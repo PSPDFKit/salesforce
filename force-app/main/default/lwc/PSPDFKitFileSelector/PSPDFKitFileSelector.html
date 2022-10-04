@@ -1,0 +1,49 @@
+<template>
+    <lightning-card style="width: 500px;">
+        <div class="slds-page-header header-margin">
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <lightning-icon icon-name="standard:file" size="medium"> </lightning-icon>
+                        </div>
+                        <div class="slds-media__body">
+                            <div class="slds-page-header__name">
+                                <div class="slds-page-header__name-title">
+                                    <h1>
+                                        <span class="slds-page-header__title slds-truncate" title="Upload File">Upload File</span>
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <lightning-button class=" slds-float_right slds-m-right_xx-large slds-m-top_xx-large " variant="brand" label="Open a file from Salesforce" title="Primary action" onclick={handleOpenModal} ></lightning-button>
+        </div>
+        <div class="slds-grid">
+            <div class="fileUpload slds-col slds-size_1-of-2 slds-align_absolute-center " data-id="file" ondragover={handleDragover} ondrop={handleDrop} onclick={handleClick}>
+                <lightning-icon icon-name="utility:download" size="large" class="downloadIcon"> </lightning-icon>
+                <p><b>Choose a file</b> or Drag it here</p>
+            </div>
+        </div>
+    </lightning-card>
+    <div>
+        <iframe src="/apex/PSPDFKit_InitPSPDFKit" style="border: none; height:100vh;" width="100%"></iframe>
+    </div>
+
+    <template if:true={openModal}>
+        <div class="slds-modal slds-fade-in-open slds-backdrop slds-modal_medium">
+          <div class="slds-modal__container" style="width:80%;">
+            <div class="slds-modal__header">
+                <lightning-button-icon icon-name="utility:close" alternative-text="Close this window" size="large" variant="bare-inverse" onclick={closeModal} class="slds-modal__close">
+                </lightning-button-icon>
+                <h1 style="font-size: 22px; font-weight:bold;">Salesforce Files</h1>
+            </div>
+            <c-pspdfkit-open-salesforce-files onpass={openVfPage}></c-pspdfkit-open-salesforce-files>
+          </div>
+        </div>
+    </template>
+</template>

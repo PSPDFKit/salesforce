@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <classAccesses>
-        <apexClass>PspdfController</apexClass>
+        <apexClass>PSPDFKitController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>PspdfControllerTest</apexClass>
+        <apexClass>PSPDFKitControllerTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <label>PSPDFKit Admin Access</label>
     <pageAccesses>
-        <apexPage>PSPDF_InitPspdf</apexPage>
+        <apexPage>PSPDFKit_InitPSPDFKit</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <tabSettings>
