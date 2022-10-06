@@ -2,7 +2,7 @@ import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import getAttacmentDetails from '@salesforce/apex/PSPDFKitController.getAttacmentDetails';
 
-export default class PSPDFKitOpenSalesforceFiles extends LightningElement {
+export default class pspdfkitOpenSalesforceFiles extends LightningElement {
 
     @track isModalOpen;
     @track recordId;
