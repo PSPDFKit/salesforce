@@ -1,4 +1,4 @@
-<apex:page controller="PspdfController">
+<apex:page controller="PSPDFKitController">
     <!-- PSPDF Init div -->
     <div id="pspdfkit" style="width: 100%; height: 100vh;"></div>
 
