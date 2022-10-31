@@ -8,7 +8,7 @@ global with sharing class PSPDFKitController {
         visualOrigin = baseUrl.split('.my.')[0] + '--c.' + 'visualforce.com';
         return visualOrigin;
     }
-
+    
     @AuraEnabled
     public static list<ContentDocument> getAttacmentDetails(string record_Id){
         if(record_Id == null || record_Id == ''){

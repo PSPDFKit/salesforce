@@ -63,7 +63,7 @@
                     view[i] = binary.charCodeAt(i);
                 }
                 pdf = new Blob( [view]);
-                loadPspdfKit();
+                loadPSPDFKit();
             }
         }
 
@@ -75,15 +75,15 @@
             pdf = event.data.versionData;
             if(pdf != ''){
                 if(tempInstance == null){
-                    loadPspdfKit();
+                    loadPSPDFKit();
                 }else{
                     PSPDFKit.unload(tempInstance);
-                    loadPspdfKit();
+                    loadPSPDFKit();
                 }
             }
         }
 
-        function loadPspdfKit(){
+        function loadPSPDFKit(){
             pdf.arrayBuffer().then(val => {
                 PSPDFKit.load({
                     baseUrl,
