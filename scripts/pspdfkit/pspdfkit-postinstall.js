@@ -5,9 +5,9 @@ const path = require("path");
 const pspdfkitJsDest = "./force-app/main/default/staticresources/PSPDFKit.js"
 const pspdfkitLibDest = "./force-app/main/default/staticresources/PSPDFKit_lib/modern/pspdfkit-lib"
 
-if (!fs.existsSync(pspdfkitLibDest)){
-    fs.mkdirSync(pspdfkitLibDest, { recursive: true });
-}
+fs.rmSync(pspdfkitLibDest, { recursive: true, force: true });
+
+fs.mkdirSync(pspdfkitLibDest, { recursive: true });
 
 // Copy the pspdfkit-lib files used by the Salesforce integration to the static resources folder
 ncp(
@@ -16,7 +16,6 @@ ncp(
   {
 	filter(filepath) {
 		const filename = path.basename(filepath);
-console.log(filepath, filename)
 
 		if (filename.startsWith('chunk-locale-')) {
 			return true
