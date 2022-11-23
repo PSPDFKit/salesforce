@@ -1,4 +1,5 @@
 const ncp = require("ncp").ncp;
+const fs = require("fs");
 
 const pspdfkitJsDest = "./force-app/main/default/staticresources/PSPDFKit.js"
 const pspdfkitLibDest = "./force-app/main/default/staticresources/PSPDFKit_lib/modern/pspdfkit-lib"
