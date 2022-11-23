@@ -3,10 +3,12 @@ const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
 
-const pspdfkitJsDest = "./force-app/main/default/staticresources/PSPDFKit.js"
-const pspdfkitLibDest = "./force-app/main/default/staticresources/PSPDFKit_lib/modern/pspdfkit-lib"
+const staticResourcesDir = "./force-app/main/default/staticresources"
+const pspdfkitJsDest = `${staticResourcesDir}/PSPDFKit.js`
+const pspdfkitLibDest = `${staticResourcesDir}/PSPDFKit_lib/modern/pspdfkit-lib`
 
 fs.rmSync(pspdfkitLibDest, { recursive: true, force: true });
+fs.rmSync(pspdfkitJsDest, { force: true });
 
 fs.mkdirSync(pspdfkitLibDest, { recursive: true });
 
@@ -54,20 +56,19 @@ ncp(
   (err) => {
     err && console.error(err);
 
+	const PSPDFKit_libZipDest = `${staticResourcesDir}/PSPDFKit_lib.zip`
+
+	fs.rmSync(PSPDFKit_libZipDest, { force: true });
+
 	const zip = new AdmZip();
 
-	const folderHandle = fs.opendirSync(pspdfkitLibDest)
-	let entry
-	while ((entry = folderHandle.readSync()) !== null) {
-	  zip.addLocalFile(`${pspdfkitLibDest}/${entry.name}`)
-	}
-	folderHandle.closeSync()
+	zip.addLocalFolder(`${staticResourcesDir}/PSPDFKit_lib`)
 
-	zip.writeZip("./force-app/main/default/staticresources/PSPDFKit_lib.zip");
+	zip.writeZip(PSPDFKit_libZipDest);
   }
 );
 
 // Copy the main pspdfkit.js bundle to the static resources folder
-ncp("./node_modules/pspdfkit/dist/pspdfkit.js", pspdfkitJsDest, (err) => {
+ncp("./node_modules/pspdfkit/dist/modern/pspdfkit.js", pspdfkitJsDest, (err) => {
   err && console.error(err);
 });
