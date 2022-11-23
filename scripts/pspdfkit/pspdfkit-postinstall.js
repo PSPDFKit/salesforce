@@ -1,6 +1,7 @@
 const ncp = require("ncp").ncp;
 const fs = require("fs");
 const path = require("path");
+const AdmZip = require("adm-zip");
 
 const pspdfkitJsDest = "./force-app/main/default/staticresources/PSPDFKit.js"
 const pspdfkitLibDest = "./force-app/main/default/staticresources/PSPDFKit_lib/modern/pspdfkit-lib"
@@ -37,8 +38,6 @@ ncp(
 			return true
 		} else if (path.extname(filepath) === '.wasm') {
 			return true
-		} else if (path.extname(filepath) === '.woff') {
-			return true
 		} else if (path.extname(filepath) === '.woff2') {
 			return true
 		} else if (filename.endsWith('.wasm.js')) {
@@ -54,6 +53,17 @@ ncp(
   },
   (err) => {
     err && console.error(err);
+
+	const zip = new AdmZip();
+
+	const folderHandle = fs.opendirSync(pspdfkitLibDest)
+	let entry
+	while ((entry = folderHandle.readSync()) !== null) {
+	  zip.addLocalFile(`${pspdfkitLibDest}/${entry.name}`)
+	}
+	folderHandle.closeSync()
+
+	zip.writeZip("./force-app/main/default/staticresources/PSPDFKit_lib.zip");
   }
 );
 
