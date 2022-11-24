@@ -26,19 +26,19 @@ ncp(
 
 		if (filename.startsWith('chunk-locale-')) {
 			return true
-		} else if (filename.startsWith('chunk-localedata-')) {
+		} else if (filename.startsWith('chunk-localedata-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-standalone-')) {
+		} else if (filename.startsWith('chunk-standalone-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-1373-')) {
+		} else if (filename.startsWith('chunk-1373-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-5148-')) {
+		} else if (filename.startsWith('chunk-5148-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-5635-')) {
+		} else if (filename.startsWith('chunk-5635-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-6630-')) {
+		} else if (filename.startsWith('chunk-6630-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-8609-')) {
+		} else if (filename.startsWith('chunk-8609-') && path.extname(filepath) === '.js') {
 			return true
 		} else if (path.extname(filepath) === '.css' && !filename.startsWith('windows-')) {
 			return true
