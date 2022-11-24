@@ -14,7 +14,6 @@
         var state;
         var pdf;
         var baseUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_lib}/`;
-        var baseCoreUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_core}/`;
 
         const saveButton = {
             type: "custom",
@@ -88,7 +87,6 @@
             pdf.arrayBuffer().then(val => {
                 PSPDFKit.load({
                     baseUrl,
-                    baseCoreUrl,
                     container: "#pspdfkit",
                     document: val,
                     toolbarItems: PSPDFKit.defaultToolbarItems.concat([saveButton]),
