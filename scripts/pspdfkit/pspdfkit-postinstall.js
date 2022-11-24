@@ -44,8 +44,6 @@ ncp(
 			return true
 		} else if (filename.endsWith('.wasm.js')) {
 			return true
-		} else if (filename.endsWith('.wasm')) {
-			return true
 		} else if (filename === 'pspdfkit-lib') {
 			return true
 		}
