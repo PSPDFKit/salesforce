@@ -8,4 +8,4 @@ assignees: ""
 
 ### Note
 
-If you modify the integration code, please make sure to check if the [corresponding Salesforce Getting started guide](https://pspdfkit.com/guides/web/salesforce/) in the Website is up to date with the changes applied in the PR.
+When you modify the code, check and update the code snippets in the [Salesforce guides](https://pspdfkit.com/guides/web/salesforce/).
