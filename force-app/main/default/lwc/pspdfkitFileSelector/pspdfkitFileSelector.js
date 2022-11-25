@@ -50,7 +50,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     {
         var input = document.createElement('input');
         input.setAttribute('type', 'file');
-        input.setAttribute('multiple', true);
+        input.setAttribute('multiple', false);
         input.setAttribute('accept', '.png, .jpg, .jpeg, .tiff, .tif, .pdf')
         input.style.display = 'none';
         input.click();
