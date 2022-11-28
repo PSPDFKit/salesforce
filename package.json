@@ -12,8 +12,11 @@
     "test:unit:coverage": "sfdx-lwc-jest --coverage",
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --list-different \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
-    "postinstall": "husky install",
+    "postinstall": "husky install && node ./scripts/pspdfkit/pspdfkit-postinstall",
     "precommit": "lint-staged"
+  },
+  "dependencies": {
+    "pspdfkit": "2022.5.1"
   },
   "devDependencies": {
     "@lwc/eslint-plugin-lwc": "^1.1.2",
@@ -22,11 +25,13 @@
     "@salesforce/eslint-plugin-aura": "^2.0.0",
     "@salesforce/eslint-plugin-lightning": "^1.0.0",
     "@salesforce/sfdx-lwc-jest": "^1.1.0",
+    "adm-zip": "^0.5.9",
     "eslint": "^8.11.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^26.1.2",
     "husky": "^7.0.4",
     "lint-staged": "^12.3.7",
+    "ncp": "^2.0.0",
     "prettier": "^2.6.0",
     "prettier-plugin-apex": "^1.10.0"
   },
