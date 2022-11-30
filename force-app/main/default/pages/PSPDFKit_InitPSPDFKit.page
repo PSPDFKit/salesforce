@@ -90,6 +90,7 @@
                     container: "#pspdfkit",
                     document: val,
                     toolbarItems: PSPDFKit.defaultToolbarItems.concat([saveButton]),
+                    isSalesforce: true,
                 })
                 .then(instance => {tempInstance = instance;})
                 .catch(error => {console.log(error);});
