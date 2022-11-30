@@ -1,12 +1,14 @@
 import { LightningElement,track, wire } from 'lwc';
 import getbase64Data from '@salesforce/apex/PSPDFKitController.getbase64Data';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import download_icon from '@salesforce/resourceUrl/download_icon';
 
 export default class PSPDFKitFileSelector extends LightningElement {
 
     fileContents;
     @track fileName
     @track openModal = false;
+    download_icon = download_icon + '#icon';
 
     async handleFile(file)
     {
