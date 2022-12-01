@@ -1,9 +1,9 @@
 global with sharing class PSPDFKitController {
     public static contentVersion contVersion{get;set;}
     public static String conbase{get;set;}
-    
+
     @AuraEnabled
-    public static list<ContentDocument> getAttacmentDetails(string record_Id){
+    public static list<ContentDocument> getAttachmentDetails(string record_Id){
         if(record_Id == null || record_Id == ''){
             return [SELECT Title, FileExtension, OwnerId FROM ContentDocument];
         }else{

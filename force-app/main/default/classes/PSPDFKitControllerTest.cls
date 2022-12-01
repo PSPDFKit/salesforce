@@ -27,7 +27,7 @@ public class PSPDFKitControllerTest {
     static void testGetAttacmentDetails() {
         Account act = [SELECT id FROM Account];
         Test.startTest();
-        List <ContentDocument> conDocList = PSPDFKitController.getAttacmentDetails(act.Id);
+        List <ContentDocument> conDocList = PSPDFKitController.getAttachmentDetails(act.Id);
         Test.stopTest();
         System.assertEquals(1,conDocList.size());
     }
