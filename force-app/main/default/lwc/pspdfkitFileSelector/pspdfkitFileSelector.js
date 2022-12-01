@@ -1,12 +1,32 @@
 import { LightningElement,track, wire } from 'lwc';
 import getbase64Data from '@salesforce/apex/PSPDFKitController.getbase64Data';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { CurrentPageReference } from 'lightning/navigation';
+import getAttachmentDetails from '@salesforce/apex/PSPDFKitController.getAttachmentDetails';
 
 export default class PSPDFKitFileSelector extends LightningElement {
 
     fileContents;
     @track fileName
     @track openModal = false;
+    @track recordId;
+    @track PSPDFKitViewer = "/apex/PSPDFKit_InitPSPDFKit"
+
+    @wire(CurrentPageReference)
+    getStateParameters(currentPageReference) {
+        if (currentPageReference) {
+            this.recordId = currentPageReference.state.recordId;
+            console.log('this.recordId', this.recordId);
+        }
+    }
+
+    connectedCallback(){
+        getAttachmentDetails({record_Id: this.recordId}).then(data=>{
+            if (data && data.length > 0) {
+                this.PSPDFKitViewer = "/apex/PSPDFKit_InitPSPDFKit?id=" + data[0].Id;
+            }
+        })
+    }
 
     async handleFile(file)
     {
