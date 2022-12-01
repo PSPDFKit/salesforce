@@ -66,7 +66,7 @@
   --sds-c-button-brand-color-text: white;
   --slds-c-button-spacing-block-end: 9px;
   --slds-c-button-spacing-block-start: 9px;
-  --sds-c-button-brand-outline-color-background: #4537de;
+  --slds-c-button-brand-color-border: #4537de;
   margin: 20px 18px;
   font-size: 16px;
 }
