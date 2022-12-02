@@ -91,6 +91,7 @@
                     document: val,
                     toolbarItems: PSPDFKit.defaultToolbarItems.concat([saveButton]),
                     isSalesforce: true,
+                    disableWebAssemblyStreaming: true,
                 })
                 .then(instance => {tempInstance = instance;})
                 .catch(error => {console.log(error);});
