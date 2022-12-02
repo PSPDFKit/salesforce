@@ -1,6 +1,6 @@
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
-import getAttacmentDetails from '@salesforce/apex/PSPDFKitController.getAttacmentDetails';
+import getAttachmentDetails from '@salesforce/apex/PSPDFKitController.getAttachmentDetails';
 
 export default class pspdfkitOpenSalesforceFiles extends LightningElement {
 
@@ -17,7 +17,7 @@ export default class pspdfkitOpenSalesforceFiles extends LightningElement {
         }
     }
     connectedCallback(){
-        getAttacmentDetails({record_Id: this.recordId}).then(data=>{
+        getAttachmentDetails({record_Id: this.recordId}).then(data=>{
             this.fileDetails = data;
             if(this.fileDetails == undefined || this.fileDetails == null || this.fileDetails.length === 0){
                 this.noRecordFound = true;
