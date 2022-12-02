@@ -18,10 +18,10 @@ export default class PSPDFKitFileSelector extends LightningElement {
             this.file=file.target.files[0];
             this.fileName = this.file.name;
         }
-        if(this.file.type != 'application/pdf' && this.file.type != 'image/png' && this.file.type != 'image/jpg' && this.file.type != 'image/jpeg'){
+        if(this.file.type != 'application/pdf' && this.file.type != 'image/png' && this.file.type != 'image/jpg' && this.file.type != 'image/jpeg' && this.file.type != 'image/tiff' && this.file.type != 'image/tif'){
             const evt = new ShowToastEvent({
                 title: 'Error',
-                message: 'Only pdf, png, jpg and jpeg files are supported.',
+                message: 'Only pdf, png, jpeg and tiff files are supported.',
                 variant: 'error',
             });
             this.dispatchEvent(evt);
@@ -50,8 +50,8 @@ export default class PSPDFKitFileSelector extends LightningElement {
     {
         var input = document.createElement('input');
         input.setAttribute('type', 'file');
-        input.setAttribute('multiple', true);
-        input.setAttribute('accept', '.png, .jpg, .jpeg, .pdf')
+        input.setAttribute('multiple', false);
+        input.setAttribute('accept', '.png, .jpg, .jpeg, .tiff, .tif, .pdf')
         input.style.display = 'none';
         input.click();
         input.addEventListener('change', file => {

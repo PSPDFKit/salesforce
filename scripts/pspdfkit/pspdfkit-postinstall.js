@@ -7,7 +7,7 @@ const originSrc = "./node_modules/pspdfkit/dist/modern"
 const staticResourcesDir = "./force-app/main/default/staticresources"
 const pspdfkitJsDest = `${staticResourcesDir}/PSPDFKit.js`
 const pspdfkitLibDest = `${staticResourcesDir}/PSPDFKit_lib/modern/pspdfkit-lib`
-const pspdfkitCoreDest= `${staticResourcesDir}/PSPDFKit_core/modern/pspdfkit-lib`
+const pspdfkitCoreDest = `${staticResourcesDir}/PSPDFKit_core/modern/pspdfkit-lib`
 
 fs.rmSync(pspdfkitLibDest, { recursive: true, force: true });
 fs.rmSync(pspdfkitCoreDest, { recursive: true, force: true });
