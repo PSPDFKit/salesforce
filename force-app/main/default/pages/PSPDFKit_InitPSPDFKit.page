@@ -20,34 +20,7 @@
             id: "download-pdf",
             title: "Save",
             onPress: () => {
-                tempInstance.exportPDF().then((buffer) => {
-                    const blob = new Blob([buffer], { type: "application/pdf" });
-                    getBase64(blob).then((result) => {
-                        updatedFile = result;
-                        var Object = new sforce.SObject('contentVersion');
-                        if(state == 'salesforce'){
-                            Object.ContentDocumentId = contVersion.ContentDocumentId;
-                            Object.PathOnClient = contVersion.PathOnClient;
-                            Object.VersionData = updatedFile;
-                            var res = sforce.connection.create([Object]);
-                            res[0].success === 'true' ? alert('File updated') : alert('File not updated');
-                        } else if(state == 'local'){
-                            Object.Title = contVersion.fName;
-                                Object.PathOnClient = contVersion.fName;
-                                Object.VersionData = updatedFile;
-                                Object.contentLocation = 'S';
-                                var res = sforce.connection.create([Object]);
-                                res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved');
-                            }
-                            else if('{!contVersion}' != null) {
-                                Object.ContentDocumentId ='{!contVersion.ContentDocumentId}';
-                                Object.PathOnClient = '{!contVersion.PathOnClient}';
-                                Object.VersionData = updatedFile;
-                                var res = sforce.connection.create([Object]);
-                                res[0].success === 'true' ? alert('File updated') : alert('File not updated');
-                            }
-                    });
-                });
+                saveFileToSalesforce();
             }
         };
 
@@ -109,6 +82,37 @@
                     resolve(fileContents);
                 }
                 reader.onerror = error => reject(error);
+            });
+        }
+
+        function saveFileToSalesforce() {
+            tempInstance.exportPDF().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/pdf" });
+                getBase64(blob).then((result) => {
+                    updatedFile = result;
+                    var Object = new sforce.SObject('contentVersion');
+                    if(state == 'salesforce'){
+                        Object.ContentDocumentId = contVersion.ContentDocumentId;
+                        Object.PathOnClient = contVersion.PathOnClient;
+                        Object.VersionData = updatedFile;
+                        var res = sforce.connection.create([Object]);
+                        res[0].success === 'true' ? alert('File updated') : alert('File not updated');
+                    } else if(state == 'local'){
+                        Object.Title = contVersion.fName;
+                            Object.PathOnClient = contVersion.fName;
+                            Object.VersionData = updatedFile;
+                            Object.contentLocation = 'S';
+                            var res = sforce.connection.create([Object]);
+                            res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved');
+                        }
+                        else if('{!contVersion}' != null) {
+                            Object.ContentDocumentId ='{!contVersion.ContentDocumentId}';
+                            Object.PathOnClient = '{!contVersion.PathOnClient}';
+                            Object.VersionData = updatedFile;
+                            var res = sforce.connection.create([Object]);
+                            res[0].success === 'true' ? alert('File updated') : alert('File not updated');
+                        }
+                });
             });
         }
     </script>
