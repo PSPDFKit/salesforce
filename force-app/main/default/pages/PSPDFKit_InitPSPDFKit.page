@@ -115,5 +115,11 @@
                 });
             });
         }
+
+        function openSalesforceFile(recordId) {
+            if (window.location.href != window.location.origin + "/apex/PSPDFKit_InitPSPDFKit?id=" + recordId) {
+                window.open('/apex/PSPDFKit_InitPSPDFKit?id=' + recordId,'_self');
+            }
+        }
     </script>
 </apex:page>
