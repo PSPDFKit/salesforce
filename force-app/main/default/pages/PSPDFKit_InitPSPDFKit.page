@@ -90,7 +90,6 @@
                     container: "#pspdfkit",
                     document: val,
                     toolbarItems: PSPDFKit.defaultToolbarItems.concat([saveButton]),
-                    license: 
                 })
                 .then(instance => {tempInstance = instance;})
                 .catch(error => {console.log(error);});
