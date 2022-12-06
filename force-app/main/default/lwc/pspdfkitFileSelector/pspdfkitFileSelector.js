@@ -29,7 +29,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
         else{
             let visualForce = this.template.querySelector("iframe");
             if( visualForce ){
-                visualForce.contentWindow.postMessage({versionData : this.file, fName : this.fileName, state : 'local'}, '*');
+                visualForce.contentWindow.postMessage({versionData : this.file, fName : this.fileName, fileType: this.file.type, state : 'local'}, '*');
                 this.fileContents = null;
             }
         }
@@ -83,7 +83,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
                     view[i] = binary.charCodeAt(i);
                 }
                 var blob = new Blob( [view]);
-                visualForce.contentWindow.postMessage({versionData : blob, ContentDocumentId : result.ContentDocumentId, PathOnClient : result.PathOnClient, state : 'salesforce'}, '*');
+                visualForce.contentWindow.postMessage({versionData : blob, ContentDocumentId : result.ContentDocumentId, PathOnClient : result.PathOnClient, fileType : result.FileType, state : 'salesforce'}, '*');
             })
             .catch(error => {console.log(error)});
             this.openModal = false;

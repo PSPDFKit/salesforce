@@ -40,6 +40,7 @@ global with sharing class PSPDFKitController {
             ContentVersion newList = [SELECT Id, VersionData, FileType, Title, FileExtension, ContentDocumentId, PathOnClient FROM ContentVersion WHERE ContentDocumentId = :strId AND IsLatest = true];
             filedNameVsValue.put('ContentDocumentId',newList.ContentDocumentId);
             filedNameVsValue.put('PathOnClient',newList.PathOnClient);
+            filedNameVsValue.put('FileType',newList.FileType);
             filedNameVsValue.put('VersionData',EncodingUtil.Base64Encode(newList.VersionData));
             return filedNameVsValue;
         } catch (Exception e) {

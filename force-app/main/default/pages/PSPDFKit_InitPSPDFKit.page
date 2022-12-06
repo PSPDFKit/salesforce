@@ -13,6 +13,7 @@
         var contVersion;
         var state;
         var pdf;
+        var fileType;
         var baseUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_lib}/`;
 
         const saveButton = {
@@ -36,7 +37,7 @@
                     view[i] = binary.charCodeAt(i);
                 }
                 pdf = new Blob( [view]);
-                loadPSPDFKit();
+                loadPSPDFKitWithSaveButton();
             }
         }
 
@@ -46,23 +47,46 @@
             state = event.data.state;
             contVersion = event.data;
             pdf = event.data.versionData;
-            if(pdf != ''){
-                if(tempInstance == null){
-                    loadPSPDFKit();
-                }else{
-                    PSPDFKit.unload(tempInstance);
-                    loadPSPDFKit();
+            fileType = event.data.fileType;
+            if (pdf != '') {
+                if (fileType == "application/pdf" || fileType == "PDF") {
+                    if (tempInstance == null) {
+                        loadPSPDFKitWithSaveButton();
+                    } else {
+                        PSPDFKit.unload(tempInstance);
+                        loadPSPDFKitWithSaveButton();
+                    }
+                } else {
+                    if (tempInstance == null) {
+                        loadPSPDFKitWithoutSaveButton();
+                    } else {
+                        PSPDFKit.unload(tempInstance);
+                        loadPSPDFKitWithoutSaveButton();
+                    }
                 }
             }
         }
 
-        function loadPSPDFKit(){
+        function loadPSPDFKitWithSaveButton(){
             pdf.arrayBuffer().then(val => {
                 PSPDFKit.load({
                     baseUrl,
                     container: "#pspdfkit",
                     document: val,
                     toolbarItems: PSPDFKit.defaultToolbarItems.concat([saveButton]),
+                    disableWebAssemblyStreaming: true,
+                })
+                .then(instance => {tempInstance = instance;})
+                .catch(error => {console.log(error);});
+            })
+        }
+
+        function loadPSPDFKitWithoutSaveButton(){
+            pdf.arrayBuffer().then(val => {
+                PSPDFKit.load({
+                    baseUrl,
+                    container: "#pspdfkit",
+                    document: val,
                     disableWebAssemblyStreaming: true,
                 })
                 .then(instance => {tempInstance = instance;})
