@@ -66,8 +66,8 @@
                     document: val,
                     disableWebAssemblyStreaming: true,
                 })
-                .then(instance => {tempInstance = instance; return instance})
                 .then(instance => {
+                    tempInstance = instance;
                     if (fileType == "application/pdf" || fileType == "PDF") {
                         instance.setToolbarItems(instance.toolbarItems.concat([saveButton]));
                     }
