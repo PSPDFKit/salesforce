@@ -96,21 +96,21 @@
                         Object.PathOnClient = contVersion.PathOnClient;
                         Object.VersionData = updatedFile;
                         var res = sforce.connection.create([Object]);
-                        res[0].success === 'true' ? alert('File updated') : alert('File not updated');
+                        res[0].success === 'true' ? alert('File updated') : alert('File not updated: ' + res[0].errors.message);
                     } else if(state == 'local'){
                         Object.Title = contVersion.fName;
                             Object.PathOnClient = contVersion.fName;
                             Object.VersionData = updatedFile;
                             Object.contentLocation = 'S';
                             var res = sforce.connection.create([Object]);
-                            res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved');
+                            res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved: ' + res[0].errors.message);
                         }
                         else if('{!contVersion}' != null) {
                             Object.ContentDocumentId ='{!contVersion.ContentDocumentId}';
                             Object.PathOnClient = '{!contVersion.PathOnClient}';
                             Object.VersionData = updatedFile;
                             var res = sforce.connection.create([Object]);
-                            res[0].success === 'true' ? alert('File updated') : alert('File not updated');
+                            res[0].success === 'true' ? alert('File updated') : alert('File not updated: ' + res[0].errors.message);
                         }
                 });
             });
