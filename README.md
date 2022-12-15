@@ -1,6 +1,6 @@
 ## PSPDFKit for Salesforce Integration
 
-PSPDFKit for Salesforce is a wrapper on top of PSPDFKit for Web Standalone, which is a client-side JavaScript library for viewing and editing PDF files directly in a web browser.
+PSPDFKit for Salesforce integration uses PSPDFKit for Web Standalone as a [static resource][]. When the integration is deployed to a Salesforce org, the static resources are automatically created. The static resources are then used to load the PSPDFKit for Web Standalone library in the Salesforce org.
 
 PSPDFKit for Salesforce shares the same APIs as PSPDFKit for Web Standalone, so please use the web documentation when customizing your Salesforce application.
 
@@ -95,3 +95,4 @@ To use PSPDFKit in your Salesforce org, follow these steps:
 [node.js]: https://nodejs.org/en/download/
 [about-npm]: https://docs.npmjs.com/about-npm
 [npm-client]: https://docs.npmjs.com/cli/v7/commands/npm
+[static resource]: https://help.salesforce.com/s/articleView?id=sf.pages_static_resources.htm&type=5
