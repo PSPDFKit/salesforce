@@ -82,6 +82,14 @@ To use PSPDFKit in your Salesforce org, follow these steps:
 4. Click `Choose a File` to upload local PDF files, or open a file from Salesforce.
 
 
+## Next Steps
+
+- [Open documents from Salesforce][]
+- [Save files back to Salesforce][]
+
+[Open documents from Salesforce]: https://pspdfkit.com/guides/web/open-a-document/from-salesforce/
+[Save files back to Salesforce]:  https://pspdfkit.com/guides/web/save-a-document/to-salesforce/
+
 [support team]: https://support.pspdfkit.com/hc/en-us/requests/new
 [Salesforce]: https://www.salesforce.org/
 [free]: /try/
