@@ -35,12 +35,10 @@ sfdx force:auth:web:login --setalias vscodeOrg --instanceurl https://login.sales
 
 3. In the browser window that opens, log in to your Salesforce org, and authorize Salesforce CLI.
 
-4. In the terminal, go to the `package.xml` file in the `manifest` folder within the PSPDFKit for Salesforce project.
-
-5. Run the following command:
+4. In the terminal, run the following command from the root folder:
 
 ```bash
-sfdx force:source:deploy -x package.xml
+sfdx force:source:deploy -x manifest/package.xml
 ```
 
 ## Enabling Users to Use PSPDFKit
