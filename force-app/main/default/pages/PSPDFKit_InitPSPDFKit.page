@@ -20,34 +20,7 @@
             id: "download-pdf",
             title: "Save",
             onPress: () => {
-                tempInstance.exportPDF().then((buffer) => {
-                    const blob = new Blob([buffer], { type: "application/pdf" });
-                    getBase64(blob).then((result) => {
-                        updatedFile = result;
-                        var Object = new sforce.SObject('contentVersion');
-                        if(state == 'salesforce'){
-                            Object.ContentDocumentId = contVersion.ContentDocumentId;
-                            Object.PathOnClient = contVersion.PathOnClient;
-                            Object.VersionData = updatedFile;
-                            var res = sforce.connection.create([Object]);
-                            res[0].success === 'true' ? alert('File updated') : alert('File not updated');
-                        } else if(state == 'local'){
-                            Object.Title = contVersion.fName;
-                                Object.PathOnClient = contVersion.fName;
-                                Object.VersionData = updatedFile;
-                                Object.contentLocation = 'S';
-                                var res = sforce.connection.create([Object]);
-                                res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved');
-                            }
-                            else if('{!contVersion}' != null) {
-                                Object.ContentDocumentId ='{!contVersion.ContentDocumentId}';
-                                Object.PathOnClient = '{!contVersion.PathOnClient}';
-                                Object.VersionData = updatedFile;
-                                var res = sforce.connection.create([Object]);
-                                res[0].success === 'true' ? alert('File updated') : alert('File not updated');
-                            }
-                    });
-                });
+                saveFileToSalesforce();
             }
         };
 
@@ -89,8 +62,33 @@
                     baseUrl,
                     container: "#pspdfkit",
                     document: val,
-                    toolbarItems: PSPDFKit.defaultToolbarItems.concat([saveButton]),
                     isSalesforce: true,
+                    toolbarItems: PSPDFKit.defaultToolbarItems
+                        .filter((item) => item.type !== "signature")
+                        .reduce((acc = [], item) => {
+                            if (item.type === "ink") {
+                                return acc.concat([
+                                    item,
+                                    { type: "signature", dropdownGroup: "additional-tools" },
+                                    { type: "form-creator", dropdownGroup: "additional-tools" },
+                                    {
+                                        type: "content-editor",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-text-highlighter",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-rectangle",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                ]);
+                            }
+
+                            return acc.concat([item]);
+                        }, [])
+                        .concat([saveButton]),
                     disableWebAssemblyStreaming: true,
                 })
                 .then(instance => {tempInstance = instance;})
@@ -111,6 +109,43 @@
                 }
                 reader.onerror = error => reject(error);
             });
+        }
+
+        function saveFileToSalesforce() {
+            tempInstance.exportPDF().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/pdf" });
+                getBase64(blob).then((result) => {
+                    updatedFile = result;
+                    var Object = new sforce.SObject('contentVersion');
+                    if(state == 'salesforce'){
+                        Object.ContentDocumentId = contVersion.ContentDocumentId;
+                        Object.PathOnClient = contVersion.PathOnClient;
+                        Object.VersionData = updatedFile;
+                        var res = sforce.connection.create([Object]);
+                        res[0].success === 'true' ? alert('File updated') : alert('File not updated');
+                    } else if(state == 'local'){
+                        Object.Title = contVersion.fName;
+                            Object.PathOnClient = contVersion.fName;
+                            Object.VersionData = updatedFile;
+                            Object.contentLocation = 'S';
+                            var res = sforce.connection.create([Object]);
+                            res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved');
+                        }
+                        else if('{!contVersion}' != null) {
+                            Object.ContentDocumentId ='{!contVersion.ContentDocumentId}';
+                            Object.PathOnClient = '{!contVersion.PathOnClient}';
+                            Object.VersionData = updatedFile;
+                            var res = sforce.connection.create([Object]);
+                            res[0].success === 'true' ? alert('File updated') : alert('File not updated');
+                        }
+                });
+            });
+        }
+
+        function openSalesforceFile(recordId) {
+            if (window.location.href != window.location.origin + "/apex/PSPDFKit_InitPSPDFKit?id=" + recordId) {
+                window.open('/apex/PSPDFKit_InitPSPDFKit?id=' + recordId,'_self');
+            }
         }
     </script>
 </apex:page>
