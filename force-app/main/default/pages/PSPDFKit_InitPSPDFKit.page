@@ -62,6 +62,7 @@
                     baseUrl,
                     container: "#pspdfkit",
                     document: val,
+                    isSalesforce: true,
                     toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
                         .reduce((acc = [], item) => {
