@@ -64,6 +64,33 @@
                     baseUrl,
                     container: "#pspdfkit",
                     document: val,
+                    isSalesforce: true,
+                    toolbarItems: PSPDFKit.defaultToolbarItems
+                        .filter((item) => item.type !== "signature")
+                        .reduce((acc = [], item) => {
+                            if (item.type === "ink") {
+                                return acc.concat([
+                                    item,
+                                    { type: "signature", dropdownGroup: "additional-tools" },
+                                    { type: "form-creator", dropdownGroup: "additional-tools" },
+                                    {
+                                        type: "content-editor",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-text-highlighter",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-rectangle",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                ]);
+                            }
+
+                            return acc.concat([item]);
+                        }, [])
+                        .concat([saveButton]),
                     disableWebAssemblyStreaming: true,
                 })
                 .then(instance => {
