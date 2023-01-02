@@ -16,7 +16,7 @@
     "precommit": "lint-staged"
   },
   "dependencies": {
-    "pspdfkit": "2022.5.3"
+    "pspdfkit": "2023.1.0"
   },
   "devDependencies": {
     "@lwc/eslint-plugin-lwc": "^1.1.2",
