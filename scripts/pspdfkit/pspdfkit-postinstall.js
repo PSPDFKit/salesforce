@@ -30,15 +30,7 @@ ncp(
 			return true
 		} else if (filename.startsWith('chunk-standalone-') && path.extname(filepath) === '.js') {
 			return true
-		} else if (filename.startsWith('chunk-1373-') && path.extname(filepath) === '.js') {
-			return true
-		} else if (filename.startsWith('chunk-5148-') && path.extname(filepath) === '.js') {
-			return true
-		} else if (filename.startsWith('chunk-5635-') && path.extname(filepath) === '.js') {
-			return true
-		} else if (filename.startsWith('chunk-6630-') && path.extname(filepath) === '.js') {
-			return true
-		} else if (filename.startsWith('chunk-8609-') && path.extname(filepath) === '.js') {
+		} else if (filename.startsWith('chunk-lazy-') && path.extname(filepath) === '.js') {
 			return true
 		} else if (path.extname(filepath) === '.css' && !filename.startsWith('windows-')) {
 			return true
