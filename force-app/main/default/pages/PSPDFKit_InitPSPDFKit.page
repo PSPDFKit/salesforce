@@ -5,7 +5,72 @@
     <script type="text/javascript"> __sfdcSessionId = '{!$Api.Session_Id}';</script>
     <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
     <script src="{!$Resource.PSPDFKit20241}" type="text/javascript"></script>
+    <script src="{!$Resource.docxtemplater}" type="text/javascript"></script>
+    <script src="{!$Resource.inspectModule}" type="text/javascript"></script>
+    <script src="{!$Resource.pizzip}" type="text/javascript"></script>
     <script type="text/javascript">
+
+
+        // Load
+        /*********************************/
+        let template = "TestTemplate";
+
+        // Get the template from Salesforce
+        sforce.connection.query(
+            "SELECT VersionData FROM ContentVersion WHERE Title = 'TestTemplate'",
+            {
+                onSuccess: function (result) {
+                    var records = result.getArray("records");
+                    // File loaded as Base64
+                    var versionData = records[0].VersionData;
+
+                    let binaryString = atob(versionData);
+
+                    let len = binaryString.length;
+                    let bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+
+                    // File converted into ArrayBuffer
+                    let arrayBuffer = bytes.buffer;
+                    console.log("File as Array Buffer");
+                    console.log(arrayBuffer);
+                    loadPSPDFKitCustom(arrayBuffer);
+
+                },
+                onFailure: function (error) {
+                    console.log("An error has occurred: " + error);
+                }
+            }
+        );
+
+        async function loadPSPDFKitCustom(arrayBufferTemplate) {
+            console.log("in loadPSPDFKit");
+            let tags = await getPlacholderTags(arrayBufferTemplate);
+            console.log("tags found");
+            console.log(tags);
+
+            window.parent.postMessage({
+                type: 'lwcEvent',
+                value: tags
+            }, '*');
+
+        }
+
+        async function getPlacholderTags(arrayBufferTemplate) {
+            const iModule = window.iModule;
+            const zip = new PizZip(arrayBufferTemplate);
+            console.log("zip");
+            const doc = new docxtemplater(zip, {
+                delimiters: { start: "{{", end: "}}" },
+                modules: [iModule]
+            });
+            console.log("doc");
+            const tags = iModule.getAllTags();
+            return tags;
+        }
+        /*********************************/
 
         var recId = '{!fileDetail}';
         var updatedFile;
@@ -45,6 +110,7 @@
         window.addEventListener('message', handleOpenAndSaveFiles);
 
         function handleOpenAndSaveFiles(event) {
+            console.log("message received here");
             state = event.data.state;
             contVersion = event.data;
             pdf = event.data.versionData;
