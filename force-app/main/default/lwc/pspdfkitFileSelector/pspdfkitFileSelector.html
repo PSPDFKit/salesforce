@@ -55,6 +55,19 @@
           stretch
           onclick={handleOpenModal}
         ></lightning-button>
+
+        <template for:each={placeholders} for:item="placeholder">
+          <div key={placeholder.key} class="slds-p-horizontal_medium slds-p-vertical_small">
+              <lightning-input label={placeholder.key} 
+                               data-key={placeholder.key}
+                               value={placeholder.value} 
+                               onchange={handleInputChange}>
+              </lightning-input>
+              <!--<c-custom-lookup data-key={placeholder.key} 
+                               onsearchchange={handleSearchChange}>
+              </c-custom-lookup>-->
+          </div>
+        </template>
       </div>
     </div>
 
@@ -88,4 +101,6 @@
       </div>
     </div>
   </template>
+
+
 </template>

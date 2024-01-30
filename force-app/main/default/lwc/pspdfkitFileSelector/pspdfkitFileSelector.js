@@ -11,7 +11,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
   @track fileName;
   @track openModal = false;
 
-  subscription = null;
+  @track placeholders = [];
 
   connectedCallback() {
     // Add event listener for the message event
@@ -29,7 +29,51 @@ export default class PSPDFKitFileSelector extends LightningElement {
 
     // Assuming the message contains a JSON object under event.data
     const messageData = event.data;
-    console.log(JSON.parse(JSON.stringify(messageData)));
+    const data = JSON.parse(JSON.stringify(messageData));
+
+    this.placeholders = Object.keys(data.value).map((key) => {
+      return {
+        key: key,
+        value: "",
+        searchKey: "",
+      };
+    });
+    console.log("placeholders");
+    console.log(placeholders);
+  }
+
+  handleInputChange(event) {
+    console.log("handleInputChange");
+    /*const key = event.target.dataset.key;
+    const value = event.target.value;
+    this.placeholders = this.placeholders.map((item) => {
+      if (item.key === key) {
+        return { ...item, value: value };
+      }
+      return item;
+    });*/
+  }
+
+  handleSearchChange(event) {
+    console.log("handleSearchChange");
+    /*const key = event.target.dataset.key;
+    const searchKey = event.target.value;
+    // Call the Apex search method
+    search({ searchKey: searchKey })
+      .then((results) => {
+        // Process search results
+        // Update the placeholders with the search results
+      })
+      .catch((error) => {
+        // Handle the error
+        console.error("Search error:", error);
+      });
+    this.placeholders = this.placeholders.map((item) => {
+      if (item.key === key) {
+        return { ...item, searchKey: searchKey };
+      }
+      return item;
+    });*/
   }
 
   async handleFile(file) {
