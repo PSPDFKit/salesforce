@@ -11,7 +11,13 @@ export default class PSPDFKitFileSelector extends LightningElement {
   @track fileName;
   @track openModal = false;
 
-  @track placeholders = [];
+  @track placeholders = [
+    {
+      key: "key",
+      value: "Test",
+      searchKey: "",
+    },
+  ];
 
   connectedCallback() {
     // Add event listener for the message event
@@ -31,27 +37,28 @@ export default class PSPDFKitFileSelector extends LightningElement {
     const messageData = event.data;
     const data = JSON.parse(JSON.stringify(messageData));
 
-    this.placeholders = Object.keys(data.value).map((key) => {
-      return {
-        key: key,
-        value: "",
-        searchKey: "",
-      };
-    });
-    console.log("placeholders");
-    console.log(placeholders);
+    console.log(data);
+    if (data && data.value) {
+      this.placeholders = Object.keys(data.value).map((key) => {
+        return {
+          key: key,
+          value: "Test",
+          searchKey: "",
+        };
+      });
+    }
   }
 
   handleInputChange(event) {
     console.log("handleInputChange");
-    /*const key = event.target.dataset.key;
+    const key = event.target.dataset.key;
     const value = event.target.value;
     this.placeholders = this.placeholders.map((item) => {
       if (item.key === key) {
         return { ...item, value: value };
       }
       return item;
-    });*/
+    });
   }
 
   handleSearchChange(event) {
@@ -139,6 +146,42 @@ export default class PSPDFKitFileSelector extends LightningElement {
 
   handleOpenModal() {
     this.openModal = true;
+  }
+
+  loadPSPDFKit() {
+    console.log("in loadPSPDFKit Generate button");
+    let event = { detail: "069Dp000008iGXQIA2" };
+    const placeholdersData = JSON.stringify(this.placeholders);
+
+    let visualForce = this.template.querySelector("iframe");
+    if (visualForce && event.detail) {
+      getbase64Data({ strId: event.detail })
+        .then((result) => {
+          var base64str = result.VersionData;
+          var binary = atob(base64str.replace(/\s/g, ""));
+          var len = binary.length;
+          var buffer = new ArrayBuffer(len);
+          var view = new Uint8Array(buffer);
+          for (var i = 0; i < len; i++) {
+            view[i] = binary.charCodeAt(i);
+          }
+          var blob = new Blob([view]);
+          visualForce.contentWindow.postMessage(
+            {
+              versionData: blob,
+              ContentDocumentId: result.ContentDocumentId,
+              PathOnClient: result.PathOnClient,
+              state: "salesforce",
+              placeholders: placeholdersData,
+            },
+            "*"
+          );
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      this.openModal = false;
+    }
   }
 
   openVfPage(event) {

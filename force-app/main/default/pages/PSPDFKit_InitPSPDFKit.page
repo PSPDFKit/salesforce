@@ -110,7 +110,10 @@
         window.addEventListener('message', handleOpenAndSaveFiles);
 
         function handleOpenAndSaveFiles(event) {
-            console.log("message received here");
+            console.log("message received on VF page");
+            console.log("placeholders received:");
+            let placeholders = event.data.placeholders;
+            console.log(placeholders);
             state = event.data.state;
             contVersion = event.data;
             pdf = event.data.versionData;
@@ -126,7 +129,9 @@
 
         function loadPSPDFKit() {
             pdf.arrayBuffer().then(val => {
+
                 PSPDFKit.load({
+                    inlineWorkers: true,
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
