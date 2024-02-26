@@ -56,6 +56,15 @@
           onclick={handleOpenModal}
         ></lightning-button>
 
+        <lightning-button
+        class="button"
+        label="Select Template"
+        title="Primary action"
+        variant="brand"
+        stretch
+        onclick={handleOpenModal}
+      ></lightning-button>
+
         <template for:each={placeholders} for:item="placeholder">
           <div key={placeholder.key} class="slds-p-horizontal_medium slds-p-vertical_small">
               <lightning-input label={placeholder.key} 
@@ -91,7 +100,7 @@
 
   <template if:true={openModal}>
     <div class="slds-modal slds-fade-in-open slds-backdrop slds-modal_medium">
-      <div class="slds-modal__container" style="width: 80%">
+      <div class="slds-modal__container" style="width: 80%; height: 50%">
         <div class="slds-modal__header">
           <lightning-button-icon
             icon-name="utility:close"
@@ -105,7 +114,7 @@
           <h1 style="font-size: 22px; font-weight: bold">Salesforce Files</h1>
         </div>
         <c-pspdfkit-open-salesforce-files
-          onpass={openVfPage}
+          onpass={selectTemplate}
         ></c-pspdfkit-open-salesforce-files>
       </div>
     </div>

@@ -37,7 +37,6 @@ export default class PSPDFKitFileSelector extends LightningElement {
     const messageData = event.data;
     const data = JSON.parse(JSON.stringify(messageData));
 
-    console.log(data);
     if (data && data.value) {
       this.placeholders = Object.keys(data.value).map((key) => {
         return {
@@ -181,6 +180,14 @@ export default class PSPDFKitFileSelector extends LightningElement {
           console.log(error);
         });
       this.openModal = false;
+    }
+  }
+
+  selectTemplate(event) {
+    this.openModal = false;
+    let visualForce = this.template.querySelector("iframe");
+    if (visualForce && event.detail) {
+      console.log("Selected template: ", event.detail);
     }
   }
 
