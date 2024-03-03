@@ -60,6 +60,10 @@ export default class PSPDFKitFileSelector extends LightningElement {
     });
   }
 
+  handleSelection(event) {
+    console.log("handleSelection");
+  }
+
   handleSearchChange(event) {
     console.log("handleSearchChange");
     /*const key = event.target.dataset.key;
@@ -187,7 +191,33 @@ export default class PSPDFKitFileSelector extends LightningElement {
     this.openModal = false;
     let visualForce = this.template.querySelector("iframe");
     if (visualForce && event.detail) {
-      console.log("Selected template: ", event.detail);
+      console.log("LWC: selected template ", event.detail);
+      getbase64Data({ strId: event.detail })
+        .then((result) => {
+          var base64str = result.VersionData;
+          var binary = atob(base64str.replace(/\s/g, ""));
+          var len = binary.length;
+          var buffer = new ArrayBuffer(len);
+          var view = new Uint8Array(buffer);
+          for (var i = 0; i < len; i++) {
+            view[i] = binary.charCodeAt(i);
+          }
+          var blob = new Blob([view]);
+          visualForce.contentWindow.postMessage(
+            {
+              versionData: blob,
+              ContentDocumentId: result.ContentDocumentId,
+              PathOnClient: result.PathOnClient,
+              state: "salesforce",
+              template: true,
+            },
+            "*"
+          );
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      this.openModal = false;
     }
   }
 

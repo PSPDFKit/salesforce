@@ -8,7 +8,7 @@
       </div>
 
       <div class="container">
-        <div
+        <!--<div
           class="fileUpload"
           data-id="file"
           ondragover={handleDragover}
@@ -45,16 +45,16 @@
           </div>
         </div>
 
-        <p class="text">or</p>
+        <p class="text">or</p>-->
 
-        <lightning-button
+        <!--<lightning-button
           class="button"
           label="Open a file from Salesforce"
           title="Primary action"
           variant="brand"
           stretch
           onclick={handleOpenModal}
-        ></lightning-button>
+        ></lightning-button>-->
 
         <lightning-button
         class="button"
@@ -67,16 +67,31 @@
 
         <template for:each={placeholders} for:item="placeholder">
           <div key={placeholder.key} class="slds-p-horizontal_medium slds-p-vertical_small">
-              <lightning-input label={placeholder.key} 
+              <!--<lightning-input label={placeholder.key} 
                                data-key={placeholder.key}
                                value={placeholder.value} 
                                onchange={handleInputChange}>
-              </lightning-input>
-              <!--<c-custom-lookup data-key={placeholder.key} 
-                               onsearchchange={handleSearchChange}>
-              </c-custom-lookup>-->
+              </lightning-input>-->
+              <p>{placeholder.key}</p>
+              <c-custom-look-up
+              object-api-name="Patient_Record__c" 
+              label="Test"
+              onselection={handleSelection}
+              onchange={handleSearchChange}
+              data-key={placeholder.key} 
+              search-key={placeholder.searchKey}
+             
+              >
+            </c-custom-look-up><!--
+               
+              -->
+              
+            
+              
           </div>
         </template>
+
+         
 
         <lightning-button
         class="button"
