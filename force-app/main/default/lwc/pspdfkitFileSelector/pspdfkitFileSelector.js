@@ -6,6 +6,8 @@ import DOCX_TEMPLATER from "@salesforce/resourceUrl/docxtemplater";
 import INSPECT_MODULE from "@salesforce/resourceUrl/inspectModule";
 import PIZZIP from "@salesforce/resourceUrl/pizzip";
 
+//import CustomLookUp from "customLookUp/customLookUp";
+
 export default class PSPDFKitFileSelector extends LightningElement {
   fileContents;
   @track fileName;
@@ -151,10 +153,31 @@ export default class PSPDFKitFileSelector extends LightningElement {
     this.openModal = true;
   }
 
+  collectSearchTerms() {
+    const lookupElements = this.template.querySelectorAll("c-custom-look-up");
+    lookupElements.forEach((element) => {
+      // Access the @api getter from the child component
+      const searchValue = element.currentSearchTerm;
+      console.log(`Search Term: ${searchValue}`);
+    });
+  }
+
   loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
+    const lookupElements = this.template.querySelectorAll("c-custom-look-up");
+    console.log(lookupElements);
+    lookupElements.forEach((element) => {
+      // Access the @api getter from the child component
+      const searchValue = element.currentSearchTerm;
+      console.log(`Search Term: ${searchValue}`);
+    });
+
+    collectLookupValues();
+
     let event = { detail: "069Dp000008iGXQIA2" };
     const placeholdersData = JSON.stringify(this.placeholders);
+    console.log("Generating document with placeholders: ");
+    console.log(placeholdersData);
 
     let visualForce = this.template.querySelector("iframe");
     if (visualForce && event.detail) {
