@@ -5,7 +5,11 @@ global with sharing class PSPDFKitController {
   @AuraEnabled
   public static list<ContentDocument> getAttachmentDetails(string record_Id) {
     if (record_Id == null || record_Id == '') {
-      return [SELECT Title, FileExtension, OwnerId FROM ContentDocument];
+      return [
+        SELECT Title, FileExtension, OwnerId
+        FROM ContentDocument
+        WHERE FileExtension = 'docx'
+      ];
     } else {
       list<ContentDocumentLink> doccontList = [
         SELECT contentDocumentId
@@ -121,5 +125,33 @@ global with sharing class PSPDFKitController {
     } catch (Exception e) {
       return 'Error: ' + e.getMessage();
     }
+  }
+
+  @AuraEnabled(cacheable=true)
+  public static Map<String, Object> getRecordFields(
+    String objectApiName,
+    Id recordId,
+    List<String> fieldNames
+  ) {
+    // Ensure fieldNames is not empty and contains valid API names
+    if (fieldNames.isEmpty()) {
+      throw new AuraHandledException('Field names list is empty.');
+    }
+
+    // Construct SOQL query string dynamically based on field names
+    String soqlQuery =
+      'SELECT ' + String.join(new List<String>(fieldNames), ', ');
+    soqlQuery += ' FROM ' + objectApiName + ' WHERE Id = :recordId LIMIT 1';
+
+    // Execute the query and return the result
+    sObject record = Database.query(soqlQuery);
+
+    // Prepare a map to return field values
+    Map<String, Object> fieldValues = new Map<String, Object>();
+    for (String fieldName : fieldNames) {
+      fieldValues.put(fieldName, record.get(fieldName));
+    }
+
+    return fieldValues;
   }
 }

@@ -71,10 +71,10 @@
                                data-key={placeholder.key}
                                value={placeholder.value} 
                                onchange={handleInputChange}>
-              </lightning-input>-->
+              </lightning-input> Patient_Record__c -->
               <p>{placeholder.key}</p>
               <c-custom-look-up
-              object-api-name="Patient_Record__c" 
+              object-api-name={objectApiName}
               label="Test"
               onselection={handleSelection}
               onchange={handleSearchChange}

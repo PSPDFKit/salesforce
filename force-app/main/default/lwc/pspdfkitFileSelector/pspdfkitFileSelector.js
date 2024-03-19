@@ -6,12 +6,27 @@ import DOCX_TEMPLATER from "@salesforce/resourceUrl/docxtemplater";
 import INSPECT_MODULE from "@salesforce/resourceUrl/inspectModule";
 import PIZZIP from "@salesforce/resourceUrl/pizzip";
 
-//import CustomLookUp from "customLookUp/customLookUp";
+import { api } from "lwc";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
 
 export default class PSPDFKitFileSelector extends LightningElement {
   fileContents;
   @track fileName;
   @track openModal = false;
+  @api recordId;
+
+  @wire(getRecord, {
+    recordId: "$recordId",
+    layoutTypes: ["Full"],
+    modes: ["View"],
+  })
+  record;
+
+  get objectApiName() {
+    return this.record.data ? this.record.data.apiName : "";
+    //return this.record.data.apiName;
+  }
 
   @track placeholders = [
     {
@@ -162,17 +177,52 @@ export default class PSPDFKitFileSelector extends LightningElement {
     });
   }
 
+  async collectLookupValues() {
+    const searchTerms = [];
+    const lookupElements = this.template.querySelectorAll("c-custom-look-up");
+    console.log("lookupElements");
+    console.log(lookupElements);
+
+    lookupElements.forEach((element) => {
+      const searchValue = element.currentSearchTerm;
+      if (searchValue) {
+        // Make sure it's not an empty string or null
+        searchTerms.push(searchValue);
+        console.log(searchValue);
+      }
+    });
+
+    if (searchTerms.length > 0) {
+      try {
+        const result = await getRecordFields({
+          objectApiName: this.objectApiName,
+          recordId: this.recordId,
+          fieldNames: searchTerms,
+        });
+        // Process your result here
+        console.log("result of collectLookupValues");
+        console.log(result);
+      } catch (error) {
+        console.error("Error fetching records:", error);
+      }
+    }
+  }
+
   loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
-    const lookupElements = this.template.querySelectorAll("c-custom-look-up");
+    console.log(this.record);
+    let name = this.record.data.apiName;
+    console.log(name);
+    /*const lookupElements = this.template.querySelectorAll("c-custom-look-up");
     console.log(lookupElements);
     lookupElements.forEach((element) => {
       // Access the @api getter from the child component
       const searchValue = element.currentSearchTerm;
       console.log(`Search Term: ${searchValue}`);
-    });
+    });*/
 
-    collectLookupValues();
+    // Roles come from CMS_Role__c
+    this.collectLookupValues();
 
     let event = { detail: "069Dp000008iGXQIA2" };
     const placeholdersData = JSON.stringify(this.placeholders);

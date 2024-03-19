@@ -27,7 +27,7 @@
     <!--<types>
         <members>*</members>
         <name>StaticResource</name>
-    </types>
+    </types>-->
     <types>
 		<members>*</members>
 		<name>CustomLabels</name>
@@ -35,7 +35,7 @@
     <types>
 		<members>*</members>
 		<name>CustomTab</name>
-	</types>-->
+	</types>
     <types>
 		<members>*</members>
 		<name>CustomPermission</name>
