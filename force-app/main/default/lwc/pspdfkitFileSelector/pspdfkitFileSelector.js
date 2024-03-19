@@ -178,37 +178,70 @@ export default class PSPDFKitFileSelector extends LightningElement {
   }
 
   async collectLookupValues() {
-    const searchTerms = [];
+    // Step 1: Populate lookupResults with keys and searchKeys from the LWC elements
     const lookupElements = this.template.querySelectorAll("c-custom-look-up");
-    console.log("lookupElements");
-    console.log(lookupElements);
-
+    const searchTerms = [];
     lookupElements.forEach((element) => {
       const searchValue = element.currentSearchTerm;
-      if (searchValue) {
-        // Make sure it's not an empty string or null
-        searchTerms.push(searchValue);
-        console.log(searchValue);
+      const keyValue = element.getAttribute("data-key"); // Assuming this maps to field API names
+      console.log(keyValue);
+      if (keyValue) {
+        searchTerms.push({
+          placeHolder: keyValue,
+          databaseField: searchValue,
+          value: "",
+        });
       }
     });
 
-    if (searchTerms.length > 0) {
+    console.log("lookupElements before filling elements");
+    console.log(lookupElements);
+    console.log("searchTerms");
+    console.log(searchTerms);
+    console.log(searchTerms.length);
+
+    const databaseFields = searchTerms
+      .map((item) => item.databaseField)
+      .filter((field) => field !== "");
+
+    console.log(databaseFields);
+
+    if (databaseFields.length > 0) {
       try {
+        console.log("looking up now");
+        // Step 2: Fetch field values for the collected searchTerms
         const result = await getRecordFields({
           objectApiName: this.objectApiName,
           recordId: this.recordId,
-          fieldNames: searchTerms,
+          fieldNames: databaseFields,
         });
-        // Process your result here
-        console.log("result of collectLookupValues");
-        console.log(result);
+        console.log("result of collectLookupValues:", result);
+
+        // Step 3: Update lookupResults with the fetched values
+        searchTerms.forEach((item) => {
+          if (item.databaseField && result[item.databaseField] !== undefined) {
+            item.value = result[item.databaseField];
+          }
+        });
+
+        // Process updated lookupResults as needed
+        console.log("Updated lookupResults:", searchTerms);
+
+        const transformedArray = searchTerms.map((item) => ({
+          key: item.placeHolder, // Mapping placeHolder to key
+          value: item.value, // Keeping value as is
+        }));
+
+        console.log(transformedArray);
+
+        return transformedArray;
       } catch (error) {
         console.error("Error fetching records:", error);
       }
     }
   }
 
-  loadPSPDFKit() {
+  async loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
     console.log(this.record);
     let name = this.record.data.apiName;
@@ -222,12 +255,12 @@ export default class PSPDFKitFileSelector extends LightningElement {
     });*/
 
     // Roles come from CMS_Role__c
-    this.collectLookupValues();
+    let filledPlaceholdersData = await this.collectLookupValues();
 
-    let event = { detail: "069Dp000008iGXQIA2" };
+    let event = { detail: "069Ou000000l6I5IAI" };
     const placeholdersData = JSON.stringify(this.placeholders);
     console.log("Generating document with placeholders: ");
-    console.log(placeholdersData);
+    console.log(filledPlaceholdersData);
 
     let visualForce = this.template.querySelector("iframe");
     if (visualForce && event.detail) {
@@ -248,7 +281,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
               ContentDocumentId: result.ContentDocumentId,
               PathOnClient: result.PathOnClient,
               state: "salesforce",
-              placeholders: placeholdersData,
+              placeholders: filledPlaceholdersData,
             },
             "*"
           );
