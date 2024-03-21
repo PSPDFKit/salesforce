@@ -9,6 +9,7 @@ import PIZZIP from "@salesforce/resourceUrl/pizzip";
 import { api } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
+import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 
 export default class PSPDFKitFileSelector extends LightningElement {
   fileContents;
@@ -183,7 +184,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     const searchTerms = [];
     lookupElements.forEach((element) => {
       const searchValue = element.currentSearchTerm;
-      const keyValue = element.getAttribute("data-key"); // Assuming this maps to field API names
+      const keyValue = element.getAttribute("data-key");
       console.log(keyValue);
       if (keyValue) {
         searchTerms.push({
@@ -200,22 +201,44 @@ export default class PSPDFKitFileSelector extends LightningElement {
     console.log(searchTerms);
     console.log(searchTerms.length);
 
-    const databaseFields = searchTerms
+    let databaseFieldsRecords = searchTerms
       .map((item) => item.databaseField)
       .filter((field) => field !== "");
 
-    console.log(databaseFields);
+    // Query roles seperately
+    let databaseFieldsRoles = databaseFieldsRecords
+      .filter((value) => value.includes("Role: "))
+      .map((value) => value.replace("Role: ", "")); // Remove "Role: " from the value
 
-    if (databaseFields.length > 0) {
+    databaseFieldsRecords = databaseFieldsRecords.filter(
+      (value) => !value.includes("Role: ")
+    );
+
+    console.log("query fields:");
+    console.log(databaseFieldsRecords);
+    console.log(databaseFieldsRoles);
+
+    if (databaseFieldsRecords.length > 0) {
       try {
-        console.log("looking up now");
+        console.log("looking up records now");
         // Step 2: Fetch field values for the collected searchTerms
         const result = await getRecordFields({
           objectApiName: this.objectApiName,
           recordId: this.recordId,
-          fieldNames: databaseFields,
+          fieldNames: databaseFieldsRecords,
         });
-        console.log("result of collectLookupValues:", result);
+
+        console.log("record id");
+        console.log(this.recordId);
+        console.log("result of getRecordFields:", result);
+
+        // Seperate this out into a seperate process later
+        const resultRoles = await getRoleFields({
+          objectApiName: "CMS_Role__c",
+          recordId: this.recordId,
+          fieldNames: databaseFieldsRoles,
+        });
+        console.log("result of getRoleFields:", resultRoles);
 
         // Step 3: Update lookupResults with the fetched values
         searchTerms.forEach((item) => {

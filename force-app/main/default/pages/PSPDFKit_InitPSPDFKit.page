@@ -88,7 +88,8 @@
         var pdf;
         //var baseUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_lib}/`;
         //var baseCoreUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_core}/`;
-        var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-1/";
+        //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-1/";
+        var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-2/pspdfkit-lib/";
 
         const saveButton = {
             type: "custom",
@@ -156,17 +157,37 @@
         }
 
         function loadPSPDFKit() {
-            pdf.arrayBuffer().then(val => {
+            pdf.arrayBuffer().then(async val => {
 
                 console.log("is PSPDFKit defined?");
                 console.log(PSPDFKit);
 
+                // Fill template with placeholder data
+                let filledDocument = await PSPDFKit.populateDocumentTemplate(
+                    {
+                        document: val,
+                        baseUrl,
+                        //licenseKey: "YOUR_LICENSE_KEY"
+                    },
+                    {
+                        config: {
+                            delimiter: {
+                                start: "{{",
+                                end: "}}"
+                            }
+                        },
+                        model: {
+                            "Placeholder1": "Pavitter",
+                        }
+                    }
+                );
+
                 PSPDFKit.load({
-                    inlineWorkers: true,
+                    //inlineWorkers: true,
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
-                    document: val,
+                    document: filledDocument,
                     toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
                         .reduce((acc = [], item) => {

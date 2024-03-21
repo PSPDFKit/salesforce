@@ -154,4 +154,40 @@ global with sharing class PSPDFKitController {
 
     return fieldValues;
   }
+
+  @AuraEnabled(cacheable=true)
+  public static List<Map<String, Object>> getRoleFields(
+    String objectApiName,
+    Id recordId,
+    List<String> fieldNames
+  ) {
+    // Ensure fieldNames is not empty and contains valid API names
+    if (fieldNames.isEmpty()) {
+      throw new AuraHandledException('Field names list is empty.');
+    }
+
+    // Construct SOQL query string dynamically based on field names
+    String soqlQuery =
+      'SELECT ' + String.join(new List<String>(fieldNames), ', ');
+    soqlQuery +=
+      ' FROM ' +
+      objectApiName +
+      ' WHERE Case__c = :recordId LIMIT 2';
+
+    // Execute the query and return the result
+    List<sObject> records = Database.query(soqlQuery);
+
+    // Prepare a list to return field values for each record
+    List<Map<String, Object>> allRecordsFieldValues = new List<Map<String, Object>>();
+
+    for (sObject record : records) {
+      Map<String, Object> fieldValues = new Map<String, Object>();
+      for (String fieldName : fieldNames) {
+        fieldValues.put(fieldName, record.get(fieldName));
+      }
+      allRecordsFieldValues.add(fieldValues);
+    }
+
+    return allRecordsFieldValues;
+  }
 }
