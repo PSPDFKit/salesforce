@@ -11,6 +11,8 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 
+import { updateRecord } from "lightning/uiRecordApi";
+
 export default class PSPDFKitFileSelector extends LightningElement {
   fileContents;
   @track fileName;
@@ -105,6 +107,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
   }
 
   async handleFile(file) {
+    console.log("in handle file");
     if (file.dataTransfer) {
       this.file = file.dataTransfer.files[0];
       this.fileName = this.file.name;
@@ -176,6 +179,39 @@ export default class PSPDFKitFileSelector extends LightningElement {
       const searchValue = element.currentSearchTerm;
       console.log(`Search Term: ${searchValue}`);
     });
+  }
+
+  async saveTemplate() {
+    console.log("in save template button");
+
+    // Collect all values from the template
+    let valuesToSave = await this.collectLookupValuesToSave();
+    console.log("the values to be saved");
+    console.log(valuesToSave);
+    console.log(this.record);
+
+    this.fileName = "test";
+    let templateObject = {
+      [this.fileName]: valuesToSave,
+    };
+
+    // Save them to the hidden field in Salesforce
+    let jsonString = JSON.stringify(templateObject);
+    let recordInput = {
+      fields: {
+        Id: this.record.data.id,
+        PSPDFKit_TemplateJson__c: jsonString,
+      },
+    };
+    updateRecord(recordInput)
+      .then(() => {
+        // Handle success, such as showing a success message
+        console.log("Record updated with JSON string");
+      })
+      .catch((error) => {
+        // Handle error, such as showing an error message
+        console.error("Error updating record:", error);
+      });
   }
 
   async collectLookupValues() {
@@ -298,73 +334,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     console.log("search terms to be saved: ");
     console.log(searchTerms);
 
-    /*console.log("lookupElements before filling elements");
-    console.log(lookupElements);
-    console.log("searchTerms");
-    console.log(searchTerms);
-    console.log(searchTerms.length);
-
-    let databaseFieldsRecords = searchTerms
-      .map((item) => item.databaseField)
-      .filter((field) => field !== "");
-
-    // Query roles seperately
-    let databaseFieldsRoles = databaseFieldsRecords
-      .filter((value) => value.includes("Role: "))
-      .map((value) => value.replace("Role: ", "")); // Remove "Role: " from the value
-
-    databaseFieldsRecords = databaseFieldsRecords.filter(
-      (value) => !value.includes("Role: ")
-    );
-
-    console.log("query fields:");
-    console.log(databaseFieldsRecords);
-    console.log(databaseFieldsRoles);
-
-    if (databaseFieldsRecords.length > 0) {
-      try {
-        console.log("looking up records now");
-        // Step 2: Fetch field values for the collected searchTerms
-        const result = await getRecordFields({
-          objectApiName: this.objectApiName,
-          recordId: this.recordId,
-          fieldNames: databaseFieldsRecords,
-        });
-
-        console.log("record id");
-        console.log(this.recordId);
-        console.log("result of getRecordFields:", result);
-
-        // Seperate this out into a seperate process later
-        const resultRoles = await getRoleFields({
-          objectApiName: "CMS_Role__c",
-          recordId: this.recordId,
-          fieldNames: databaseFieldsRoles,
-        });
-        console.log("result of getRoleFields:", resultRoles);
-
-        // Step 3: Update lookupResults with the fetched values
-        searchTerms.forEach((item) => {
-          if (item.databaseField && result[item.databaseField] !== undefined) {
-            item.value = result[item.databaseField];
-          }
-        });
-
-        // Process updated lookupResults as needed
-        console.log("Updated lookupResults:", searchTerms);
-
-        const transformedArray = searchTerms.map((item) => ({
-          key: item.placeHolder, // Mapping placeHolder to key
-          value: item.value, // Keeping value as is
-        }));
-
-        console.log(transformedArray);
-
-        return transformedArray;
-      } catch (error) {
-        console.error("Error fetching records:", error);
-      }
-    }*/
+    return searchTerms;
   }
 
   async loadPSPDFKit() {
@@ -461,6 +431,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     if (visualForce && event.detail) {
       getbase64Data({ strId: event.detail })
         .then((result) => {
+          this.fileName = result.ContentDocumentId;
           var base64str = result.VersionData;
           var binary = atob(base64str.replace(/\s/g, ""));
           var len = binary.length;

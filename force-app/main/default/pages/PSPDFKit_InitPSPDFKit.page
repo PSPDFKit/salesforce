@@ -163,7 +163,7 @@
                 console.log(PSPDFKit);
 
                 // Fill template with placeholder data
-                let filledDocument = await PSPDFKit.populateDocumentTemplate(
+                let filledDocumentDocx = await PSPDFKit.populateDocumentTemplate(
                     {
                         document: val,
                         baseUrl,
@@ -182,12 +182,26 @@
                     }
                 );
 
+                console.log("template filled");
+
+                // Convert filled document to PDF
+                let filledDocumentPDF = await PSPDFKit.convertToPDF(
+                    {
+                        document: filledDocumentDocx,
+                        baseUrl,
+                        //licenseKey: "YOUR_LICENSE_KEY"
+                    },
+                    //PSPDFKit.Conformance.PDFA_4F
+                );
+
+
+
                 PSPDFKit.load({
                     //inlineWorkers: true,
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
-                    document: filledDocument,
+                    document: filledDocumentPDF,
                     toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
                         .reduce((acc = [], item) => {
