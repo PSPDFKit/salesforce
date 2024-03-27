@@ -123,7 +123,7 @@
             // 1. Template selected, load template
             // find placeholders and send back.
             console.log(event);
-            if (event.data.template) {
+            if (event.data.template === true) {
                 console.log("VF papge: template received in VF page");
                 state = event.data.state;
                 contVersion = event.data;
@@ -133,7 +133,7 @@
 
                 // Show viewer with template document
                 loadPSPDFKit(null);
-            } else {
+            } else if (event.data.template === false) {
 
                 // 2. Placholders filled, loadPSPDFKit
                 // and generate final document.
@@ -148,14 +148,17 @@
                 console.log("VF page: pdf data: ");
                 console.log(pdf);
                 console.log(tempInstance);
-                if (pdf != '') {
+
+                // Template should not be shown when 
+                // generating the document
+                /*if (pdf != '') {
                     if (tempInstance == null) {
                         loadPSPDFKit(null);
                     } else {
                         PSPDFKit.unload(tempInstance);
                         loadPSPDFKit(null);
                     }
-                }
+                }*/
             }
         }
 

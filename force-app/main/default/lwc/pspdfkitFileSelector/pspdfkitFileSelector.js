@@ -447,7 +447,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
               ContentDocumentId: result.ContentDocumentId,
               PathOnClient: result.PathOnClient,
               state: "salesforce",
-              template: "config",
+              template: true,
             },
             "*"
           );
