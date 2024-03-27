@@ -112,7 +112,7 @@
                     view[i] = binary.charCodeAt(i);
                 }
                 pdf = new Blob([view]);
-                loadPSPDFKit();
+                loadPSPDFKit(null);
             }
         }
 
@@ -132,7 +132,7 @@
                 loadPlaceholdersFromTemplate(pdf);
 
                 // Show viewer with template document
-                loadPSPDFKit();
+                loadPSPDFKit(null);
             } else {
 
                 // 2. Placholders filled, loadPSPDFKit
@@ -150,24 +150,44 @@
                 console.log(tempInstance);
                 if (pdf != '') {
                     if (tempInstance == null) {
-                        loadPSPDFKit();
+                        loadPSPDFKit(null);
                     } else {
                         PSPDFKit.unload(tempInstance);
-                        loadPSPDFKit();
+                        loadPSPDFKit(null);
                     }
                 }
             }
         }
 
-        function fillTemplate() {
+        function fillTemplate(templateArrayBuffer, jsonData) {
+            const iModule = window.iModule;
+            const zip = new PizZip(templateArrayBuffer);
+            const doc = new docxtemplater(zip, {
+                delimiters: { start: "{{", end: "}}" },
+                modules: [iModule]
+            });
+
+            doc.setData(jsonData);
+            doc.render();
+
+            const arrayBuffer = doc.getZip().generate({ type: "arraybuffer", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 
         }
 
-        function loadPSPDFKit() {
+        function loadPSPDFKit(placeholderData) {
             pdf.arrayBuffer().then(async val => {
 
                 console.log("is PSPDFKit defined?");
                 console.log(PSPDFKit);
+
+
+                let document = val;
+                if (placeholderData != null) {
+                    document = fillTemplate(val, {
+                        "Placeholder1": "Pavitter"
+                    });
+                }
+
 
                 // Fill template with placeholder data - needs to be re-used later
                 /*let filledDocumentDocx = await PSPDFKit.populateDocumentTemplate(
@@ -189,7 +209,7 @@
                     }
                 );
 
-                console.log("template filled");*/
+                console.log("template filled");
 
                 // Convert filled document to PDF
                 let filledDocumentPDF = await PSPDFKit.convertToPDF(
@@ -199,7 +219,7 @@
                         //licenseKey: "YOUR_LICENSE_KEY"
                     },
                     //PSPDFKit.Conformance.PDFA_4F
-                );
+                );*/
 
 
 
@@ -208,7 +228,7 @@
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
-                    document: val,
+                    document: document,
                     toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
                         .reduce((acc = [], item) => {
