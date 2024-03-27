@@ -130,6 +130,9 @@
                 pdf = event.data.versionData;
 
                 loadPlaceholdersFromTemplate(pdf);
+
+                // Show viewer with template document
+                loadPSPDFKit();
             } else {
 
                 // 2. Placholders filled, loadPSPDFKit
@@ -156,14 +159,18 @@
             }
         }
 
+        function fillTemplate() {
+
+        }
+
         function loadPSPDFKit() {
             pdf.arrayBuffer().then(async val => {
 
                 console.log("is PSPDFKit defined?");
                 console.log(PSPDFKit);
 
-                // Fill template with placeholder data
-                let filledDocumentDocx = await PSPDFKit.populateDocumentTemplate(
+                // Fill template with placeholder data - needs to be re-used later
+                /*let filledDocumentDocx = await PSPDFKit.populateDocumentTemplate(
                     {
                         document: val,
                         baseUrl,
@@ -182,7 +189,7 @@
                     }
                 );
 
-                console.log("template filled");
+                console.log("template filled");*/
 
                 // Convert filled document to PDF
                 let filledDocumentPDF = await PSPDFKit.convertToPDF(
@@ -201,7 +208,7 @@
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
-                    document: filledDocumentPDF,
+                    document: val,
                     toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
                         .reduce((acc = [], item) => {
