@@ -151,14 +151,14 @@
 
                 // Template should not be shown when 
                 // generating the document
-                /*if (pdf != '') {
+                if (pdf != '') {
                     if (tempInstance == null) {
                         loadPSPDFKit(null);
                     } else {
                         PSPDFKit.unload(tempInstance);
                         loadPSPDFKit(null);
                     }
-                }*/
+                }
             }
         }
 

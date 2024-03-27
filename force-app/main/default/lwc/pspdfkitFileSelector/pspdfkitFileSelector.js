@@ -315,7 +315,8 @@ export default class PSPDFKitFileSelector extends LightningElement {
       // Check if searchValue contains "Role:" and process accordingly
       if (searchValue && searchValue.includes("Role:")) {
         // If it does contain "Role:", remove "Role: " from the searchValue
-        const cleanedSearchValue = searchValue.replace("Role: ", "");
+        //const cleanedSearchValue = searchValue.replace("Role: ", "");
+        const cleanedSearchValue = searchValue;
         searchTerms.push({
           placeHolder: keyValue,
           databaseField: cleanedSearchValue, // Assuming you want the cleaned value
