@@ -1,0 +1,51 @@
+<template>
+    <div class="slds-combobox_container">
+        <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click" aria-expanded="true" aria-haspopup="listbox" role="combobox">
+            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                <!--<input type="text" class="slds-input slds-combobox__input" 
+                       aria-autocomplete="list" 
+                       aria-controls="listbox-id-1" 
+                       autocomplete="off"
+                       role="textbox"
+                       placeholder="Search"
+                       oninput={handleSearchChange}
+                       value={selectedValue}/>-->
+                       <input type="text" class="slds-input slds-combobox__input"
+                       aria-autocomplete="list" 
+                       aria-controls="listbox-id-1" 
+                       autocomplete="off"
+                       role="textbox"
+                       placeholder={searchKey}
+                       oninput={handleSearchChange} 
+                       value={searchTerm}/>
+                <span class="slds-icon_container slds-icon-utility-down">
+                    <lightning-icon icon-name="utility:down" size="small" alternative-text="Show More"></lightning-icon>
+                </span>
+            </div>
+            <div id="listbox-id-1" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox" style="display:flex">
+                <ul class="slds-listbox slds-listbox_vertical" role="group" aria-label="Suggested for you">
+                    <template for:each={searchResults} for:item="result">
+                        <li key={result.Id} data-id={result.Id} role="presentation" class="slds-listbox__item">
+                            <div id={result.Id} name={result.Name} data-id={result.Id} class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small slds-media_center" role="option">
+                                <span class="slds-media__body" data-id={result.Id}>
+                                    <div onclick={handleSelect} data-id={result.Id} data-name={result.Name}>{result.Name}</div>
+                                </span>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+            <template if:true={showDropdown}>
+                <div class="slds-m-top_small">
+                    <lightning-combobox name="options"
+                                        label="Role Options"
+                                        value={selectedOption}
+                                        placeholder="Select an Option"
+                                        options={dropdownOptions}
+                                        onchange={handleOptionChange}></lightning-combobox>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

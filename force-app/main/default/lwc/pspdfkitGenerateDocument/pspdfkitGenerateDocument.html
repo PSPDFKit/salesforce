@@ -1,0 +1,92 @@
+<template>
+  <div class="page">
+    <div class="wrapper">
+      <div>
+        <div>
+          <p title="Generate Document" class="heading">Generate Document</p>
+        </div>
+      </div>
+
+      <div class="container">
+
+        <lightning-button
+        class="button"
+        label="Select Template"
+        title="Primary action"
+        variant="brand"
+        stretch
+        onclick={handleOpenModalGenerate}
+      ></lightning-button>
+
+        <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
+          <div key={placeholderGenerated.key} class="slds-p-horizontal_medium slds-p-vertical_small">
+              <!--<lightning-input label={placeholder.key} 
+                               data-key={placeholder.key}
+                               value={placeholder.value} 
+                               onchange={handleInputChange}>
+              </lightning-input> Patient_Record__c -->
+              <p>{placeholderGenerated.key}</p>
+              <c-custom-look-up-generate
+              object-api-name={objectApiName}
+              label="Test"
+              onselection={handleSelection}
+              onchange={handleSearchChangeGenerated}
+              data-key={placeholderGenerated.key} 
+              search-key={placeholderGenerated.searchTerm}
+              drop-down-options-api={dropdownOptions}
+              >
+            </c-custom-look-up-generate><!--
+               
+              -->
+              
+            
+              
+          </div>
+        </template>
+
+         
+
+        <lightning-button
+        class="button"
+        label="Generate"
+        title="Primary action"
+        variant="brand"
+        stretch
+        onclick={loadPSPDFKit}
+      ></lightning-button>
+      </div>
+    </div>
+
+    <div class="viewer">
+      <iframe
+        src="/apex/PSPDFKit_InitPSPDFKit"
+        style="border: none; height: 100vh"
+        width="100%"
+      ></iframe>
+    </div>
+  </div>
+
+  <template if:true={openModalGenerate}>
+    <div class="slds-modal slds-fade-in-open slds-backdrop slds-modal_medium">
+      <div class="slds-modal__container" style="width: 80%; height: 50%">
+        <div class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close this window"
+            size="large"
+            variant="bare-inverse"
+            onclick={closeModal}
+            class="slds-modal__close"
+          >
+          </lightning-button-icon>
+          <h1 style="font-size: 22px; font-weight: bold">Salesforce Files</h1>
+        </div>
+        <c-pspdfkit-open-salesforce-files
+          onpass={selectTemplateGenerate}
+        ></c-pspdfkit-open-salesforce-files>
+      </div>
+    </div>
+  </template>
+
+
+</template>
