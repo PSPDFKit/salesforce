@@ -13,7 +13,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @track fileName;
   @track openModalGenerate = false;
   @api recordId;
-  @track dropdownOptions = [
+  /*@track dropdownOptions = [
     { label: "Role 1", value: "option1" },
     { label: "Role 2", value: "option2" },
     // You can add more options here
@@ -21,7 +21,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   updateDropdownOptions(newOptions) {
     this.dropdownOptions = [...newOptions];
-  }
+  }*/
 
   @wire(getRecord, {
     recordId: "$recordId",
@@ -57,6 +57,14 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   }
 
   @track placeholdersGenerated = [
+    {
+      key: "key",
+      value: "Test",
+      searchTerm: "",
+    },
+  ];
+
+  @track placeholdersWithDropdownOptions = [
     {
       key: "key",
       value: "Test",
@@ -444,6 +452,30 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           });
           console.log("Result for role fields:", rolesResult);
 
+          const roleMapping = rolesResult.reduce((acc, role) => {
+            const [fieldKey, fieldValue] = Object.entries(role)[0];
+            acc[fieldKey] = fieldValue; // Map database field to role value
+            return acc;
+          }, {});
+          console.log("mapping in roleMapping");
+          console.log(roleMapping);
+
+          this.placeholdersWithDropdownOptions = this.placeholdersGenerated.map(
+            (placeholder) => {
+              // Check if placeholder's searchTerm matches any key in the roleMapping
+              const roleValue =
+                roleMapping[placeholder.searchTerm.replace("Role: ", "")];
+              return {
+                ...placeholder,
+                dropdownOptions: roleValue
+                  ? [{ label: roleValue, value: roleValue }]
+                  : [],
+              };
+            }
+          );
+          console.log("placeholdersWithDropdownOptions");
+          console.log(JSON.stringify(this.placeholdersWithDropdownOptions));
+
           // Transform the result into dropdown options
           /*const newDropdownOptions = await Object.keys(rolesResult).map(
             (fieldKey) => {
@@ -456,7 +488,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             }
           );*/
           // test
-          const newDropdownOptions = Object.entries(rolesResult).map(
+
+          /*const newDropdownOptions = Object.entries(rolesResult).map(
             ([key, obj]) => {
               // Assuming each `obj` has only one key-value pair and you want its value
               const labelAndValue = Object.values(obj)[0]; // This gets "Hugo Loaiza-Suarez" from the object
@@ -468,9 +501,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           );
 
           console.log("setting drop down options");
-          console.log(newDropdownOptions);
+          console.log(newDropdownOptions);*/
           // Update the dropdown options
-          this.updateDropdownOptions(newDropdownOptions);
+          //this.updateDropdownOptions(newDropdownOptions);
         }
       } catch (error) {
         console.error("Error fetching data:", error);

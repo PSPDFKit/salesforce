@@ -13,14 +13,15 @@ export default class CustomLookUp extends LightningElement {
   @track showDropdown = false;
   @api searchKey;
 
-  _dropDownOptionsApi = []; // Use a private variable to store the incoming options
+  @track dropdownOptions = [];
+  @track selectedOption = "";
 
   @api
   get dropDownOptionsApi() {
-    return this._dropDownOptionsAPI;
+    return this.dropdownOptions;
   }
 
-  set dropDownOptionsApi(value) {
+  /*set dropDownOptionsApi(value) {
     this._dropDownOptionsApi = value;
     this.dropdownOptions = [...value]; // Update dropdownOptions whenever new options are passed
     this.showDropdown = true;
@@ -28,14 +29,24 @@ export default class CustomLookUp extends LightningElement {
     console.log("dropdown options set");
     //console.log(this.dropdownOptions);
     //console.log(this._dropDownOptionsApi);
-  }
+  }*/
 
-  @track selectedOption = ""; // To track the selected option from the dropdown
+  set dropDownOptionsApi(value) {
+    // When set, update the tracked property and possibly the showDropdown state
+    console.log("-- setting dropdown options");
+    console.log(JSON.stringify(value));
+    //this.dropdownOptions = [...value];
+    //this.showDropdown = value.length > 0;
+    //this.showDropdown = true;
+    if (value && value.length > 0) {
+      this.showDropdown = true;
+      this.dropdownOptions = [...value];
+    }
+  }
 
   handleOptionChange(event) {
     this.selectedOption = event.detail.value;
-    console.log("Role selected: ");
-    console.log(this.selectedOption);
+    console.log("Role selected: ", this.selectedOption);
   }
 
   handleSearchChange(event) {

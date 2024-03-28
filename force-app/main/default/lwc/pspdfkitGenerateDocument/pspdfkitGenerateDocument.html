@@ -18,7 +18,7 @@
         onclick={handleOpenModalGenerate}
       ></lightning-button>
 
-        <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
+        <template for:each={placeholdersWithDropdownOptions} for:item="placeholderGenerated">
           <div key={placeholderGenerated.key} class="slds-p-horizontal_medium slds-p-vertical_small">
               <!--<lightning-input label={placeholder.key} 
                                data-key={placeholder.key}
@@ -33,7 +33,7 @@
               onchange={handleSearchChangeGenerated}
               data-key={placeholderGenerated.key} 
               search-key={placeholderGenerated.searchTerm}
-              drop-down-options-api={dropdownOptions}
+              drop-down-options-api={placeholderGenerated.dropdownOptions}
               >
             </c-custom-look-up-generate><!--
                
