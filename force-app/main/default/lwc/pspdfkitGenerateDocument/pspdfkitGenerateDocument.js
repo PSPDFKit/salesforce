@@ -369,7 +369,67 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     // Roles come from CMS_Role__c
 
-    let filledPlaceholdersData = await this.collectLookupValues();
+    // Placeholder data
+    console.log("placeholders without roles selected");
+    console.log(
+      JSON.parse(JSON.stringify(this.placeholdersWithDropdownOptions))
+    );
+
+    // fill in role data
+    // Step 1: Select all parent divs
+
+    console.log(document);
+    const parentDivs = document.querySelectorAll(
+      "div[c-pspdfkitgeneratedocument_pspdfkitgeneratedocument] > div.slds-p-horizontal_medium.slds-p-vertical_small"
+    );
+
+    const parentDivs2 = document.querySelectorAll(
+      "c-pspdfkitgeneratedocument_pspdfkitgeneratedocument"
+    );
+
+    console.log("parentDivs");
+    console.log(parentDivs2);
+
+    // Initialize an empty object to hold the results
+    const result = {};
+
+    // Step 2: Iterate over each parent div to extract information
+    parentDivs.forEach((div) => {
+      // Find the <p> tag that contains the placeholder name
+      const placeholderName = div.querySelector("p").textContent.trim();
+
+      // Find the button with the selected value
+      const selectedButton = div.querySelector("button.slds-combobox__input");
+      const selectedValue = selectedButton.getAttribute("data-value");
+
+      // Compile into the result object
+      result[placeholderName] = selectedValue;
+    });
+
+    console.log(result);
+    //
+
+    // log the final placeholders
+    console.log("placeholders WITH roles selected");
+    console.log(
+      JSON.parse(JSON.stringify(this.placeholdersWithDropdownOptions))
+    );
+
+    // Convert to the desired format
+    const filledPlaceholdersData = this.placeholdersWithDropdownOptions.reduce(
+      (acc, item) => {
+        // Add only items where value is not "Test" and searchTerm does not start with "Role:"
+        if (!item.searchTerm.startsWith("Role:")) {
+          acc[item.key] = item.value;
+        }
+        return acc;
+      },
+      {}
+    );
+    console.log("filledPlaceholdersData");
+    console.log(filledPlaceholdersData);
+
+    /*let filledPlaceholdersData = await this.collectLookupValues();
     let valuesToSaveTemp = await this.collectLookupValuesToGenerate();
     console.log("the values to be saved");
     console.log(valuesToSaveTemp);
@@ -377,11 +437,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     let event = { detail: "069Ou000000l6I5IAI" };
     const placeholdersData = JSON.stringify(this.placeholdersGenerated);
     console.log("Generating document with placeholders: ");
-    console.log(filledPlaceholdersData);
+    console.log(filledPlaceholdersData);*/
 
     // Fetch all placeholders AND their data
     // and send it to the VisualForce page
-
+    let event = this.event;
+    console.log(event);
+    console.log("opening visual force page now");
     let visualForce = this.template.querySelector("iframe");
     if (visualForce && event.detail) {
       getbase64Data({ strId: event.detail })
@@ -402,6 +464,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               PathOnClient: result.PathOnClient,
               state: "salesforce",
               placeholders: filledPlaceholdersData,
+              template: false,
             },
             "*"
           );
@@ -575,6 +638,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   }
 
   async selectTemplateGenerate(event) {
+    this.event = event;
     this.openModalGenerate = false;
 
     console.log("template for generation selected");

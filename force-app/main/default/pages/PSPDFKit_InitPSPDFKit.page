@@ -120,6 +120,8 @@
 
         function handleOpenAndSaveFiles(event) {
 
+            console.log("in handleOpenAndSaveFiles");
+            console.log(event);
             // 1. Template selected, load template
             // find placeholders and send back.
             console.log(event);
@@ -153,10 +155,10 @@
                 // generating the document
                 if (pdf != '') {
                     if (tempInstance == null) {
-                        loadPSPDFKit(null);
+                        loadPSPDFKit(placeholders);
                     } else {
                         PSPDFKit.unload(tempInstance);
-                        loadPSPDFKit(null);
+                        loadPSPDFKit(placeholders);
                     }
                 }
             }
@@ -174,7 +176,7 @@
             doc.render();
 
             const arrayBuffer = doc.getZip().generate({ type: "arraybuffer", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-
+            return arrayBuffer;
         }
 
         function loadPSPDFKit(placeholderData) {
@@ -182,14 +184,16 @@
 
                 console.log("is PSPDFKit defined?");
                 console.log(PSPDFKit);
+                console.log(placeholderData);
 
 
                 let document = val;
                 if (placeholderData != null) {
-                    document = fillTemplate(val, {
-                        "Placeholder1": "Pavitter"
-                    });
+                    document = fillTemplate(val, placeholderData);
+                } else {
+                    document = val;
                 }
+
 
 
                 // Fill template with placeholder data - needs to be re-used later
@@ -225,6 +229,8 @@
                 );*/
 
 
+                console.log("document to be loaded");
+                console.log(document);
 
                 PSPDFKit.load({
                     //inlineWorkers: true,
