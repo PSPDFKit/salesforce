@@ -317,7 +317,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   async collectLookupValuesToGenerate() {
     // Step 1: Populate lookupResults with keys and searchKeys from the LWC elements
-    const lookupElements = this.template.querySelectorAll("c-custom-look-up");
+    const lookupElements = this.template.querySelectorAll(
+      "c-custom-look-up-generate"
+    );
     const searchTerms = [];
     lookupElements.forEach((element) => {
       // Get the current search term (value associated with the lookup)
@@ -366,6 +368,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     });*/
 
     // Roles come from CMS_Role__c
+
     let filledPlaceholdersData = await this.collectLookupValues();
     let valuesToSaveTemp = await this.collectLookupValuesToGenerate();
     console.log("the values to be saved");
@@ -410,7 +413,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     }
   }
 
-  async getRoleRecords() {
+  async getAllRecords() {
     /*const lookupElements = this.template.querySelectorAll(
       "c-custom-look-up-generate"
     );*/
@@ -425,21 +428,21 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     let roleFields = databaseFields
       .filter((value) => value.includes("Role: "))
       .map((value) => value.replace("Role: ", ""));
-    let otherFields = databaseFields.filter(
+    let recordFields = databaseFields.filter(
       (value) => !value.includes("Role: ")
     );
 
     console.log("Fields for querying databaseFields:", databaseFields);
-    console.log("Fields for querying records:", otherFields);
+    console.log("Fields for querying records:", recordFields);
     console.log("Fields for querying roles:", roleFields);
 
-    if (otherFields.length > 0) {
+    if (recordFields.length > 0) {
       try {
         console.log("Looking up record fields...");
         const recordsResult = await getRecordFields({
           objectApiName: this.objectApiName,
           recordId: this.recordId,
-          fieldNames: otherFields,
+          fieldNames: recordFields,
         });
         console.log("Result for record fields:", recordsResult);
 
@@ -473,35 +476,34 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               };
             }
           );
-          console.log("placeholdersWithDropdownOptions");
-          console.log(JSON.stringify(this.placeholdersWithDropdownOptions));
-
-          // Transform the result into dropdown options
-          /*const newDropdownOptions = await Object.keys(rolesResult).map(
-            (fieldKey) => {
-              // Optionally, you can add logic here to format fieldKey into a more user-friendly label
-              // For simplicity, this example uses the fieldKey directly as the label
-              return {
-                label: fieldKey, // or any formatted label you prefer
-                value: rolesResult[fieldKey], // The value from the result
-              };
-            }
-          );*/
-          // test
-
-          /*const newDropdownOptions = Object.entries(rolesResult).map(
-            ([key, obj]) => {
-              // Assuming each `obj` has only one key-value pair and you want its value
-              const labelAndValue = Object.values(obj)[0]; // This gets "Hugo Loaiza-Suarez" from the object
-              return {
-                label: labelAndValue, // Sets label to "Hugo Loaiza-Suarez"
-                value: labelAndValue, // Sets value to "Hugo Loaiza-Suarez"
-              };
-            }
+          console.log("placeholdersWithDropdownOptions1");
+          console.log(
+            JSON.parse(JSON.stringify(this.placeholdersWithDropdownOptions))
           );
 
-          console.log("setting drop down options");
-          console.log(newDropdownOptions);*/
+          this.placeholdersWithDropdownOptions =
+            this.placeholdersWithDropdownOptions.map((placeholder) => {
+              // Check if searchTerm starts with "Role: ". If it does, return the placeholder unchanged.
+              if (placeholder.searchTerm.startsWith("Role: ")) {
+                return placeholder;
+              }
+
+              // For other searchTerms, attempt to update the value based on recordFields.
+              const searchTerm = placeholder.searchTerm; // No need to replace "Role: " here due to the check above.
+
+              // If there's a matching key in recordsResult, update the value.
+              if (recordsResult.hasOwnProperty(searchTerm)) {
+                return { ...placeholder, value: recordsResult[searchTerm] };
+              }
+
+              // If no matching key is found, return the placeholder unchanged.
+              return placeholder;
+            });
+          console.log("placeholdersWithDropdownOptions2");
+          console.log(
+            JSON.parse(JSON.stringify(this.placeholdersWithDropdownOptions))
+          );
+
           // Update the dropdown options
           //this.updateDropdownOptions(newDropdownOptions);
         }
@@ -594,38 +596,15 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     console.log("new placeholder data");
     console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
 
-    console.log("fetching roles");
-    await this.getRoleRecords();
-    /*let visualForce = this.template.querySelector("iframe");
-    if (visualForce && event.detail) {
-      console.log("LWC: selected template ", event.detail);
-      getbase64Data({ strId: event.detail })
-        .then((result) => {
-          var base64str = result.VersionData;
-          var binary = atob(base64str.replace(/\s/g, ""));
-          var len = binary.length;
-          var buffer = new ArrayBuffer(len);
-          var view = new Uint8Array(buffer);
-          for (var i = 0; i < len; i++) {
-            view[i] = binary.charCodeAt(i);
-          }
-          var blob = new Blob([view]);
-          visualForce.contentWindow.postMessage(
-            {
-              versionData: blob,
-              ContentDocumentId: result.ContentDocumentId,
-              PathOnClient: result.PathOnClient,
-              state: "salesforce",
-              template: false,
-            },
-            "*"
-          );
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      this.openModalGenerate = false;
-    }*/
+    console.log("fetching all records");
+    await this.getAllRecords();
+
+    // fetch field data
+    /*const result = await getRecordFields({
+      objectApiName: this.objectApiName,
+      recordId: this.recordId,
+      fieldNames: databaseFieldsRecords,
+    });*/
   }
 
   openVfPage(event) {
