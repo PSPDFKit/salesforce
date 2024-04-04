@@ -190,4 +190,52 @@ global with sharing class PSPDFKitController {
 
     return allRecordsFieldValues;
   }
+
+  @AuraEnabled
+  public static Map<String, Object> fetchDocumentTemplateNameAndFile(
+    String recordId
+  ) {
+    Map<String, Object> result = new Map<String, Object>();
+    try {
+      // First, fetch the Document Template Name from BD_Document_Templates__c
+      BD_Document_Templates__c docTemplate = [
+        SELECT Name
+        FROM BD_Document_Templates__c
+        WHERE Id = :recordId
+        LIMIT 1
+      ];
+
+      if (docTemplate != null) {
+        result.put('TemplateName', docTemplate.Name);
+
+        // Assume 'Name' corresponds to the title of the ContentDocument you're looking for
+        List<ContentVersion> contentVersions = [
+          SELECT Title, ContentDocumentId, VersionData
+          FROM ContentVersion
+          WHERE Title = :docTemplate.Name AND IsLatest = TRUE
+        ];
+
+        if (!contentVersions.isEmpty()) {
+          // Fetch the latest version details of the document
+          ContentVersion contentVersion = contentVersions[0];
+          result.put('DocumentTitle', contentVersion.Title);
+          result.put('ContentDocumentId', contentVersion.ContentDocumentId);
+          result.put(
+            'VersionData',
+            EncodingUtil.base64Encode(contentVersion.VersionData)
+          );
+        } else {
+          result.put(
+            'Error',
+            'No matching document found for the template name.'
+          );
+        }
+      } else {
+        result.put('Error', 'No document template found with the provided ID.');
+      }
+    } catch (Exception e) {
+      result.put('Error', e.getMessage());
+    }
+    return result;
+  }
 }

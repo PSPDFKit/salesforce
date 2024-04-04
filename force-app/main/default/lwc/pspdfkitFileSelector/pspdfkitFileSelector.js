@@ -10,6 +10,7 @@ import { api } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
+import fetchDocumentTemplateNameAndFile from "@salesforce/apex/PSPDFKitController.fetchDocumentTemplateNameAndFile";
 
 import { updateRecord } from "lightning/uiRecordApi";
 
@@ -390,6 +391,50 @@ export default class PSPDFKitFileSelector extends LightningElement {
           console.log(error);
         });
       this.openModal = false;
+    }
+  }
+
+  async loadTemplate() {
+    if (!this.recordId) {
+      console.error("No recordId found");
+      return;
+    }
+
+    try {
+      let documentData = await fetchDocumentTemplateNameAndFile({
+        recordId: this.recordId,
+      });
+
+      // Check if the document has been retrieved
+      if (documentData && documentData.VersionData) {
+        var base64str = documentData.VersionData;
+        var binary = atob(base64str.replace(/\s/g, ""));
+        var len = binary.length;
+        var buffer = new ArrayBuffer(len);
+        var view = new Uint8Array(buffer);
+        for (var i = 0; i < len; i++) {
+          view[i] = binary.charCodeAt(i);
+        }
+        var blob = new Blob([view], { type: "application/pdf" }); // Set the correct MIME type
+
+        let visualForce = this.template.querySelector("iframe");
+        if (visualForce) {
+          visualForce.contentWindow.postMessage(
+            {
+              versionData: blob,
+              ContentDocumentId: documentData.ContentDocumentId,
+              PathOnClient: documentData.PathOnClient,
+              state: "salesforce",
+              template: true,
+            },
+            "*" // Be cautious with using "*", it's better to specify the target origin if possible for security reasons
+          );
+        }
+      } else {
+        console.error("Document data is not available");
+      }
+    } catch (error) {
+      console.error("Error loading template:", error);
     }
   }
 
