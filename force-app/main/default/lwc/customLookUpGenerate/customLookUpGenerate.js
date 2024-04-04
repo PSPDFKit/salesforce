@@ -12,6 +12,9 @@ export default class CustomLookUp extends LightningElement {
   @api objectApiName;
   @track showDropdown = false;
   @api searchKey;
+  @api placeholderName;
+  @api selectedRole;
+  @track hasData = false;
 
   @track dropdownOptions = [];
   @track selectedOption = "";
@@ -41,12 +44,16 @@ export default class CustomLookUp extends LightningElement {
     if (value && value.length > 0) {
       this.showDropdown = true;
       this.dropdownOptions = [...value];
+      this.hasData = true;
+    } else {
+      this.hasData = false;
     }
   }
 
   handleOptionChange(event) {
     this.selectedOption = event.detail.value;
     console.log("Role selected: ", this.selectedOption);
+    this.selectedRole = this.selectedOption;
   }
 
   handleSearchChange(event) {
@@ -103,6 +110,7 @@ export default class CustomLookUp extends LightningElement {
 
     console.log(filteredResults);
     this.searchResults = filteredResults;
+    this.hasData = this.searchResults.length > 0;
   }
 
   searchRecords() {
@@ -124,6 +132,7 @@ export default class CustomLookUp extends LightningElement {
 
   handleSelect(event) {
     console.log("handleSelect");
+    this.hasData = true;
 
     const target = event.target.closest("[data-id]");
 

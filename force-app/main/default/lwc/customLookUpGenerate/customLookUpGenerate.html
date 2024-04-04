@@ -1,4 +1,5 @@
-<template>
+
+<template ><!--if:true={hasData}-->
     <template if:false={showDropdown}>
         <div class="slds-combobox_container">
             <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click" aria-expanded="true" aria-haspopup="listbox" role="combobox">
@@ -50,6 +51,7 @@
                                 value={selectedOption}
                                 placeholder="Select a Role"
                                 options={dropdownOptions}
+                                id={placeholderName}
                                 onchange={handleOptionChange}></lightning-combobox>
         </div>
     </template>

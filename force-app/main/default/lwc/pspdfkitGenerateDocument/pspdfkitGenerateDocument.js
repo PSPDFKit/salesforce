@@ -370,7 +370,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // Roles come from CMS_Role__c
 
     // Placeholder data
-    console.log("placeholders without roles selected");
+    /*console.log("placeholders without roles selected");
     console.log(
       JSON.parse(JSON.stringify(this.placeholdersWithDropdownOptions))
     );
@@ -427,7 +427,59 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       {}
     );
     console.log("filledPlaceholdersData");
+    console.log(filledPlaceholdersData);*/
+
+    console.log("manually fetching all input fields");
+
+    const lookupElements = this.template.querySelectorAll(
+      "c-custom-look-up-generate"
+    );
+
+    let filledPlaceholdersData = {};
+    lookupElements.forEach((element) => {
+      // Access the @api getter from the child component
+      //console.log(element);
+      //const searchValue = element.currentSearchTerm;
+      //console.log(`Search Term: ${searchValue}`);
+
+      let placeHolderName = element.placeholderName;
+      let placeHolderValue = element.searchKey;
+      let selectedRole = element.selectedRole;
+      console.log("placeHolderName: ");
+      console.log(placeHolderName);
+      console.log("placeHolderValue");
+      console.log(placeHolderValue);
+      console.log("selectedRole");
+      console.log(selectedRole);
+      if (element.selectedRole) {
+        filledPlaceholdersData[placeHolderName] = selectedRole;
+      } else {
+        filledPlaceholdersData[placeHolderName] = placeHolderValue;
+      }
+    });
+    console.log("final placeholder data");
     console.log(filledPlaceholdersData);
+
+    // Use "this.template.querySelectorAll" to get all placeholder containers
+    /*const placeholderElements = this.template.querySelectorAll("div");
+    console.log(JSON.stringify(placeholderElements));
+
+    placeholderElements.forEach((element) => {
+      // Get the placeholder name from the <p> tag
+      const placeholderName = element.querySelector("p").textContent;
+
+      // Get the input field value or placeholder text
+      const inputElement = element.querySelector("input");
+      const inputValue = inputElement.value || inputElement.placeholder;
+
+      // Store the data in the results object
+      results[placeholderName] = inputValue;
+    });
+
+    // Log the results object to the console
+    console.log(results);*/
+
+    // If you need to return this data from the method
 
     /*let filledPlaceholdersData = await this.collectLookupValues();
     let valuesToSaveTemp = await this.collectLookupValuesToGenerate();
