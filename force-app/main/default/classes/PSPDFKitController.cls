@@ -249,4 +249,15 @@ global with sharing class PSPDFKitController {
     ];
     return templateRecord.PSPDFKit_TemplateJson__c;
   }
+
+  @AuraEnabled(cacheable=true)
+  public static String getAvailableObject(Id recordId) {
+    BD_Document_Templates__c templateRecord = [
+      SELECT BD_Available_On_Objects__c
+      FROM BD_Document_Templates__c
+      WHERE Id = :recordId
+      LIMIT 1
+    ];
+    return templateRecord.BD_Available_On_Objects__c;
+  }
 }

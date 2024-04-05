@@ -12,6 +12,7 @@ import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 import fetchDocumentTemplateNameAndFile from "@salesforce/apex/PSPDFKitController.fetchDocumentTemplateNameAndFile";
 import getTemplateJson from "@salesforce/apex/PSPDFKitController.getTemplateJson";
+import getAvailableObject from "@salesforce/apex/PSPDFKitController.getAvailableObject";
 
 import { updateRecord } from "lightning/uiRecordApi";
 
@@ -41,17 +42,17 @@ export default class PSPDFKitFileSelector extends LightningElement {
     },*/
   ];
 
-  /*@wire(getTemplateJson, { recordId: "$recordId" })
-  templateJson({ error, data }) {
+  @track availableObject;
+
+  @wire(getAvailableObject, { recordId: "$recordId" })
+  wiredAvailableObject({ error, data }) {
     if (data) {
-      //this.processTemplateJson(data);
-      console.log("...data fetched from json");
-      console.log(JSON.stringify(data));
+      this.availableObject = data;
     } else if (error) {
-      // handle the error properly
-      console.error("Error retrieving template JSON:", error);
+      // handle error
+      console.error("Error retrieving available object:", error);
     }
-  }*/
+  }
 
   connectedCallback() {
     // Add event listener for the message event
