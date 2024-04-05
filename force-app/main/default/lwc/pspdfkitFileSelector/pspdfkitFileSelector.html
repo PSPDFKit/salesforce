@@ -8,54 +8,8 @@
       </div>
 
       <div class="container">
-        <!--<div
-          class="fileUpload"
-          data-id="file"
-          ondragover={handleDragover}
-          ondrop={handleDrop}
-          onclick={handleClick}
-        >
-          <svg
-            class="icon"
-            width="72"
-            height="54"
-            viewBox="0 0 72 54"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M63.7705 26.1738C63.557 26.9565 63.8375 27.7906 64.4806 28.2852C67.9372 30.9442 70 34.88 70 39C70 46.2954 64.2954 52 57 52H18C9.20457 52 2 44.7954 2 36C2 27.7509 8.39681 20.7935 16.6926 19.9907C17.6493 19.8981 18.4048 19.1382 18.4918 18.1811C19.3021 9.26776 26.8775 2 36 2C42.9926 2 49.4644 6.31452 52.1538 12.7692C52.4644 13.5145 53.1926 14 54 14C57.2556 14 60.2562 15.4902 62.2825 18.2763C62.2864 18.2817 62.2904 18.2871 62.2944 18.2925C62.3032 18.3044 62.3122 18.3162 62.3213 18.3279C64.0033 20.4904 64.5188 23.4298 63.7705 26.1738Z"
-              stroke="#D7DCE4"
-              stroke-width="4"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M36 39.5V22M36 22L28 30M36 22L44 30"
-              stroke="#D7DCE4"
-              stroke-width="4"
-              stroke-linecap="round"
-            />
-          </svg>
 
-          <div>
-            <p class="heading_text">
-              Drop your document here, or <a class="link">browse</a>
-            </p>
-            <p class="heading_info">Supports PDF, JPG, PNG, TIF</p>
-          </div>
-        </div>
-
-        <p class="text">or</p>-->
-
-        <!--<lightning-button
-          class="button"
-          label="Open a file from Salesforce"
-          title="Primary action"
-          variant="brand"
-          stretch
-          onclick={handleOpenModal}
-        ></lightning-button>-->
-
+        <!-- //Open the document stored in the record -->
         <lightning-button
         class="button"
         label="Load Template"
@@ -64,14 +18,16 @@
         stretch
         onclick={loadTemplate}
       ></lightning-button>
-        <lightning-button
+      
+      <!-- // Open any document from Salesforce
+      <lightning-button
         class="button"
         label="Select Template"
         title="Primary action"
         variant="brand"
         stretch
         onclick={handleOpenModal}
-      ></lightning-button>
+      ></lightning-button>-->
 
         <template for:each={placeholders} for:item="placeholder">
           <div key={placeholder.key} class="slds-p-horizontal_medium slds-p-vertical_small">
@@ -80,19 +36,17 @@
                                value={placeholder.value} 
                                onchange={handleInputChange}>
               </lightning-input> Patient_Record__c -->
-              <p>{placeholder.key}</p>
               <c-custom-look-up
               object-api-name={objectApiName}
-              label="Test"
+              label={placeholder.key}
               onselection={handleSelection}
               onchange={handleSearchChange}
               data-key={placeholder.key} 
               search-key={placeholder.searchKey}
+              placeholder-name={placeholder.key}
              
               >
-            </c-custom-look-up><!--
-               
-              -->
+            </c-custom-look-up>
               
             
               

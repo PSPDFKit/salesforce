@@ -12,7 +12,7 @@ export default class CustomLookUp extends LightningElement {
   @api objectApiName;
   @track showDropdown = false;
   @api searchKey;
-  //@api dataKey;
+  @api placeholderName;
 
   @track selectedOption = ""; // To track the selected option from the dropdown
   @track dropdownOptions = [

@@ -11,6 +11,7 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 import fetchDocumentTemplateNameAndFile from "@salesforce/apex/PSPDFKitController.fetchDocumentTemplateNameAndFile";
+import getTemplateJson from "@salesforce/apex/PSPDFKitController.getTemplateJson";
 
 import { updateRecord } from "lightning/uiRecordApi";
 
@@ -33,12 +34,24 @@ export default class PSPDFKitFileSelector extends LightningElement {
   }
 
   @track placeholders = [
-    {
+    /*{
       key: "key",
       value: "Test",
       searchKey: "",
-    },
+    },*/
   ];
+
+  /*@wire(getTemplateJson, { recordId: "$recordId" })
+  templateJson({ error, data }) {
+    if (data) {
+      //this.processTemplateJson(data);
+      console.log("...data fetched from json");
+      console.log(JSON.stringify(data));
+    } else if (error) {
+      // handle the error properly
+      console.error("Error retrieving template JSON:", error);
+    }
+  }*/
 
   connectedCallback() {
     // Add event listener for the message event
@@ -58,15 +71,45 @@ export default class PSPDFKitFileSelector extends LightningElement {
     const messageData = event.data;
     const data = JSON.parse(JSON.stringify(messageData));
 
+    // Pre-fill searchKey, if they already exist
+    //getTemplateJson
+
     if (data && data.value) {
       this.placeholders = Object.keys(data.value).map((key) => {
         return {
           key: key,
           value: "Test",
-          searchKey: "",
+          searchKey: "", // to be filled later by  this.fetchAndProcessTemplateJson()
         };
       });
+
+      this.fetchAndProcessTemplateJson();
     }
+  }
+
+  fetchAndProcessTemplateJson() {
+    getTemplateJson({ recordId: this.recordId })
+      .then((result) => {
+        // Parse the JSON string into an array
+        const templateArray = JSON.parse(result);
+
+        // Create a map for quick searchKey lookup by placeholder
+        const searchKeyMap = new Map(
+          templateArray.map((item) => [item.placeHolder, item.databaseField])
+        );
+
+        // Now, go over the placeholders and fill in the searchKeys
+        this.placeholders = this.placeholders.map((placeholder) => ({
+          ...placeholder,
+          searchKey: searchKeyMap.get(placeholder.key) || "",
+        }));
+
+        // If you need to trigger a re-render or notify the component of the change
+        this.placeholders = [...this.placeholders];
+      })
+      .catch((error) => {
+        console.error("Error fetching template JSON:", error);
+      });
   }
 
   handleInputChange(event) {
@@ -191,13 +234,13 @@ export default class PSPDFKitFileSelector extends LightningElement {
     console.log(valuesToSave);
     console.log(this.record);
 
-    this.fileName = "test";
+    /*this.fileName = "test";
     let templateObject = {
       [this.fileName]: valuesToSave,
-    };
+    };*/
 
     // Save them to the hidden field in Salesforce
-    let jsonString = JSON.stringify(templateObject);
+    let jsonString = JSON.stringify(valuesToSave);
     let recordInput = {
       fields: {
         Id: this.record.data.id,
