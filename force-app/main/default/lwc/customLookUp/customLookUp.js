@@ -42,8 +42,10 @@ export default class CustomLookUp extends LightningElement {
     //this.retrieveObjectFields();
 
     if (this.searchTerm.length > 2 && this.isValueSelected === false) {
-      this.retrieveObjectFields();
-      this.retrieveObjectRoleFields();
+      // These fields should be queried by the parent object and then
+      // just filtered here
+      //this.retrieveObjectFields();
+      //this.retrieveObjectRoleFields();
       //
     } else {
       this.searchResults = [];

@@ -260,4 +260,49 @@ global with sharing class PSPDFKitController {
     ];
     return templateRecord.BD_Available_On_Objects__c;
   }
+
+  @AuraEnabled(cacheable=true)
+  public static Map<String, List<String>> getRelatedObjectFields(Id recordId) {
+    // Fetch the record with the Related_Objects__c field
+    BD_Document_Templates__c templateRecord = [
+      SELECT Related_Objects__c
+      FROM BD_Document_Templates__c
+      WHERE Id = :recordId
+      LIMIT 1
+    ];
+
+    Map<String, List<String>> objectFieldsMap = new Map<String, List<String>>();
+    if (templateRecord.Related_Objects__c != null) {
+      // Split the Related_Objects__c field into individual object API names
+      List<String> relatedObjects = templateRecord.Related_Objects__c.split(
+        ';'
+      );
+
+      // Process each object name
+      for (String objectName : relatedObjects) {
+        objectName = objectName.trim(); // Clean up any extra whitespace
+        List<String> fieldsList = getFieldNamesForSObject(objectName);
+        if (fieldsList != null) {
+          objectFieldsMap.put(objectName, fieldsList);
+        }
+      }
+    }
+    return objectFieldsMap;
+  }
+
+  private static List<String> getFieldNamesForSObject(String objectApiName) {
+    Map<String, Schema.SObjectType> globalDescribe = Schema.getGlobalDescribe();
+    Schema.SObjectType sObjectType = globalDescribe.get(objectApiName);
+    if (sObjectType != null) {
+      Schema.DescribeSObjectResult describeResult = sObjectType.getDescribe();
+      List<String> fieldNames = new List<String>();
+      for (
+        Schema.SObjectField field : describeResult.fields.getMap().values()
+      ) {
+        fieldNames.add(field.getDescribe().getName());
+      }
+      return fieldNames;
+    }
+    return null; // Return null if object name is not valid
+  }
 }

@@ -13,6 +13,9 @@ import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 import fetchDocumentTemplateNameAndFile from "@salesforce/apex/PSPDFKitController.fetchDocumentTemplateNameAndFile";
 import getTemplateJson from "@salesforce/apex/PSPDFKitController.getTemplateJson";
 import getAvailableObject from "@salesforce/apex/PSPDFKitController.getAvailableObject";
+import getRelatedObjectFields from "@salesforce/apex/PSPDFKitController.getRelatedObjectFields";
+
+import getJunctionAndRoleFields from "@salesforce/apex/ObjectFieldRetriever.getJunctionAndRoleFields";
 
 import { updateRecord } from "lightning/uiRecordApi";
 
@@ -51,6 +54,32 @@ export default class PSPDFKitFileSelector extends LightningElement {
     } else if (error) {
       // handle error
       console.error("Error retrieving available object:", error);
+    }
+  }
+
+  @track dropDownFields;
+  @wire(getJunctionAndRoleFields, {})
+  wiredAvailableObject({ error, data }) {
+    if (data) {
+      this.dropDownFields = data;
+      console.log("dropdown fields");
+      console.log(JSON.stringify(this.dropDownFields));
+    } else if (error) {
+      // handle error
+      console.error("Error retrieving available object:", error);
+    }
+  }
+
+  @track relatedObjects;
+  @wire(getRelatedObjectFields, { recordId: "$recordId" })
+  wiredRelatedObject({ error, data }) {
+    if (data) {
+      console.log("related objects");
+      this.relatedObjects = data;
+      console.log(JSON.stringify(this.relatedObjects));
+    } else if (error) {
+      // handle error
+      console.error("Error retrieving related objects:", error);
     }
   }
 
