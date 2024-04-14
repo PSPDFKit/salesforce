@@ -26,10 +26,17 @@
             <div id="listbox-id-1" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox" style="display:flex">
                 <ul class="slds-listbox slds-listbox_vertical" role="group" aria-label="Suggested for you">
                     <template for:each={searchResults} for:item="result">
-                        <li key={result.Id} data-id={result.Id} role="presentation" class="slds-listbox__item">
+                        <!--<li key={result.Id} data-id={result.Id} role="presentation" class="slds-listbox__item">
                             <div id={result.Id} name={result.Name} data-id={result.Id} class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small slds-media_center" role="option">
                                 <span class="slds-media__body" data-id={result.Id}>
                                     <div onclick={handleSelect} data-id={result.Id} data-name={result.Name}>{result.Name}</div>
+                                </span>
+                            </div>
+                        </li>-->
+                        <li key={result} data-id={result} role="presentation" class="slds-listbox__item">
+                            <div id={result} name={result} data-id={result} class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small slds-media_center" role="option">
+                                <span class="slds-media__body" data-id={result}>
+                                    <div onclick={handleSelect} data-id={result} data-name={result}>{result}</div>
                                 </span>
                             </div>
                         </li>

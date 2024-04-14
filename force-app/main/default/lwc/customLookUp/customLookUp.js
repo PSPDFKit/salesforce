@@ -13,6 +13,7 @@ export default class CustomLookUp extends LightningElement {
   @track showDropdown = false;
   @api searchKey;
   @api placeholderName;
+  @api dropdownValues;
 
   @track selectedOption = ""; // To track the selected option from the dropdown
   @track dropdownOptions = [
@@ -28,6 +29,25 @@ export default class CustomLookUp extends LightningElement {
   }
 
   handleSearchChange(event) {
+    console.log("dropdown Values sent:");
+    //console.log(this.dropdownValues);
+
+    let transformedFields = [];
+
+    // Iterate through each object key in the map
+    Object.keys(this.dropdownValues).forEach((objectName) => {
+      // Get the list of fields for the current object
+      let fields = this.dropdownValues[objectName];
+
+      // Concatenate each field name with the object name and add to the transformed list
+      fields.forEach((field) => {
+        transformedFields.push(`${objectName}: ${field}`);
+      });
+    });
+
+    this.searchResults = transformedFields;
+    //console.log(JSON.stringify(this.searchResults));
+
     console.log("objectApiName set: ");
     console.log(this.objectApiName);
     console.log("handle search change of customLookUp");
@@ -48,7 +68,7 @@ export default class CustomLookUp extends LightningElement {
       //this.retrieveObjectRoleFields();
       //
     } else {
-      this.searchResults = [];
+      //this.searchResults = [];
     }
   }
 
