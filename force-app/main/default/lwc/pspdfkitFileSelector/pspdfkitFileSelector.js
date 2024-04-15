@@ -75,7 +75,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
   @track relatedObjects;
   @wire(getRelatedObjectFields, {
     recordId: "$recordId",
-    availableObject: this.availableObject,
+    availableObject: "$availableObject",
   })
   wiredRelatedObject({ error, data }) {
     if (data) {

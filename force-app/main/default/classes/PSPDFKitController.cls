@@ -262,7 +262,10 @@ global with sharing class PSPDFKitController {
   }
 
   @AuraEnabled(cacheable=true)
-  public static Map<String, List<String>> getRelatedObjectFields(Id recordId) {
+  public static Map<String, List<String>> getRelatedObjectFields(
+    Id recordId,
+    String availableObject
+  ) {
     // Fetch the record with the Related_Objects__c field
     BD_Document_Templates__c templateRecord = [
       SELECT Related_Objects__c
@@ -287,6 +290,17 @@ global with sharing class PSPDFKitController {
         }
       }
     }
+
+    // Additional logic to get fields for the availableObject if it's provided
+    if (String.isNotBlank(availableObject)) {
+      List<String> availableObjectFields = getFieldNamesForSObject(
+        availableObject
+      );
+      if (availableObjectFields != null) {
+        objectFieldsMap.put(availableObject, availableObjectFields);
+      }
+    }
+
     return objectFieldsMap;
   }
 
