@@ -28,14 +28,14 @@ export default class CustomLookUp extends LightningElement {
     console.log(this.selectedOption);
   }
 
-  handleSearchChange(event) {
+  async handleSearchChange(event) {
     console.log("dropdown Values sent:");
     //console.log(this.dropdownValues);
 
     let transformedFields = [];
 
     // Iterate through each object key in the map
-    Object.keys(this.dropdownValues).forEach((objectName) => {
+    await Object.keys(this.dropdownValues).forEach((objectName) => {
       // Get the list of fields for the current object
       let fields = this.dropdownValues[objectName];
 
@@ -45,7 +45,7 @@ export default class CustomLookUp extends LightningElement {
       });
     });
 
-    this.searchResults = transformedFields;
+    //this.searchResults = transformedFields;
     //console.log(JSON.stringify(this.searchResults));
 
     console.log("objectApiName set: ");
@@ -60,15 +60,17 @@ export default class CustomLookUp extends LightningElement {
     console.log("this is the search term: ");
     console.log(this.searchTerm);
     //this.retrieveObjectFields();
+    console.log(this.isValueSelected);
 
-    if (this.searchTerm.length > 2 && this.isValueSelected === false) {
+    if (this.searchTerm.length > 1 && this.isValueSelected === false) {
       // These fields should be queried by the parent object and then
       // just filtered here
       //this.retrieveObjectFields();
       //this.retrieveObjectRoleFields();
-      //
+
+      this.filterFields(transformedFields);
     } else {
-      //this.searchResults = [];
+      this.searchResults = [];
     }
   }
 
@@ -94,12 +96,9 @@ export default class CustomLookUp extends LightningElement {
   filterFields(fields) {
     console.log("filtering");
     const searchTermLower = this.searchTerm.toLowerCase();
-    let filteredResults = fields
-      .filter((field) => field.toLowerCase().includes(searchTermLower))
-      .map((field) => ({
-        Id: field, // Use the field API name as Id
-        Name: field, // Also use the field API name as Name for display
-      }));
+    let filteredResults = fields.filter((field) =>
+      field.toLowerCase().includes(searchTermLower)
+    );
 
     console.log(filteredResults);
     this.searchResults = filteredResults;
