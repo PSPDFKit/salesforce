@@ -319,4 +319,66 @@ global with sharing class PSPDFKitController {
     }
     return null; // Return null if object name is not valid
   }
+
+  @AuraEnabled(cacheable=true)
+  public static String getDocumentTemplateJsonByDocumentId(Id documentId) {
+    // Fetch the document name from the ContentDocument object using the document ID
+    ContentDocument document = [
+      SELECT Title
+      FROM ContentDocument
+      WHERE Id = :documentId
+      LIMIT 1
+    ];
+
+    // Now use the document Title to find the corresponding Document Template record
+    if (document != null) {
+      BD_Document_Templates__c template = [
+        SELECT PSPDFKit_TemplateJson__c
+        FROM BD_Document_Templates__c
+        WHERE Name = :document.Title
+        LIMIT 1
+      ];
+
+      if (template != null) {
+        // Return the PSPDFKit_TemplateJson__c field's value
+        return template.PSPDFKit_TemplateJson__c;
+      }
+    }
+    // Return null or an appropriate error message if not found
+    return null;
+  }
+
+  @AuraEnabled(cacheable=true)
+  public static Object getRecordValue(
+    String tableName,
+    String fieldName,
+    Id recordId
+  ) {
+    // Construct SOQL query to fetch a single record field value
+    SObject record = Database.query(
+      'SELECT ' + fieldName + ' FROM ' + tableName + ' WHERE Id = :recordId'
+    );
+    return record.get(fieldName);
+  }
+
+  @AuraEnabled(cacheable=true)
+  public static List<String> getRecordList(
+    String tableName,
+    String databaseField,
+    Id caseId
+  ) {
+    // Use "Case__c" as the relationship field for role-related queries
+    List<SObject> records = Database.query(
+      'SELECT ' +
+        databaseField +
+        ' FROM ' +
+        tableName +
+        ' WHERE Case__c = :caseId'
+    );
+    List<String> values = new List<String>();
+    for (SObject record : records) {
+      values.add((String) record.get(databaseField));
+    }
+    return values;
+  }
 }

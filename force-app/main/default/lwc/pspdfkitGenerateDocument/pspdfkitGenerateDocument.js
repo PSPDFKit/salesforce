@@ -8,7 +8,31 @@ import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 import PSPDFKit_TemplateJson__c from "@salesforce/schema/CMS_Case__c.PSPDFKit_TemplateJson__c";
 
+import getDocumentTemplateJsonByDocumentId from "@salesforce/apex/PSPDFKitController.getDocumentTemplateJsonByDocumentId";
+import getRecordValue from "@salesforce/apex/PSPDFKitController.getRecordValue";
+import getRecordList from "@salesforce/apex/PSPDFKitController.getRecordList";
+
 export default class PSPDFKitGenerateDocument extends LightningElement {
+  @api documentId;
+
+  // Use wire service to automatically call the Apex method when documentId is set
+  @wire(getDocumentTemplateJsonByDocumentId, { documentId: "$documentId" })
+  wiredDocumentTemplateJson({ error, data }) {
+    if (data) {
+      this.placeholders = JSON.parse(data);
+      console.log("Template JSON:", this.placeholders);
+
+      this.getAllRecordsNew();
+      //console.log("recordValues received");
+      //console.log(recordValues);
+      //this.placeholdersGenerated = recordValues;
+
+      //getAllRecordsNew();
+    } else if (error) {
+      console.error("Error retrieving document template JSON:", error);
+    }
+  }
+
   fileContents;
   @track fileName;
   @track openModalGenerate = false;
@@ -23,7 +47,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     this.dropdownOptions = [...newOptions];
   }*/
 
-  @wire(getRecord, {
+  /*@wire(getRecord, {
     recordId: "$recordId",
     fields: [PSPDFKit_TemplateJson__c],
   })
@@ -36,13 +60,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log("fetched data from Salesforce");
       console.log(data);
       const jsonString = data.fields.PSPDFKit_TemplateJson__c.value;
-      /*const jsonString = getFieldDisplayValue(
-        data,
-        PSPDFKit_TemplateJson_FIELD
-      );*/
+
       this.templateData = jsonString ? JSON.parse(jsonString) : {};
     }
-  }
+  }*/
 
   @wire(getRecord, {
     recordId: "$recordId",
@@ -74,7 +95,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   connectedCallback() {
     // Add event listener for the message event
-    window.addEventListener("message", this.handleMessageFromVf.bind(this));
+    //window.addEventListener("message", this.handleMessageFromVf.bind(this));
   }
 
   disconnectedCallback() {
@@ -689,12 +710,80 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log("result of getRoleFields:", resultRoles);*/
   }
 
+  async getAllRecordsNew() {
+    const results = [];
+
+    for (const {
+      databaseField,
+      placeHolder,
+      selectAtGenerate,
+      tableName,
+    } of this.placeholders) {
+      if (selectAtGenerate) {
+        // Fetch list of possible values for dropdown
+        try {
+          const dropdownValues = await getRecordList({
+            tableName,
+            databaseField,
+            recordId: this.recordId,
+          });
+          results.push({
+            placeHolder,
+            values: dropdownValues,
+            isDropdown: true,
+          });
+        } catch (error) {
+          console.error(
+            `Error fetching dropdown values for ${placeHolder}:`,
+            error
+          );
+          results.push({
+            placeHolder,
+            values: [],
+            error: `Error fetching data: ${error.message}`,
+            isDropdown: true,
+          });
+        }
+      } else {
+        // Fetch single value
+        try {
+          const value = await getRecordValue({
+            tableName,
+            fieldName: databaseField,
+            recordId: this.recordId,
+          });
+          results.push({
+            placeHolder,
+            value,
+            isDropdown: false,
+          });
+        } catch (error) {
+          console.error(`Error fetching value for ${placeHolder}:`, error);
+          results.push({
+            placeHolder,
+            value: null,
+            error: `Error fetching data: ${error.message}`,
+            isDropdown: false,
+          });
+        }
+      }
+    }
+
+    console.log("Fetched data:", results);
+    this.placeholdersGenerated = results;
+    return results;
+  }
+
   async selectTemplateGenerate(event) {
     this.event = event;
     this.openModalGenerate = false;
 
     console.log("template for generation selected");
-    console.log("loading pre-saved data now");
+
+    console.log(event);
+    this.documentId = event.detail;
+
+    /*console.log("loading pre-saved data now");
 
     const savedTemplateData = this.templateData;
 
