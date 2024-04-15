@@ -62,8 +62,8 @@ export default class PSPDFKitFileSelector extends LightningElement {
   wiredAvailableObject({ error, data }) {
     if (data) {
       this.dropDownFields = data;
-      console.log("dropdown fields");
-      console.log(JSON.stringify(this.dropDownFields));
+      //console.log("dropdown fields");
+      //console.log(JSON.stringify(this.dropDownFields));
     } else if (error) {
       // handle error
       console.error("Error retrieving available object:", error);
@@ -77,6 +77,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
       console.log("related objects");
       this.relatedObjects = data;
       console.log(JSON.stringify(this.relatedObjects));
+      //this.dropDownFields = data;
     } else if (error) {
       // handle error
       console.error("Error retrieving related objects:", error);
@@ -125,7 +126,12 @@ export default class PSPDFKitFileSelector extends LightningElement {
 
         // Create a map for quick searchKey lookup by placeholder
         const searchKeyMap = new Map(
-          templateArray.map((item) => [item.placeHolder, item.databaseField])
+          templateArray.map((item) => [
+            item.placeHolder,
+            item.databaseField
+              ? item.tableName + ": " + item.databaseField
+              : "",
+          ])
         );
 
         // Now, go over the placeholders and fill in the searchKeys
@@ -384,10 +390,41 @@ export default class PSPDFKitFileSelector extends LightningElement {
 
       // Get the key (placeholder name) associated with this lookup
       const keyValue = element.getAttribute("data-key");
-      console.log(`Key Value: ${keyValue}, Search Value: ${searchValue}`);
+      const placeholder = element.currentSearchKey;
+
+      console.log(
+        `Key Value: ${keyValue}, Search Value: ${searchValue}, Placeholder: ${placeholder}`
+      );
+
+      //let parts = value.split(":").map((part) => part.trim()); // Split the string on ':' and trim whitespace
+
+      console.log("available object when saving");
+      console.log(element.objectApiName);
+
+      if (searchValue !== "") {
+        let parts = searchValue.split(":").map((part) => part.trim());
+        let tableName = parts[0]; // Before the ':'
+        let databaseField = parts[1]; // After the ':'
+
+        searchTerms.push({
+          placeHolder: keyValue,
+          databaseField: databaseField,
+          tableName: tableName,
+        });
+      } else {
+        let parts = placeholder.split(":").map((part) => part.trim());
+        let tableName = parts[0]; // Before the ':'
+        let databaseField = parts[1]; // After the ':'
+
+        searchTerms.push({
+          placeHolder: keyValue,
+          databaseField: databaseField,
+          tableName: tableName,
+        });
+      }
 
       // Check if searchValue contains "Role:" and process accordingly
-      if (searchValue && searchValue.includes("Role:")) {
+      /*if (searchValue && searchValue.includes("Role:")) {
         // If it does contain "Role:", remove "Role: " from the searchValue
         //const cleanedSearchValue = searchValue.replace("Role: ", "");
         const cleanedSearchValue = searchValue;
@@ -403,7 +440,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
           databaseField: searchValue,
           tableName: this.objectApiName, // Use the object API name from the component's property
         });
-      }
+      }*/
     });
 
     console.log("search terms to be saved: ");

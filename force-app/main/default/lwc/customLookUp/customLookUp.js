@@ -210,4 +210,9 @@ export default class CustomLookUp extends LightningElement {
   get currentSearchTerm() {
     return this.searchTerm;
   }
+
+  @api
+  get currentSearchKey() {
+    return this.searchKey;
+  }
 }
