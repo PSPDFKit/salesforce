@@ -49,6 +49,8 @@ export default class PSPDFKitFileSelector extends LightningElement {
 
   @wire(getAvailableObject, { recordId: "$recordId" })
   wiredAvailableObject({ error, data }) {
+    console.log("---got available object");
+    console.log(data);
     if (data) {
       this.availableObject = data;
     } else if (error) {
@@ -57,7 +59,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     }
   }
 
-  @track dropDownFields;
+  /*@track dropDownFields;
   @wire(getJunctionAndRoleFields, {})
   wiredAvailableObject({ error, data }) {
     if (data) {
@@ -68,15 +70,18 @@ export default class PSPDFKitFileSelector extends LightningElement {
       // handle error
       console.error("Error retrieving available object:", error);
     }
-  }
+  }*/
 
   @track relatedObjects;
-  @wire(getRelatedObjectFields, { recordId: "$recordId" })
+  @wire(getRelatedObjectFields, {
+    recordId: "$recordId",
+    availableObject: this.availableObject,
+  })
   wiredRelatedObject({ error, data }) {
     if (data) {
       console.log("related objects");
       this.relatedObjects = data;
-      console.log(JSON.stringify(this.relatedObjects));
+      //console.log(JSON.stringify(this.relatedObjects));
       //this.dropDownFields = data;
     } else if (error) {
       // handle error
@@ -399,27 +404,46 @@ export default class PSPDFKitFileSelector extends LightningElement {
       //let parts = value.split(":").map((part) => part.trim()); // Split the string on ':' and trim whitespace
 
       console.log("available object when saving");
-      console.log(element.objectApiName);
+      //console.log(element.objectApiName);
+      console.log(this.availableObject);
+
+      // If the available object is the same
+      // as the tableName, it's a regular field
+      // otherwise it's a field that can have
+      // multiple options and has to be selected
+      // at the time of generating the document
 
       if (searchValue !== "") {
         let parts = searchValue.split(":").map((part) => part.trim());
         let tableName = parts[0]; // Before the ':'
         let databaseField = parts[1]; // After the ':'
 
+        let tableNameDifferent = false;
+        if (this.availableObject !== tableName) {
+          tableNameDifferent = true;
+        }
+
         searchTerms.push({
           placeHolder: keyValue,
           databaseField: databaseField,
           tableName: tableName,
+          selectAtGenerate: tableNameDifferent,
         });
       } else {
         let parts = placeholder.split(":").map((part) => part.trim());
         let tableName = parts[0]; // Before the ':'
         let databaseField = parts[1]; // After the ':'
 
+        let tableNameDifferent = false;
+        if (this.availableObject !== tableName) {
+          tableNameDifferent = true;
+        }
+
         searchTerms.push({
           placeHolder: keyValue,
           databaseField: databaseField,
           tableName: tableName,
+          selectAtGenerate: tableNameDifferent,
         });
       }
 
