@@ -18,23 +18,23 @@
         onclick={handleOpenModalGenerate}
       ></lightning-button>
 
-        <template for:each={placeholdersWithDropdownOptions} for:item="placeholderGenerated">
-          <div key={placeholderGenerated.key} class="slds-p-horizontal_medium slds-p-vertical_small">
+        <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
+          <div key={placeholderGenerated.placeholder} class="slds-p-horizontal_medium slds-p-vertical_small">
               <!--<lightning-input label={placeholder.key} 
                                data-key={placeholder.key}
                                value={placeholder.value} 
                                onchange={handleInputChange}>
               </lightning-input> Patient_Record__c -->
-              <p>{placeholderGenerated.key}</p>
+              <p>{placeholderGenerated.placeholder}</p>
               <c-custom-look-up-generate
               object-api-name={objectApiName}
               label="Test"
               onselection={handleSelection}
               onchange={handleSearchChangeGenerated}
-              placeholder-name={placeholderGenerated.key}
-              data-key={placeholderGenerated.key} 
+              placeholder-name={placeholderGenerated.placeholder}
+              data-key={placeholderGenerated.placeholder} 
               search-key={placeholderGenerated.value}
-              drop-down-options-api={placeholderGenerated.dropdownOptions}
+              drop-down-options-api={placeholderGenerated.values}
               >
             </c-custom-look-up-generate><!--
                

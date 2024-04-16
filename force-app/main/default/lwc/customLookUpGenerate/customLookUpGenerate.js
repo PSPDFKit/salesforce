@@ -21,6 +21,8 @@ export default class CustomLookUp extends LightningElement {
 
   @api
   get dropDownOptionsApi() {
+    console.log("dropdown options set");
+    console.log(dropdownOptions);
     return this.dropdownOptions;
   }
 

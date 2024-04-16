@@ -19,7 +19,15 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @wire(getDocumentTemplateJsonByDocumentId, { documentId: "$documentId" })
   wiredDocumentTemplateJson({ error, data }) {
     if (data) {
-      this.placeholders = JSON.parse(data);
+      let placeholders = JSON.parse(data);
+
+      this.placeholders = placeholders.map((item) => ({
+        placeholder: item.placeHolder,
+        databaseField: item.databaseField,
+        tableName: item.tableName,
+        selectAtGenerate: item.selectAtGenerate,
+      }));
+
       console.log("Template JSON:", this.placeholders);
 
       this.getAllRecordsNew();
@@ -122,7 +130,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     if (data && data.value) {
       this.placeholdersGenerated = Object.keys(data.value).map((key) => {
         const savedValue = savedTemplateData.find(
-          (item) => item.placeHolder === key
+          (item) => item.placeholder === key
         );
         console.log(savedValue);
         return {
@@ -260,7 +268,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log(keyValue);
       if (keyValue) {
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: searchValue,
           value: "",
         });
@@ -323,7 +331,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log("Updated lookupResults:", searchTerms);
 
         const transformedArray = searchTerms.map((item) => ({
-          key: item.placeHolder, // Mapping placeHolder to key
+          key: item.placeholder, // Mapping placeholder to key
           value: item.value, // Keeping value as is
         }));
 
@@ -355,14 +363,14 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         // If it does contain "Role:", remove "Role: " from the searchValue
         const cleanedSearchValue = searchValue.replace("Role: ", "");
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: cleanedSearchValue, // Assuming you want the cleaned value
           tableName: "CMS_Role__c", // Assuming this is the correct table to use for role-based values
         });
       } else {
         // If it does not contain "Role:", use the original logic
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: searchValue,
           tableName: this.objectApiName, // Use the object API name from the component's property
         });
@@ -463,19 +471,19 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       //const searchValue = element.currentSearchTerm;
       //console.log(`Search Term: ${searchValue}`);
 
-      let placeHolderName = element.placeholderName;
-      let placeHolderValue = element.searchKey;
+      let placeholderName = element.placeholderName;
+      let placeholderValue = element.searchKey;
       let selectedRole = element.selectedRole;
-      console.log("placeHolderName: ");
-      console.log(placeHolderName);
-      console.log("placeHolderValue");
-      console.log(placeHolderValue);
+      console.log("placeholderName: ");
+      console.log(placeholderName);
+      console.log("placeholderValue");
+      console.log(placeholderValue);
       console.log("selectedRole");
       console.log(selectedRole);
       if (element.selectedRole) {
-        filledPlaceholdersData[placeHolderName] = selectedRole;
+        filledPlaceholdersData[placeholderName] = selectedRole;
       } else {
-        filledPlaceholdersData[placeHolderName] = placeHolderValue;
+        filledPlaceholdersData[placeholderName] = placeholderValue;
       }
     });
     console.log("final placeholder data");
@@ -657,7 +665,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log(keyValue);
       if (keyValue) {
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: searchValue,
           value: "",
         });
@@ -715,7 +723,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     for (const {
       databaseField,
-      placeHolder,
+      placeholder,
       selectAtGenerate,
       tableName,
     } of this.placeholders) {
@@ -728,17 +736,17 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             recordId: this.recordId,
           });
           results.push({
-            placeHolder,
+            placeholder,
             values: dropdownValues,
             isDropdown: true,
           });
         } catch (error) {
           console.error(
-            `Error fetching dropdown values for ${placeHolder}:`,
+            `Error fetching dropdown values for placeholder:`,
             error
           );
           results.push({
-            placeHolder,
+            placeholder,
             values: [],
             error: `Error fetching data: ${error.message}`,
             isDropdown: true,
@@ -753,14 +761,14 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             recordId: this.recordId,
           });
           results.push({
-            placeHolder,
+            placeholder,
             value,
             isDropdown: false,
           });
         } catch (error) {
-          console.error(`Error fetching value for ${placeHolder}:`, error);
+          console.error(`Error fetching value for ${placeholder}:`, error);
           results.push({
-            placeHolder,
+            placeholder,
             value: null,
             error: `Error fetching data: ${error.message}`,
             isDropdown: false,
@@ -771,6 +779,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
+    console.log("these are the new placeholders generated:");
+    console.log(JSON.stringify(this.placeholdersGenerated));
     return results;
   }
 
@@ -792,7 +802,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     if (savedTemplateData["test"]) {
       this.placeholdersGenerated = savedTemplateData["test"].map((item) => {
         return {
-          key: item.placeHolder,
+          key: item.placeholder,
           value: "Test",
           searchTerm: item.databaseField ? item.databaseField : "", // Use databaseField directly from savedTemplateData
         };
