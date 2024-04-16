@@ -1,5 +1,7 @@
 <template>
     <lightning-card>
+        <!-- Inline style for scrolling added to the div wrapper -->
+        <div style="max-height: 600px; overflow-y: auto;">
         <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
             <thead>
                 <tr class="slds-line-height_reset ">
@@ -36,5 +38,6 @@
         <template if:true={noRecordFound}>
             <div class="slds-align_absolute-center" style="height:5rem">No Record Found</div>
         </template>
+    </div>
     </lightning-card>
 </template>
