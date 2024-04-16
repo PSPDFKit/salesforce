@@ -19,14 +19,16 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @wire(getDocumentTemplateJsonByDocumentId, { documentId: "$documentId" })
   wiredDocumentTemplateJson({ error, data }) {
     if (data) {
-      let placeholders = JSON.parse(data);
+      console.log("data before");
+      console.log(data);
+      this.placeholders = JSON.parse(data);
 
-      this.placeholders = placeholders.map((item) => ({
+      /*this.placeholders = placeholders.map((item) => ({
         placeholder: item.placeHolder,
         databaseField: item.databaseField,
         tableName: item.tableName,
         selectAtGenerate: item.selectAtGenerate,
-      }));
+      }));*/
 
       console.log("Template JSON:", this.placeholders);
 
