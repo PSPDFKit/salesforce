@@ -10,7 +10,7 @@ import { api } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
-import fetchDocumentTemplateNameAndFile from "@salesforce/apex/PSPDFKitController.fetchDocumentTemplateNameAndFile";
+import fetchAttachedDocumentFile from "@salesforce/apex/PSPDFKitController.fetchAttachedDocumentFile";
 import getTemplateJson from "@salesforce/apex/PSPDFKitController.getTemplateJson";
 import getAvailableObject from "@salesforce/apex/PSPDFKitController.getAvailableObject";
 import getRelatedObjectFields from "@salesforce/apex/PSPDFKitController.getRelatedObjectFields";
@@ -132,7 +132,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
         // Create a map for quick searchKey lookup by placeholder
         const searchKeyMap = new Map(
           templateArray.map((item) => [
-            item.placeHolder,
+            item.placeholder,
             item.databaseField
               ? item.tableName + ": " + item.databaseField
               : "",
@@ -309,7 +309,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
       console.log(keyValue);
       if (keyValue) {
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: searchValue,
           value: "",
         });
@@ -372,7 +372,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
         console.log("Updated lookupResults:", searchTerms);
 
         const transformedArray = searchTerms.map((item) => ({
-          key: item.placeHolder, // Mapping placeHolder to key
+          key: item.placeholder, // Mapping placeholder to key
           value: item.value, // Keeping value as is
         }));
 
@@ -424,7 +424,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
         }
 
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: databaseField,
           tableName: tableName,
           selectAtGenerate: tableNameDifferent,
@@ -440,7 +440,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
         }
 
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: databaseField,
           tableName: tableName,
           selectAtGenerate: tableNameDifferent,
@@ -453,14 +453,14 @@ export default class PSPDFKitFileSelector extends LightningElement {
         //const cleanedSearchValue = searchValue.replace("Role: ", "");
         const cleanedSearchValue = searchValue;
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: cleanedSearchValue, // Assuming you want the cleaned value
           tableName: "CMS_Role__c", // Assuming this is the correct table to use for role-based values
         });
       } else {
         // If it does not contain "Role:", use the original logic
         searchTerms.push({
-          placeHolder: keyValue,
+          placeholder: keyValue,
           databaseField: searchValue,
           tableName: this.objectApiName, // Use the object API name from the component's property
         });
@@ -535,7 +535,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     }
 
     try {
-      let documentData = await fetchDocumentTemplateNameAndFile({
+      let documentData = await fetchAttachedDocumentFile({
         recordId: this.recordId,
       });
 
