@@ -110,16 +110,39 @@ export default class PSPDFKitFileSelector extends LightningElement {
     // Pre-fill searchKey, if they already exist
     //getTemplateJson
 
+    console.log(data);
+
     if (data && data.value) {
-      this.placeholders = Object.keys(data.value).map((key) => {
-        return {
-          key: key,
-          value: "Test",
-          searchKey: "", // to be filled later by  this.fetchAndProcessTemplateJson()
-        };
+      this.placeholders = Object.keys(data.value).map((fullKey) => {
+        const parts = fullKey.split("+"); // Splitting the string by "+"
+        if (parts.length === 2) {
+          console.log("after splitting");
+          console.log(parts[1]); // This should now be the searchKey
+          return {
+            key: parts[0].trim(), // Remove any potential whitespace around the key
+            value: "Test", // The value you want to set
+            searchKey: parts[1].trim(), // Remove any potential whitespace around the searchKey
+          };
+        } else {
+          // Handle the error or provide default values
+          console.error("Invalid format for key: " + fullKey);
+          return {
+            key: fullKey, // Fallback to the fullKey if the format is not as expected
+            value: "Test",
+            searchKey: "", // No searchKey available
+          };
+        }
       });
 
-      this.fetchAndProcessTemplateJson();
+      console.log("placeholders set");
+      console.log(this.placeholders);
+
+      // Don't fetch JSON from Salesforce anymore, but
+      // always load it from the document.
+      //this.fetchAndProcessTemplateJson();
+    } else {
+      console.log("placeholder not set");
+      console.log(data.value);
     }
   }
 
@@ -414,7 +437,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
       // at the time of generating the document
 
       if (searchValue !== "") {
-        let parts = searchValue.split(":").map((part) => part.trim());
+        let parts = searchValue.split(".").map((part) => part.trim());
         let tableName = parts[0]; // Before the ':'
         let databaseField = parts[1]; // After the ':'
 
@@ -430,7 +453,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
           selectAtGenerate: tableNameDifferent,
         });
       } else {
-        let parts = placeholder.split(":").map((part) => part.trim());
+        let parts = placeholder.split(".").map((part) => part.trim());
         let tableName = parts[0]; // Before the ':'
         let databaseField = parts[1]; // After the ':'
 

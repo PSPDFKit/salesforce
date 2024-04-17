@@ -41,7 +41,7 @@ export default class CustomLookUp extends LightningElement {
 
       // Concatenate each field name with the object name and add to the transformed list
       fields.forEach((field) => {
-        transformedFields.push(`${objectName}: ${field}`);
+        transformedFields.push(`${objectName}.${field}`);
       });
     });
 
