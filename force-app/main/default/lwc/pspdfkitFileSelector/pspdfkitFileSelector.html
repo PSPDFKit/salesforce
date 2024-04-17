@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="wrapper">
+    <div class="wrapper" style="max-height: 600px; overflow-y: auto; margin-top: 10px;">
       <div>
         <div>
           <p title="Configure Template" class="heading">Configure Template</p>
@@ -19,23 +19,8 @@
         onclick={loadTemplate}
       ></lightning-button>
       
-      <!-- // Open any document from Salesforce
-      <lightning-button
-        class="button"
-        label="Select Template"
-        title="Primary action"
-        variant="brand"
-        stretch
-        onclick={handleOpenModal}
-      ></lightning-button>-->
-
         <template for:each={placeholders} for:item="placeholder">
           <div key={placeholder.key} class="slds-p-horizontal_medium slds-p-vertical_small">
-              <!--<lightning-input label={placeholder.key} 
-                               data-key={placeholder.key}
-                               value={placeholder.value} 
-                               onchange={handleInputChange}>
-              </lightning-input> Patient_Record__c -->
               <c-custom-look-up
               object-api-name={availableObject}
               label={placeholder.key}
@@ -52,8 +37,6 @@
               
           </div>
         </template>
-
-         
 
         <lightning-button
         class="button"

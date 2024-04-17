@@ -36,19 +36,24 @@ export default class CustomLookUp extends LightningElement {
     //console.log(this._dropDownOptionsApi);
   }*/
 
-  set dropDownOptionsApi(value) {
-    // When set, update the tracked property and possibly the showDropdown state
-    console.log("-- setting dropdown options");
-    console.log(JSON.stringify(value));
-    //this.dropdownOptions = [...value];
-    //this.showDropdown = value.length > 0;
-    //this.showDropdown = true;
-    if (value && value.length > 0) {
+  set dropDownOptionsApi(proxyObject) {
+    if (proxyObject && Object.keys(proxyObject).length > 0) {
       this.showDropdown = true;
-      this.dropdownOptions = [...value];
+
+      // Convert the Proxy object to a regular object first
+      const obj = JSON.parse(JSON.stringify(proxyObject));
+
+      // Now map the object to the array format expected by the dropdown
+      this.dropdownOptions = Object.keys(obj).map((key) => ({
+        label: obj[key], // The text that will be shown in the dropdown
+        value: obj[key], // The identifier for the selection
+      }));
+
       this.hasData = true;
     } else {
+      this.showDropdown = false;
       this.hasData = false;
+      this.dropdownOptions = []; // Reset the options
     }
   }
 

@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="wrapper">
+    <div class="wrapper" style="max-height: 600px; overflow-y: auto; margin-top: 10px;">
       <div>
         <div>
           <p title="Generate Document" class="heading">Generate Document</p>
@@ -20,11 +20,6 @@
 
         <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
           <div key={placeholderGenerated.placeholder} class="slds-p-horizontal_medium slds-p-vertical_small">
-              <!--<lightning-input label={placeholder.key} 
-                               data-key={placeholder.key}
-                               value={placeholder.value} 
-                               onchange={handleInputChange}>
-              </lightning-input> Patient_Record__c -->
               <p>{placeholderGenerated.placeholder}</p>
               <c-custom-look-up-generate
               object-api-name={objectApiName}
@@ -36,16 +31,9 @@
               search-key={placeholderGenerated.value}
               drop-down-options-api={placeholderGenerated.values}
               >
-            </c-custom-look-up-generate><!--
-               
-              -->
-              
-            
-              
+            </c-custom-look-up-generate>
           </div>
         </template>
-
-         
 
         <lightning-button
         class="button"
