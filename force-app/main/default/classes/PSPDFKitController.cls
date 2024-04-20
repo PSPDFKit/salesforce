@@ -379,4 +379,50 @@ global with sharing class PSPDFKitController {
     }
     return values;
   }
+
+  @AuraEnabled(cacheable=true)
+  public static String getRelatedRecord(
+    String recordId,
+    String tableName,
+    String relationshipReferenceField,
+    String relationshipField
+  ) {
+    // Generate dynamic SOQL query strings
+    String baseQuery =
+      'SELECT ' +
+      relationshipReferenceField +
+      ' FROM ' +
+      tableName +
+      ' WHERE Id = :recordId';
+    SObject record = Database.query(baseQuery);
+    if (record == null) {
+      return 'Record not found';
+    }
+
+    // Extract the relationship ID from the record
+    Id relatedRecordId = (Id) record.get(relationshipReferenceField);
+    if (relatedRecordId == null) {
+      return 'Related record not found';
+    }
+
+    // Get the field token for the relationship field, and determine the related object type
+    Schema.DescribeFieldResult fieldDescription = record.getSObjectType()
+      .getDescribe()
+      .fields.getMap()
+      .get(relationshipReferenceField)
+      .getDescribe();
+    String relatedObjectName = fieldDescription.getReferenceTo()[0]
+      .getDescribe()
+      .getName();
+
+    // Fetch the related object field value using the determined object name
+    SObject relatedRecord = Database.query(
+      'SELECT ' +
+        relationshipField +
+        ' FROM ' +
+        relatedObjectName +
+        ' WHERE Id = :relatedRecordId'
+    );
+    return (String) relatedRecord.get(relationshipField);
+  }
 }

@@ -125,11 +125,11 @@ export default class PSPDFKitFileSelector extends LightningElement {
           };
         } else {
           // Handle the error or provide default values
-          console.error("Invalid format for key: " + fullKey);
+          //console.error("Invalid format for key: " + fullKey);
           return {
             key: fullKey, // Fallback to the fullKey if the format is not as expected
             value: "Test",
-            searchKey: "", // No searchKey available
+            searchKey: fullKey, // No searchKey available
           };
         }
       });
@@ -435,40 +435,33 @@ export default class PSPDFKitFileSelector extends LightningElement {
       // otherwise it's a field that can have
       // multiple options and has to be selected
       // at the time of generating the document
-
+      let parts;
       if (searchValue !== "") {
-        let parts = searchValue.split(".").map((part) => part.trim());
-        let tableName = parts[0]; // Before the ':'
-        let databaseField = parts[1]; // After the ':'
-
-        let tableNameDifferent = false;
-        if (this.availableObject !== tableName) {
-          tableNameDifferent = true;
-        }
-
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: databaseField,
-          tableName: tableName,
-          selectAtGenerate: tableNameDifferent,
-        });
+        parts = searchValue.split(".").map((part) => part.trim());
       } else {
-        let parts = placeholder.split(".").map((part) => part.trim());
-        let tableName = parts[0]; // Before the ':'
-        let databaseField = parts[1]; // After the ':'
-
-        let tableNameDifferent = false;
-        if (this.availableObject !== tableName) {
-          tableNameDifferent = true;
-        }
-
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: databaseField,
-          tableName: tableName,
-          selectAtGenerate: tableNameDifferent,
-        });
+        parts = placeholder.split(".").map((part) => part.trim());
       }
+
+      let tableName;
+      let databaseField;
+      // Invalid format, fallback to the entire string
+      // and select the correct value in the UI.
+      if (parts.length < 2) {
+        tableName = parts[0];
+        databaseField = parts[0];
+      } else {
+        tableName = parts[0]; // Before the first '.'
+        databaseField = parts.slice(1).join("."); // Join everything after the first '.'
+      }
+
+      let tableNameDifferent = this.availableObject !== tableName;
+
+      searchTerms.push({
+        placeholder: keyValue,
+        databaseField: databaseField,
+        tableName: tableName,
+        selectAtGenerate: tableNameDifferent,
+      });
 
       // Check if searchValue contains "Role:" and process accordingly
       /*if (searchValue && searchValue.includes("Role:")) {

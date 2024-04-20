@@ -11,6 +11,7 @@ import PSPDFKit_TemplateJson__c from "@salesforce/schema/CMS_Case__c.PSPDFKit_Te
 import getDocumentTemplateJsonByDocumentId from "@salesforce/apex/PSPDFKitController.getDocumentTemplateJsonByDocumentId";
 import getRecordValue from "@salesforce/apex/PSPDFKitController.getRecordValue";
 import getRecordList from "@salesforce/apex/PSPDFKitController.getRecordList";
+import getRelatedRecord from "@salesforce/apex/PSPDFKitController.getRelatedRecord";
 
 export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
@@ -23,21 +24,11 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log(data);
       this.placeholders = JSON.parse(data);
 
-      /*this.placeholders = placeholders.map((item) => ({
-        placeholder: item.placeHolder,
-        databaseField: item.databaseField,
-        tableName: item.tableName,
-        selectAtGenerate: item.selectAtGenerate,
-      }));*/
-
       console.log("Template JSON:", this.placeholders);
 
+      // Function to get the value for all placeholders
+      // in the JSON
       this.getAllRecordsNew();
-      //console.log("recordValues received");
-      //console.log(recordValues);
-      //this.placeholdersGenerated = recordValues;
-
-      //getAllRecordsNew();
     } else if (error) {
       console.error("Error retrieving document template JSON:", error);
     }
@@ -755,26 +746,57 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           });
         }
       } else {
-        // Fetch single value
-        try {
-          const value = await getRecordValue({
-            tableName,
-            fieldName: databaseField,
-            recordId: this.recordId,
-          });
-          results.push({
-            placeholder,
-            value,
-            isDropdown: false,
-          });
-        } catch (error) {
-          console.error(`Error fetching value for ${placeholder}:`, error);
-          results.push({
-            placeholder,
-            value: null,
-            error: `Error fetching data: ${error.message}`,
-            isDropdown: false,
-          });
+        // It's a lookup field
+        if (databaseField.includes(".")) {
+          console.log("found a lookup field: " + databaseField);
+          let relationshipReferenceField;
+          let relationshipField;
+          [relationshipReferenceField, relationshipField] =
+            databaseField.split(".");
+          try {
+            const value = await getRelatedRecord({
+              recordId: this.recordId,
+              tableName,
+              relationshipReferenceField,
+              relationshipField,
+            });
+            results.push({
+              placeholder,
+              value,
+              isDropdown: false,
+            });
+          } catch (error) {
+            console.error(`Error fetching value for ${placeholder}:`, error);
+            results.push({
+              placeholder,
+              value: null,
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: false,
+            });
+          }
+        }
+        // It's regular field
+        else {
+          try {
+            const value = await getRecordValue({
+              tableName,
+              fieldName: databaseField,
+              recordId: this.recordId,
+            });
+            results.push({
+              placeholder,
+              value,
+              isDropdown: false,
+            });
+          } catch (error) {
+            console.error(`Error fetching value for ${placeholder}:`, error);
+            results.push({
+              placeholder,
+              value: null,
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: false,
+            });
+          }
         }
       }
     }
@@ -794,34 +816,6 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     console.log(event);
     this.documentId = event.detail;
-
-    /*console.log("loading pre-saved data now");
-
-    const savedTemplateData = this.templateData;
-
-    console.log("saved template data");
-    console.log(savedTemplateData);
-    if (savedTemplateData["test"]) {
-      this.placeholdersGenerated = savedTemplateData["test"].map((item) => {
-        return {
-          key: item.placeholder,
-          value: "Test",
-          searchTerm: item.databaseField ? item.databaseField : "", // Use databaseField directly from savedTemplateData
-        };
-      });
-    }
-    console.log("new placeholder data");
-    console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
-
-    console.log("fetching all records");
-    await this.getAllRecords();
-
-    // fetch field data
-    /*const result = await getRecordFields({
-      objectApiName: this.objectApiName,
-      recordId: this.recordId,
-      fieldNames: databaseFieldsRecords,
-    });*/
   }
 
   openVfPage(event) {
