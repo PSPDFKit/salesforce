@@ -3,7 +3,11 @@ import getbase64Data from "@salesforce/apex/PSPDFKitController.getbase64Data";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 import { api } from "lwc";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import {
+  getRecord,
+  getFieldValue,
+  getRecordNotifyChange,
+} from "lightning/uiRecordApi";
 import getRecordFields from "@salesforce/apex/PSPDFKitController.getRecordFields";
 import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 import PSPDFKit_TemplateJson__c from "@salesforce/schema/CMS_Case__c.PSPDFKit_TemplateJson__c";
@@ -17,18 +21,56 @@ import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document
 export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
 
-  //BD_Document_Templates__c
+  pollingIntervalMs = 5000; // Poll every 5 seconds
+  lastKnownValue; // Cache the last known value of the field
+  pollingTimer;
+  pollingStarted = false;
+
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [BD_Document_Selection__c],
   })
-  record;
-
-  get myFieldValue() {
-    console.log("++++ getting document template value");
-    let value = getFieldValue(this.record.data, BD_Document_Selection__c);
-    console.log(value);
-    return value;
+  wiredRecord({ error, data }) {
+    /*if (data) {
+      const currentValue = getFieldValue(data, BD_Document_Selection__c);
+      if (this.lastKnownValue !== currentValue) {
+        // The value has changed, do something here
+        console.log(
+          `Value changed from ${this.lastKnownValue} to ${currentValue}`
+        );
+        this.lastKnownValue = currentValue;
+      }
+    } else if (error) {
+      // Handle the error
+      console.error(error);
+    }*/
+    console.log("in wiredRecord for BD_Document_Selection__c");
+    const currentValue = getFieldValue(data, BD_Document_Selection__c);
+    console.log(currentValue);
+    this.documentId = currentValue;
+    //console.log(this.pollingStarted);
+    /*if (this.pollingStarted === false) {
+      this.pollingStarted = true;
+      this.pollingTimer = setInterval(() => {
+        console.log("polling");
+        //if (data) {
+        const currentValue = getFieldValue(data, BD_Document_Selection__c);
+        if (this.lastKnownValue !== currentValue) {
+          // The value has changed, do something here
+          console.log(
+            `Value changed from ${this.lastKnownValue} to ${currentValue}`
+          );
+          this.lastKnownValue = currentValue;
+          this.documentId = currentValue;
+        }else{
+          console.log("current value");
+        }
+        //} else if (error) {
+        // Handle the error
+        //console.error(error);
+        //}
+      }, this.pollingIntervalMs);
+    }*/
   }
 
   // Use wire service to automatically call the Apex method when documentId is set
