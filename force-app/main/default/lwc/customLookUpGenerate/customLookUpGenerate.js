@@ -86,6 +86,11 @@ export default class CustomLookUp extends LightningElement {
     }
   }
 
+  handleInputChange(event) {
+    this.searchTerm = event.target.value;
+    this.searchKey = event.target.value;
+  }
+
   retrieveObjectFields() {
     getObjectFields({ objectApiName: this.objectApiName })
       .then((results) => {

@@ -89,7 +89,10 @@
         //var baseUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_lib}/`;
         //var baseCoreUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_core}/`;
         //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-1/";
-        var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-2/pspdfkit-lib/";
+
+        //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-2/pspdfkit-lib/";
+        // Cloudfare
+        var baseUrl = "https://pspdfkit-static.org/";
 
         const saveButton = {
             type: "custom",
