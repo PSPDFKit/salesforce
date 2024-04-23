@@ -9,14 +9,14 @@
 
       <div class="container">
 
-        <lightning-button
+        <!--<lightning-button
         class="button"
         label="Select Template"
         title="Primary action"
         variant="brand"
         stretch
         onclick={handleOpenModalGenerate}
-      ></lightning-button>
+      ></lightning-button>-->
 
         <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
           <div key={placeholderGenerated.placeholder} class="slds-p-horizontal_medium slds-p-vertical_small">
@@ -34,6 +34,7 @@
             </c-custom-look-up-generate>
           </div>
         </template>
+
 
         <lightning-button
         class="button"

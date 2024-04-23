@@ -1,5 +1,7 @@
 import { LightningElement, track, wire } from "lwc";
 import getbase64Data from "@salesforce/apex/PSPDFKitController.getbase64Data";
+import getbase64DataForTemplate from "@salesforce/apex/PSPDFKitController.getbase64DataForTemplate";
+
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 import { api } from "lwc";
@@ -21,56 +23,17 @@ import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document
 export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
 
-  pollingIntervalMs = 5000; // Poll every 5 seconds
-  lastKnownValue; // Cache the last known value of the field
-  pollingTimer;
-  pollingStarted = false;
-
+  // Listen for when BD_Document_Selection__c
+  // changes and reload PSPDFKit
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [BD_Document_Selection__c],
   })
   wiredRecord({ error, data }) {
-    /*if (data) {
-      const currentValue = getFieldValue(data, BD_Document_Selection__c);
-      if (this.lastKnownValue !== currentValue) {
-        // The value has changed, do something here
-        console.log(
-          `Value changed from ${this.lastKnownValue} to ${currentValue}`
-        );
-        this.lastKnownValue = currentValue;
-      }
-    } else if (error) {
-      // Handle the error
-      console.error(error);
-    }*/
     console.log("in wiredRecord for BD_Document_Selection__c");
     const currentValue = getFieldValue(data, BD_Document_Selection__c);
     console.log(currentValue);
     this.documentId = currentValue;
-    //console.log(this.pollingStarted);
-    /*if (this.pollingStarted === false) {
-      this.pollingStarted = true;
-      this.pollingTimer = setInterval(() => {
-        console.log("polling");
-        //if (data) {
-        const currentValue = getFieldValue(data, BD_Document_Selection__c);
-        if (this.lastKnownValue !== currentValue) {
-          // The value has changed, do something here
-          console.log(
-            `Value changed from ${this.lastKnownValue} to ${currentValue}`
-          );
-          this.lastKnownValue = currentValue;
-          this.documentId = currentValue;
-        }else{
-          console.log("current value");
-        }
-        //} else if (error) {
-        // Handle the error
-        //console.error(error);
-        //}
-      }, this.pollingIntervalMs);
-    }*/
   }
 
   // Use wire service to automatically call the Apex method when documentId is set
@@ -450,12 +413,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       let placeholderName = element.placeholderName;
       let placeholderValue = element.searchKey;
       let selectedRole = element.selectedRole;
-      /*console.log("placeholderName: ");
-      console.log(placeholderName);
-      console.log("placeholderValue");
-      console.log(placeholderValue);
-      console.log("selectedRole");
-      console.log(selectedRole);*/
+
       if (element.selectedRole) {
         filledPlaceholdersData[placeholderName] = selectedRole;
       } else {
@@ -465,66 +423,40 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     console.log("final placeholder data");
     console.log(filledPlaceholdersData);
 
-    // Use "this.template.querySelectorAll" to get all placeholder containers
-    /*const placeholderElements = this.template.querySelectorAll("div");
-    console.log(JSON.stringify(placeholderElements));
-
-    placeholderElements.forEach((element) => {
-      // Get the placeholder name from the <p> tag
-      const placeholderName = element.querySelector("p").textContent;
-
-      // Get the input field value or placeholder text
-      const inputElement = element.querySelector("input");
-      const inputValue = inputElement.value || inputElement.placeholder;
-
-      // Store the data in the results object
-      results[placeholderName] = inputValue;
-    });
-
-    // Log the results object to the console
-    console.log(results);*/
-
-    // If you need to return this data from the method
-
-    /*let filledPlaceholdersData = await this.collectLookupValues();
-    let valuesToSaveTemp = await this.collectLookupValuesToGenerate();
-    console.log("the values to be saved");
-    console.log(valuesToSaveTemp);
-
-    let event = { detail: "069Ou000000l6I5IAI" };
-    const placeholdersData = JSON.stringify(this.placeholdersGenerated);
-    console.log("Generating document with placeholders: ");
-    console.log(filledPlaceholdersData);*/
-
     // Fetch all placeholders AND their data
     // and send it to the VisualForce page
-    let event = this.event;
-    console.log(event);
+    // let event = this.event;
+    //console.log(event);
     console.log("opening visual force page now");
     let visualForce = this.template.querySelector("iframe");
-    if (visualForce && event.detail) {
-      getbase64Data({ strId: event.detail })
+    if (visualForce && this.documentId) {
+      getbase64DataForTemplate({ documentTemplateId: this.documentId })
         .then((result) => {
-          var base64str = result.VersionData;
-          var binary = atob(base64str.replace(/\s/g, ""));
-          var len = binary.length;
-          var buffer = new ArrayBuffer(len);
-          var view = new Uint8Array(buffer);
-          for (var i = 0; i < len; i++) {
-            view[i] = binary.charCodeAt(i);
-          }
-          var blob = new Blob([view]);
-          visualForce.contentWindow.postMessage(
-            {
-              versionData: blob,
-              ContentDocumentId: result.ContentDocumentId,
-              PathOnClient: result.PathOnClient,
-              state: "salesforce",
-              placeholders: filledPlaceholdersData,
-              template: false,
-            },
-            "*"
-          );
+          console.log("got result from getbase64DataForTemplate");
+          console.log(result);
+
+          getbase64Data({ strId: result }).then((result) => {
+            var base64str = result.VersionData;
+            var binary = atob(base64str.replace(/\s/g, ""));
+            var len = binary.length;
+            var buffer = new ArrayBuffer(len);
+            var view = new Uint8Array(buffer);
+            for (var i = 0; i < len; i++) {
+              view[i] = binary.charCodeAt(i);
+            }
+            var blob = new Blob([view]);
+            visualForce.contentWindow.postMessage(
+              {
+                versionData: blob,
+                ContentDocumentId: result.ContentDocumentId,
+                PathOnClient: result.PathOnClient,
+                state: "salesforce",
+                placeholders: filledPlaceholdersData,
+                template: false,
+              },
+              "*"
+            );
+          });
         })
         .catch((error) => {
           console.log(error);
@@ -800,10 +732,15 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       }
     }
 
-    console.log("Fetched data:", results);
+    //console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
-    console.log("these are the new placeholders generated:");
-    console.log(JSON.stringify(this.placeholdersGenerated));
+    //console.log("these are the new placeholders generated:");
+    //console.log(JSON.stringify(this.placeholdersGenerated));
+
+    // Once the values have been fetched
+    // load PSPDFKit
+    this.loadPSPDFKit();
+
     return results;
   }
 

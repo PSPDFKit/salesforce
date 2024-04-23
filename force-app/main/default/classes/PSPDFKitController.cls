@@ -88,6 +88,42 @@ global with sharing class PSPDFKitController {
     }
   }
 
+  @AuraEnabled
+  public static String getbase64DataForTemplate(String documentTemplateId) {
+    Map<String, String> fieldNameVsValue = new Map<String, String>();
+
+    try {
+      // Query ContentDocumentLink to get the ContentDocumentId
+      ContentDocumentLink cdl = [
+        SELECT ContentDocumentId
+        FROM ContentDocumentLink
+        WHERE LinkedEntityId = :documentTemplateId
+        LIMIT 1
+      ];
+
+      /*if (cdl != null) {
+        // Query for the latest ContentVersion
+        ContentVersion latestVersion = [
+          SELECT
+            Id,
+            ContentDocumentId,
+            VersionData,
+            PathOnClient,
+            Title,
+            FileExtension
+          FROM ContentVersion
+          WHERE ContentDocumentId = :cdl.ContentDocumentId AND IsLatest = TRUE
+          LIMIT 1
+        ]; 
+      }*/
+      return cdl.ContentDocumentId;
+    } catch (Exception e) {
+      throw new AuraHandledException(
+        'Error retrieving document data: ' + e.getMessage()
+      );
+    }
+  }
+
   //@AuraEnabled
   @RemoteAction
   public static String getFileAsArrayBuffer(String fileName) {
@@ -320,28 +356,18 @@ global with sharing class PSPDFKitController {
 
   @AuraEnabled(cacheable=true)
   public static String getDocumentTemplateJsonByDocumentId(Id documentId) {
-    // Fetch the document name from the ContentDocument object using the document ID
-    ContentDocument document = [
-      SELECT Title
-      FROM ContentDocument
+    BD_Document_Templates__c template = [
+      SELECT PSPDFKit_TemplateJson__c
+      FROM BD_Document_Templates__c
       WHERE Id = :documentId
       LIMIT 1
     ];
 
-    // Now use the document Title to find the corresponding Document Template record
-    if (document != null) {
-      BD_Document_Templates__c template = [
-        SELECT PSPDFKit_TemplateJson__c
-        FROM BD_Document_Templates__c
-        WHERE Name = :document.Title
-        LIMIT 1
-      ];
-
-      if (template != null) {
-        // Return the PSPDFKit_TemplateJson__c field's value
-        return template.PSPDFKit_TemplateJson__c;
-      }
+    if (template != null) {
+      // Return the PSPDFKit_TemplateJson__c field's value
+      return template.PSPDFKit_TemplateJson__c;
     }
+
     // Return null or an appropriate error message if not found
     return null;
   }
