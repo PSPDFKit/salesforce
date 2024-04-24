@@ -13,6 +13,7 @@ export default class CustomLookUp extends LightningElement {
   @track showDropdown = false;
   @api searchKey;
   @api placeholderName;
+  @api templatePlaceholder;
   @api selectedRole;
   @track hasData = false;
 

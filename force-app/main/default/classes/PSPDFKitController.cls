@@ -389,7 +389,7 @@ global with sharing class PSPDFKitController {
   public static List<String> getRecordList(
     String tableName,
     String databaseField,
-    Id caseId
+    String recordId
   ) {
     // Use "Case__c" as the relationship field for role-related queries
     List<SObject> records = Database.query(
@@ -397,7 +397,7 @@ global with sharing class PSPDFKitController {
         databaseField +
         ' FROM ' +
         tableName +
-        ' WHERE Case__c = :caseId'
+        ' WHERE Case__c = :recordId '
     );
     List<String> values = new List<String>();
     for (SObject record : records) {

@@ -391,6 +391,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     return searchTerms;
   }
 
+  findTemplatePlaceholder(placeholders, placeholderName) {
+    const placeholderObj = placeholders.find(
+      (element) => element.placeholder === placeholderName
+    );
+    return placeholderObj ? placeholderObj.templatePlaceholder : null;
+  }
+
   async loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
     console.log(this.record);
@@ -404,13 +411,29 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     );
 
     let filledPlaceholdersData = {};
+
+    //console.log(JSON.stringify(lookupElements));
+
     lookupElements.forEach((element) => {
       // Access the @api getter from the child component
       //console.log(element);
       //const searchValue = element.currentSearchTerm;
       //console.log(`Search Term: ${searchValue}`);
 
-      let placeholderName = element.placeholderName;
+      const templatePlaceholderString = this.findTemplatePlaceholder(
+        this.placeholdersGenerated,
+        element.placeholderName
+      );
+
+      console.log("element");
+      //console.log(element);
+      console.log(element.placeholderName);
+      console.log(templatePlaceholderString);
+
+      // Search for element.placeholderName in this.placeholdersGenerated
+      // and fetch the templatePlacholder from there.
+
+      let placeholderName = templatePlaceholderString;
       let placeholderValue = element.searchKey;
       let selectedRole = element.selectedRole;
 
@@ -635,6 +658,21 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       selectAtGenerate,
       tableName,
     } of this.placeholders) {
+      // Reconstruct the displayname + placeholder if necessary
+      let templatePlaceholder = "";
+      if (
+        placeholder !== tableName + "." + databaseField &&
+        !placeholder.includes(".")
+      ) {
+        templatePlaceholder =
+          placeholder + "+" + tableName + "." + databaseField;
+      } else {
+        templatePlaceholder = placeholder;
+      }
+
+      console.log("templatePlaceholder");
+      console.log(templatePlaceholder);
+
       // Static Date field
       if (databaseField.includes("DATE")) {
         console.log("+++++ in date field");
@@ -650,6 +688,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           placeholder: "Date",
           value: formattedDate,
           isDropdown: false,
+          templatePlaceholder: templatePlaceholder,
         });
       }
       // It's a lookup field
@@ -666,10 +705,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             relationshipReferenceField,
             relationshipField,
           });
+
           results.push({
             placeholder,
             value,
             isDropdown: false,
+            templatePlaceholder: templatePlaceholder,
           });
         } catch (error) {
           console.error(`Error fetching value for ${placeholder}:`, error);
@@ -678,20 +719,31 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             value: "No value found",
             error: `Error fetching data: ${error.message}`,
             isDropdown: false,
+            templatePlaceholder: templatePlaceholder,
           });
         }
       } else if (selectAtGenerate === true) {
         // Fetch list of possible values for dropdown
+        console.log("----- in dropdown field");
+        console.log(tableName);
+        console.log(databaseField);
+        console.log(this.recordId);
+        let recordId = await this.recordId;
         try {
           const dropdownValues = await getRecordList({
             tableName,
             databaseField,
-            recordId: this.recordId,
+            recordId,
           });
+
+          console.log("result for dropdwown received");
+          console.log(dropdownValues);
+
           results.push({
             placeholder,
             values: dropdownValues,
             isDropdown: true,
+            templatePlaceholder: templatePlaceholder,
           });
         } catch (error) {
           console.error(
@@ -703,12 +755,14 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             values: ["No values found"],
             error: `Error fetching data: ${error.message}`,
             isDropdown: true,
+            templatePlaceholder: templatePlaceholder,
           });
         }
       }
       // It's regular field
       else {
         console.log("----- in regular field");
+        console.log(databaseField);
         try {
           const value = await getRecordValue({
             tableName,
@@ -719,6 +773,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             placeholder,
             value,
             isDropdown: false,
+            templatePlaceholder: templatePlaceholder,
           });
         } catch (error) {
           console.error(`Error fetching value for ${placeholder}:`, error);
@@ -727,12 +782,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             value: "No value found",
             error: `Error fetching data: ${error.message}`,
             isDropdown: false,
+            templatePlaceholder: templatePlaceholder,
           });
         }
       }
     }
 
-    //console.log("Fetched data:", results);
+    console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
     //console.log("these are the new placeholders generated:");
     //console.log(JSON.stringify(this.placeholdersGenerated));
