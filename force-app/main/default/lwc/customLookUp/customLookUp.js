@@ -15,6 +15,8 @@ export default class CustomLookUp extends LightningElement {
   @api placeholderName;
   @api dropdownValues;
 
+  _searchKey = "";
+
   @track selectedOption = ""; // To track the selected option from the dropdown
   @track dropdownOptions = [
     // Define the options for the dropdown
@@ -214,5 +216,15 @@ export default class CustomLookUp extends LightningElement {
   @api
   get currentSearchKey() {
     return this.searchKey;
+  }
+
+  set searchKey(value) {
+    // When searchKey is updated from the parent component,
+    // this setter is called and we update searchTerm
+    if (value) {
+      // If the value is not undefined or empty
+      this.searchTerm = value;
+      this._searchKey = value;
+    }
   }
 }
