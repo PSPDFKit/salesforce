@@ -2,6 +2,21 @@ global with sharing class PSPDFKitController {
   public static contentVersion contVersion { get; set; }
   public static String conbase { get; set; }
 
+  public class OptionWrapper {
+    @AuraEnabled
+    public String label;
+    @AuraEnabled
+    public String value;
+    @AuraEnabled
+    public String recordId;
+
+    public OptionWrapper(String label, String value, String recordId) {
+      this.label = label;
+      this.value = value;
+      this.recordId = recordId;
+    }
+  }
+
   @AuraEnabled
   public static list<ContentDocument> getAttachmentDetails(string record_Id) {
     if (record_Id == null || record_Id == '') {

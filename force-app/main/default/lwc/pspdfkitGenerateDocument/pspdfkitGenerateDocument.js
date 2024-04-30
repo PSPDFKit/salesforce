@@ -653,6 +653,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   async getAllRecordsNew() {
     const results = [];
+    let structuredData = [];
 
     for (const {
       databaseField,
@@ -743,6 +744,32 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         let recordId = await this.recordId;
 
         if (databaseField.includes(".")) {
+          console.log("child element found");
+
+          // It's a child record, extract the parent name
+          let parentName = databaseField.split(".")[0];
+          let parent = structuredData.find((p) => p.name === parentName);
+          if (!parent) {
+            // If parent does not exist, create it and add it to the array
+            parent = {
+              name: parentName,
+              children: [],
+              databaseField,
+              placeholder,
+              selectAtGenerate,
+              tableName,
+            };
+            structuredData.push(parent);
+          }
+          // Add the child field to the parent's children array
+          parent.children.push({
+            databaseField,
+            placeholder,
+            selectAtGenerate,
+            tableName,
+          });
+          /*
+        
           let relationshipReferenceField;
           let relationshipField;
           [relationshipReferenceField, relationshipField] =
@@ -781,7 +808,16 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               templatePlaceholder: templatePlaceholder,
             });
           }
+        */
         } else {
+          /*console.log("Parent value found, look for children values");
+          alert(databaseField);
+          if (!structuredData.some((p) => p.name === databaseField)) {
+            structuredData.push({ name: databaseField, children: [] });
+          }*/
+          // handle this later
+          // fetch values for parents
+          /*
           try {
             const dropdownValues = await getRecordList({
               tableName,
@@ -811,7 +847,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               isDropdown: true,
               templatePlaceholder: templatePlaceholder,
             });
-          }
+          }*/
         }
       }
       // It's regular field
@@ -842,6 +878,94 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         }
       }
     }
+
+    console.log("structured data");
+    console.log(structuredData);
+    // Now fetch all dropdown values for parents and
+    // get the values for all of their children
+
+    structuredData.forEach(async (parent) => {
+      console.log("Parent:", parent.name);
+
+      // Fetch parent values
+      try {
+        const dropdownValues = await getRecordList({
+          tableName: parent.tableName,
+          databaseField: parent.databaseField,
+          recordId: parent.recordId,
+        });
+
+        console.log("result for dropdown received");
+        console.log(dropdownValues);
+
+        parent.children.forEach((child) => {
+          console.log("  Child:", child);
+
+          /*
+          let relationshipReferenceField;
+          let relationshipField;
+          [relationshipReferenceField, relationshipField] =
+            databaseField.split(".");
+
+          console.log(
+            "relationshipReferenceField:  " + relationshipReferenceField
+          );
+          console.log("relationshipField:  " + relationshipField);
+
+          try {
+            const dropdownValues = await getRelatedLookupRecord({
+              recordId: this.recordId,
+              tableName,
+              relationshipReferenceField,
+              relationshipField,
+            });
+
+            console.log("results from dropdown");
+            console.log(dropdownValues);
+
+            results.push({
+              placeholder,
+              values: dropdownValues,
+              isDropdown: true,
+              templatePlaceholder: templatePlaceholder,
+              recordId: this.recordId,
+            });
+          } catch (error) {
+            console.error(`Error fetching value for ${placeholder}:`, error);
+            results.push({
+              placeholder,
+              value: "No value found",
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: false,
+              templatePlaceholder: templatePlaceholder,
+            });
+          }
+          */
+        });
+
+        results.push({
+          placeholder: parent.placeholder,
+          values: dropdownValues,
+          isDropdown: true,
+          templatePlaceholder: templatePlaceholder,
+          recordId: this.recordId,
+        });
+      } catch (error) {
+        console.error(`Error fetching dropdown values for placeholder:`, error);
+        results.push({
+          placeholder: parent.placeholder,
+          values: ["No values found"],
+          error: `Error fetching data: ${error.message}`,
+          isDropdown: true,
+          templatePlaceholder: templatePlaceholder,
+        });
+      }
+    });
+    // For every databaseField that's in structuredData.name
+
+    // Fetch parent values
+
+    // Once parent value is fetched, fetch all of their children values
 
     console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
