@@ -99,7 +99,8 @@
             id: "download-pdf",
             title: "Save",
             onPress: () => {
-                saveFileToSalesforce();
+                //saveFileToSalesforce();
+                saveFileToPendingDocuments();
             }
         };
 
@@ -153,6 +154,10 @@
                 console.log("VF page: pdf data: ");
                 console.log(pdf);
                 console.log(tempInstance);
+
+                console.log("VF Case Id received");
+                console.log(event.data.caseId);
+                caseId = event.data.caseId;
 
                 // Template should not be shown when 
                 // generating the document
@@ -235,7 +240,10 @@
                 console.log("document to be loaded");
                 console.log(document);
 
+                let licenseKey = 'vCR5dwIXsXHZsHQoufWEefkm8URHmt9zBymfQ5rWYpggjx_xYADpAXOHYxcdt_PbwurRb_c52uN5BrbRl0ta5wnVrcTnfSM4jASkm6QuPPiuhEI0xdglf_s-V-4aFMCK9u9XT0vJ3XPU4zyiMdem6Wd5sNvUEfP_fWPsbm1DnRMAJJl3vmXshBTlGtjlJYXwNn69OkOq6K9q7qGFHIx95iCXSQLSjRfpyEtWr0wjwLlUykC7tIt9qX8oGO-STn6hplnJzRWRFs_EdP4-YqzcLMaaY-GMKnOUSU5wrThJ7Bb6LJEWBTRX2XraeB6UFqM0rwMqcso8CnoDq1l3Qn_aNZS_6wmcj3K1azVL8NuMyBmu87nwzwlegvXjSqWIXHptd_FUqXX3Npze4CymDYNoRJuJy8s3bv1ikBvXkMKwQR8d1ayy8fs9tzcRyWamyzfzsCNjv1duLSGIkluTxIZMeYU2hd3nsFsFY7Bnot2MLGZI2udJ7iIFTx3QBS_zRFdQjJ_FLl9viOFVtjG_Rklfzqvn2675leoU7de7DBUOnUWQk8oZRUAvMmber1GzORnKeE1M37Wd5YxS20tQYrjRNr0BdaTOMEUshCyCI1EEjWrCy_zdlng2l2jZtrlYZkNsEwiGz8Cvn9UtmgVHg0UQPfzDYB8tk7Hv51rh5RR9xEllaFZMc82py7G_GjSHIRLyKJWiD_eaHbWxPEnzZszNhmqpA6Jx4Y-jVAPE-bub3LG6dd5nfzCHlbMOJTiNPHrSayPmX3QRTV14MpDcyRu8uZGhalXvx3IYcMPx_SLEXattbzdcT6OWH6nFmmrztq63pJ2IgnfDbeZ0XlarWKu0SYEMAq8fBl41tFFVYdztD6PU2qULlY3SyTQyL_FnQxw4oSgFTBXeyr80Mlj03FZf710WxYF1-JuWUQq4GlOlknuXqmVdjgCF4R__lKm0IPr0xCvTq4r5f9t7zXP3LT12QcQ5QtRXPi6By11pZMkTlKGbfzRbDuf2ksVAMhOSuPmYf3C-xZBdPGvm6r95ltSFxIdYNILrwJ2IjYs2RW3JxDWFpwK4MYpEiADzQP3SiKBgqKncfTcInoFmd5kM8mFddavDbw4uoaNLIUaSXphq_qgucHk5LQP7sHFjzfqVVWxYR_U6_NUZyvpUn-1Wv6YO9K5JzeR-lnCTxOxPIE-iA01qDhj2lZ-sJYy_zK0D19uPk9b8agtDudqWlQPebCtc6cHpfe3Wq16rlwiFheL4pVI=';
+
                 PSPDFKit.load({
+                    licenseKey,
                     //inlineWorkers: true,
                     baseUrl,
                     //baseCoreUrl,
@@ -320,6 +328,73 @@
                 });
             });
         }
+
+        let caseId;
+        function saveFileToPendingDocuments() {
+            tempInstance.exportPDF().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/pdf" });
+                getBase64(blob).then((result) => {
+                    updatedFile = result;
+                    var contentVersionObject = new sforce.SObject('ContentVersion');
+                    // Set other necessary attributes for contentVersionObject...
+                    contentVersionObject.VersionData = updatedFile;
+                    contentVersionObject.Title = contVersion.fName || 'Default Title'; // Set a default title if fName is not availa
+                    contentVersionObject.PathOnClient = contVersion.PathOnClient || 'file.pdf';
+
+                    // ...other settings for contentVersionObject
+
+                    // Save the ContentVersion
+                    var cvResult = sforce.connection.create([contentVersionObject]);
+                    if (cvResult[0].success === 'true') {
+                        // Now create the ContentDocumentLink
+                        var contentDocumentLinkObject = new sforce.SObject('ContentDocumentLink');
+
+                        var cvId = cvResult[0].id;
+                        // Query to get ContentDocumentId
+                        var query = "SELECT ContentDocumentId FROM ContentVersion WHERE Id = '" + cvId + "'";
+                        var queryResult = sforce.connection.query(query);
+                        var records = queryResult.getArray("records");
+                        console.log("Content Document Id");
+                        console.log(records);
+                        console.log("case id");
+                        console.log(caseId);
+                        var contentDocumentId = records[0].ContentDocumentId;
+                        contentDocumentLinkObject.ContentDocumentId = contentDocumentId;
+                        contentDocumentLinkObject.LinkedEntityId = caseId;
+                        contentDocumentLinkObject.ShareType = 'V';
+                        // ... other settings for contentDocumentLinkObject
+
+                        var cdlResult = sforce.connection.create([contentDocumentLinkObject]);
+                        console.log(cdlResult);
+                        if (cdlResult[0].success === 'true') {
+                            // Here you create the BD_Pending_Documents__c record and link it to the CMS_Case__c
+                            var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
+                            pendingDocumentObject.BD_Case__c = caseId; // This is how you link it to CMS_Case__c
+                            // Set other necessary fields of BD_Pending_Documents__c
+                            pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
+
+                            // Assuming there's a lookup or master-detail field on BD_Pending_Documents__c that relates to the ContentVersion or ContentDocument
+                            pendingDocumentObject.Name = cvResult[0].id;
+                            pendingDocumentObject.BD_Status__c = "Pending Approval";
+
+                            var pdResult = sforce.connection.create([pendingDocumentObject]);
+                            console.log(pdResult);
+                            if (pdResult[0].success === 'true') {
+                                alert('Pending document record created and linked successfully.');
+                            } else {
+                                alert('Error creating pending document record: ' + pdResult[0].errors.message);
+                            }
+                        } else {
+                            alert('Error linking content document to case: ' + cdlResult[0].errors.message);
+                        }
+                    } else {
+                        alert('Error saving content version: ' + cvResult[0].errors.message);
+                        console.log(cvResult);
+                    }
+                });
+            });
+        }
+
 
         function openSalesforceFile(recordId) {
             if (window.location.href != window.location.origin + "/apex/PSPDFKit_InitPSPDFKit?id=" + recordId) {

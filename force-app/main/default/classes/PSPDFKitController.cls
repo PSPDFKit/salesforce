@@ -451,4 +451,61 @@ global with sharing class PSPDFKitController {
     );
     return (String) relatedRecord.get(relationshipField);
   }
+
+  @AuraEnabled(cacheable=true)
+  public static List<String> getRelatedLookupRecord(
+    String recordId,
+    String tableName,
+    String relationshipReferenceField,
+    String relationshipField
+  ) {
+    // Generate dynamic SOQL query strings
+    String baseQuery =
+      'SELECT ' +
+      relationshipReferenceField +
+      ' FROM ' +
+      tableName +
+      ' WHERE Case__c = :recordId';
+    List<SObject> records = Database.query(baseQuery);
+    if (records.isEmpty()) {
+      return new List<String>{ 'Record not found' };
+    }
+
+    List<String> allRelatedValues = new List<String>();
+
+    for (SObject record : records) {
+      // Extract the relationship ID from each record
+      Id relatedRecordId = (Id) record.get(relationshipReferenceField);
+      if (relatedRecordId == null) {
+        continue; // Skip if no related record ID is found
+      }
+
+      // Get the field token for the relationship field, and determine the related object type
+      Schema.DescribeFieldResult fieldDescription = record.getSObjectType()
+        .getDescribe()
+        .fields.getMap()
+        .get(relationshipReferenceField)
+        .getDescribe();
+      String relatedObjectName = fieldDescription.getReferenceTo()[0]
+        .getDescribe()
+        .getName();
+
+      // Fetch the related object field value using the determined object name
+      String relatedQuery =
+        'SELECT ' +
+        relationshipField +
+        ' FROM ' +
+        relatedObjectName +
+        ' WHERE Id = :relatedRecordId';
+      List<SObject> relatedRecords = Database.query(relatedQuery);
+      for (SObject relatedRecord : relatedRecords) {
+        String fieldValue = (String) relatedRecord.get(relationshipField);
+        if (fieldValue != null) {
+          allRelatedValues.add(fieldValue);
+        }
+      }
+    }
+
+    return allRelatedValues; // Returns a list of values from all the related records
+  }
 }

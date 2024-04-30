@@ -18,6 +18,7 @@ import getDocumentTemplateJsonByDocumentId from "@salesforce/apex/PSPDFKitContro
 import getRecordValue from "@salesforce/apex/PSPDFKitController.getRecordValue";
 import getRecordList from "@salesforce/apex/PSPDFKitController.getRecordList";
 import getRelatedRecord from "@salesforce/apex/PSPDFKitController.getRelatedRecord";
+import getRelatedLookupRecord from "@salesforce/apex/PSPDFKitController.getRelatedLookupRecord";
 
 import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document_Selection__c";
 export default class PSPDFKitGenerateDocument extends LightningElement {
@@ -476,6 +477,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 state: "salesforce",
                 placeholders: filledPlaceholdersData,
                 template: false,
+                caseId: this.recordId,
               },
               "*"
             );
@@ -658,11 +660,15 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       selectAtGenerate,
       tableName,
     } of this.placeholders) {
+      console.log("reconstructing placeholders");
+      console.log("placeholder: " + placeholder);
+      console.log("rest: " + tableName + "." + databaseField);
       // Reconstruct the displayname + placeholder if necessary
       let templatePlaceholder = "";
       if (
-        placeholder !== tableName + "." + databaseField &&
-        !placeholder.includes(".")
+        placeholder !==
+        tableName + "." + databaseField /*&&
+        !placeholder.includes(".")*/
       ) {
         templatePlaceholder =
           placeholder + "+" + tableName + "." + databaseField;
@@ -692,12 +698,18 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         });
       }
       // It's a lookup field
-      else if (databaseField.includes(".")) {
+      else if (databaseField.includes(".") && selectAtGenerate === false) {
         console.log("found a lookup field: " + databaseField);
+        console.log("in table: " + tableName);
         let relationshipReferenceField;
         let relationshipField;
         [relationshipReferenceField, relationshipField] =
           databaseField.split(".");
+
+        console.log(
+          "relationshipReferenceField:  " + relationshipReferenceField
+        );
+        console.log("relationshipField:  " + relationshipField);
         try {
           const value = await getRelatedRecord({
             recordId: this.recordId,
@@ -729,34 +741,77 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log(databaseField);
         console.log(this.recordId);
         let recordId = await this.recordId;
-        try {
-          const dropdownValues = await getRecordList({
-            tableName,
-            databaseField,
-            recordId,
-          });
 
-          console.log("result for dropdwown received");
-          console.log(dropdownValues);
+        if (databaseField.includes(".")) {
+          let relationshipReferenceField;
+          let relationshipField;
+          [relationshipReferenceField, relationshipField] =
+            databaseField.split(".");
 
-          results.push({
-            placeholder,
-            values: dropdownValues,
-            isDropdown: true,
-            templatePlaceholder: templatePlaceholder,
-          });
-        } catch (error) {
-          console.error(
-            `Error fetching dropdown values for placeholder:`,
-            error
+          console.log(
+            "relationshipReferenceField:  " + relationshipReferenceField
           );
-          results.push({
-            placeholder,
-            values: ["No values found"],
-            error: `Error fetching data: ${error.message}`,
-            isDropdown: true,
-            templatePlaceholder: templatePlaceholder,
-          });
+          console.log("relationshipField:  " + relationshipField);
+
+          try {
+            const dropdownValues = await getRelatedLookupRecord({
+              recordId: this.recordId,
+              tableName,
+              relationshipReferenceField,
+              relationshipField,
+            });
+
+            console.log("results from dropdown");
+            console.log(dropdownValues);
+
+            results.push({
+              placeholder,
+              values: dropdownValues,
+              isDropdown: true,
+              templatePlaceholder: templatePlaceholder,
+              recordId: this.recordId,
+            });
+          } catch (error) {
+            console.error(`Error fetching value for ${placeholder}:`, error);
+            results.push({
+              placeholder,
+              value: "No value found",
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: false,
+              templatePlaceholder: templatePlaceholder,
+            });
+          }
+        } else {
+          try {
+            const dropdownValues = await getRecordList({
+              tableName,
+              databaseField,
+              recordId,
+            });
+
+            console.log("result for dropdwown received");
+            console.log(dropdownValues);
+
+            results.push({
+              placeholder,
+              values: dropdownValues,
+              isDropdown: true,
+              templatePlaceholder: templatePlaceholder,
+              recordId: this.recordId,
+            });
+          } catch (error) {
+            console.error(
+              `Error fetching dropdown values for placeholder:`,
+              error
+            );
+            results.push({
+              placeholder,
+              values: ["No values found"],
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: true,
+              templatePlaceholder: templatePlaceholder,
+            });
+          }
         }
       }
       // It's regular field
@@ -834,6 +889,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               ContentDocumentId: result.ContentDocumentId,
               PathOnClient: result.PathOnClient,
               state: "salesforce",
+              caseId: this.recordId,
             },
             "*"
           );
