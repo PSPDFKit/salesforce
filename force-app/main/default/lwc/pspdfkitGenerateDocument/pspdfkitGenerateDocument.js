@@ -743,23 +743,25 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log(this.recordId);
         let recordId = await this.recordId;
 
-        if (databaseField.includes(".")) {
+        if (placeholder.includes(".")) {
           console.log("child element found");
 
           // It's a child record, extract the parent name
-          let parentName = databaseField.split(".")[0];
+          let parentName = placeholder.split(".")[0];
           let parent = structuredData.find((p) => p.name === parentName);
           if (!parent) {
             // If parent does not exist, create it and add it to the array
             parent = {
               name: parentName,
               children: [],
-              databaseField,
-              placeholder,
-              selectAtGenerate,
-              tableName,
+              databaseField: null,
+              placeholder: null,
+              selectAtGenerate: null,
+              tableName: null,
+              recordId: this.recordId,
             };
             structuredData.push(parent);
+          } else {
           }
           // Add the child field to the parent's children array
           parent.children.push({
@@ -810,11 +812,26 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           }
         */
         } else {
-          /*console.log("Parent value found, look for children values");
-          alert(databaseField);
-          if (!structuredData.some((p) => p.name === databaseField)) {
-            structuredData.push({ name: databaseField, children: [] });
-          }*/
+          console.log("Parent value found, look for children values");
+
+          let parent = structuredData.some((p) => p.name === databaseField);
+          if (!parent) {
+            structuredData.push({
+              name: placeholder,
+              children: [],
+              databaseField,
+              placeholder,
+              selectAtGenerate,
+              tableName,
+              recordId,
+            });
+          } else if (parent && parent.databaseField === null) {
+            parent.databaseField = databaseField;
+            parent.placeholder = placeholder;
+            parent.selectAtGenerate = selectAtGenerate;
+            parent.tableName = tableName;
+            parent.recordId = this.recordId;
+          }
           // handle this later
           // fetch values for parents
           /*
@@ -888,6 +905,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log("Parent:", parent.name);
 
       // Fetch parent values
+      // TODO: Parent can be a lookup too
       try {
         const dropdownValues = await getRecordList({
           tableName: parent.tableName,
@@ -898,49 +916,49 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log("result for dropdown received");
         console.log(dropdownValues);
 
-        parent.children.forEach((child) => {
+        parent.children.forEach(async (child) => {
           console.log("  Child:", child);
 
-          /*
           let relationshipReferenceField;
           let relationshipField;
           [relationshipReferenceField, relationshipField] =
-            databaseField.split(".");
+            child.databaseField.split(".");
 
           console.log(
             "relationshipReferenceField:  " + relationshipReferenceField
           );
           console.log("relationshipField:  " + relationshipField);
 
+          // TODO: Child can be a regular element as well
+          // not just lookup
           try {
             const dropdownValues = await getRelatedLookupRecord({
-              recordId: this.recordId,
-              tableName,
+              recordId: parent.recordId,
+              tableName: child.tableName,
               relationshipReferenceField,
               relationshipField,
             });
 
-            console.log("results from dropdown");
+            console.log("results from children dropdown");
             console.log(dropdownValues);
 
             results.push({
-              placeholder,
+              placeholder: parent.placeholder,
               values: dropdownValues,
               isDropdown: true,
-              templatePlaceholder: templatePlaceholder,
-              recordId: this.recordId,
+              //templatePlaceholder: templatePlaceholder,
+              recordId: parent.recordId,
             });
           } catch (error) {
             console.error(`Error fetching value for ${placeholder}:`, error);
             results.push({
-              placeholder,
+              placeholder: parent.placeholder,
               value: "No value found",
               error: `Error fetching data: ${error.message}`,
               isDropdown: false,
-              templatePlaceholder: templatePlaceholder,
+              //templatePlaceholder: templatePlaceholder,
             });
           }
-          */
         });
 
         results.push({

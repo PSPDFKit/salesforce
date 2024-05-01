@@ -401,7 +401,7 @@ global with sharing class PSPDFKitController {
   }
 
   @AuraEnabled(cacheable=true)
-  public static List<String> getRecordList(
+  public static List<Map<String, String>> getRecordList(
     String tableName,
     String databaseField,
     String recordId
@@ -410,13 +410,16 @@ global with sharing class PSPDFKitController {
     List<SObject> records = Database.query(
       'SELECT ' +
         databaseField +
-        ' FROM ' +
+        ', Id FROM ' +
         tableName +
-        ' WHERE Case__c = :recordId '
+        ' WHERE Case__c = :recordId'
     );
-    List<String> values = new List<String>();
+    List<Map<String, String>> values = new List<Map<String, String>>();
     for (SObject record : records) {
-      values.add((String) record.get(databaseField));
+      Map<String, String> recordMap = new Map<String, String>();
+      recordMap.put('value', (String) record.get(databaseField));
+      recordMap.put('Id', (String) record.get('Id'));
+      values.add(recordMap);
     }
     return values;
   }
