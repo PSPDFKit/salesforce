@@ -901,11 +901,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // Now fetch all dropdown values for parents and
     // get the values for all of their children
 
+    let addressData = [];
     structuredData.forEach(async (parent) => {
       console.log("Parent:", parent.name);
 
       // Fetch parent values
       // TODO: Parent can be a lookup too
+      // Call the function with the parent object
       try {
         const dropdownValues = await getRecordList({
           tableName: parent.tableName,
@@ -916,67 +918,74 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log("result for dropdown received");
         console.log(dropdownValues);
 
-        parent.children.forEach(async (child) => {
-          console.log("  Child:", child);
+        // Ensure results array is accessible and modifiable across multiple async calls
+        let results = [];
 
-          let relationshipReferenceField;
-          let relationshipField;
-          [relationshipReferenceField, relationshipField] =
-            child.databaseField.split(".");
+        // Loop through each item in dropdownValues
+        for (const dropdownItem of dropdownValues) {
+          console.log("Processing ID:", dropdownItem.Id);
 
-          console.log(
-            "relationshipReferenceField:  " + relationshipReferenceField
-          );
-          console.log("relationshipField:  " + relationshipField);
+          // Loop through all children and process each
+          for (const child of parent.children) {
+            console.log("  Child:", child);
 
-          // TODO: Child can be a regular element as well
-          // not just lookup
-          try {
-            const dropdownValues = await getRelatedLookupRecord({
-              recordId: parent.recordId,
-              tableName: child.tableName,
-              relationshipReferenceField,
-              relationshipField,
-            });
+            let [relationshipReferenceField, relationshipField] =
+              child.databaseField.split(".");
 
-            console.log("results from children dropdown");
-            console.log(dropdownValues);
+            console.log(
+              "relationshipReferenceField: " + relationshipReferenceField
+            );
+            console.log("relationshipField: " + relationshipField);
+            console.log("recordId: " + this.recordId);
+            console.log("parentId: " + dropdownItem.Id);
 
-            results.push({
-              placeholder: parent.placeholder,
-              values: dropdownValues,
-              isDropdown: true,
-              //templatePlaceholder: templatePlaceholder,
-              recordId: parent.recordId,
-            });
-          } catch (error) {
-            console.error(`Error fetching value for ${placeholder}:`, error);
-            results.push({
-              placeholder: parent.placeholder,
-              value: "No value found",
-              error: `Error fetching data: ${error.message}`,
-              isDropdown: false,
-              //templatePlaceholder: templatePlaceholder,
-            });
+            try {
+              const childDropdownValues = await getRelatedLookupRecord({
+                recordId: this.recordId,
+                parentId: dropdownItem.Id, // Use Id from dropdownValues for each child
+                tableName: child.tableName,
+                relationshipReferenceField,
+                relationshipField,
+              });
+
+              console.log("results from children dropdown");
+              console.log(childDropdownValues);
+
+              addressData.push({
+                placeholder: parent.placeholder,
+                values: childDropdownValues,
+                isDropdown: true,
+                recordId: dropdownItem.Id,
+              });
+              /*results.push({
+                placeholder: parent.placeholder,
+                values: childDropdownValues,
+                isDropdown: true,
+                recordId: dropdownItem.Id, // Use Id for better tracking/association
+              });*/
+            } catch (error) {
+              console.error(
+                `Error fetching value for ${child.placeholder}:`,
+                error
+              );
+              results.push({
+                placeholder: parent.placeholder,
+                value: "No value found",
+                error: `Error fetching data: ${error.message}`,
+                isDropdown: false,
+                recordId: dropdownItem.Id,
+              });
+            }
           }
-        });
+        }
 
-        results.push({
-          placeholder: parent.placeholder,
-          values: dropdownValues,
-          isDropdown: true,
-          templatePlaceholder: templatePlaceholder,
-          recordId: this.recordId,
-        });
+        console.log("final address data");
+        console.log(addressData);
+
+        return results;
       } catch (error) {
-        console.error(`Error fetching dropdown values for placeholder:`, error);
-        results.push({
-          placeholder: parent.placeholder,
-          values: ["No values found"],
-          error: `Error fetching data: ${error.message}`,
-          isDropdown: true,
-          templatePlaceholder: templatePlaceholder,
-        });
+        console.error("Error in processing data:", error);
+        return []; // Return an empty array or suitable error handling
       }
     });
     // For every databaseField that's in structuredData.name

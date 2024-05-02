@@ -473,6 +473,7 @@ global with sharing class PSPDFKitController {
   @AuraEnabled(cacheable=true)
   public static List<String> getRelatedLookupRecord(
     String recordId,
+    String parentId,
     String tableName,
     String relationshipReferenceField,
     String relationshipField
@@ -483,7 +484,7 @@ global with sharing class PSPDFKitController {
       relationshipReferenceField +
       ' FROM ' +
       tableName +
-      ' WHERE Case__c = :recordId';
+      ' WHERE Id = :parentId';
     List<SObject> records = Database.query(baseQuery);
     if (records.isEmpty()) {
       return new List<String>{ 'Record not found' };
