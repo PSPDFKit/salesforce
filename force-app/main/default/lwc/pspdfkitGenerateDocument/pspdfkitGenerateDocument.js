@@ -698,7 +698,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           templatePlaceholder: templatePlaceholder,
         });
       }
-      // It's a lookup field
+      // It's a lookup field without relation
       else if (databaseField.includes(".") && selectAtGenerate === false) {
         console.log("found a lookup field: " + databaseField);
         console.log("in table: " + tableName);
@@ -735,7 +735,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             templatePlaceholder: templatePlaceholder,
           });
         }
-      } else if (selectAtGenerate === true) {
+      }
+      // It's a related object
+      else if (selectAtGenerate === true) {
         // Fetch list of possible values for dropdown
         console.log("----- in dropdown field");
         console.log(tableName);
@@ -770,6 +772,15 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             selectAtGenerate,
             tableName,
           });
+
+          results.push({
+            placeholder,
+            //values: dropdownValues,
+            isDropdown: false,
+            templatePlaceholder: templatePlaceholder,
+            recordId: this.recordId,
+          });
+
           /*
         
           let relationshipReferenceField;
@@ -834,7 +845,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           }
           // handle this later
           // fetch values for parents
-          /*
+
           try {
             const dropdownValues = await getRecordList({
               tableName,
@@ -842,7 +853,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               recordId,
             });
 
-            console.log("result for dropdwown received");
+            console.log("result for dropdwown parent received");
             console.log(dropdownValues);
 
             results.push({
@@ -864,7 +875,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               isDropdown: true,
               templatePlaceholder: templatePlaceholder,
             });
-          }*/
+          }
         }
       }
       // It's regular field
@@ -902,6 +913,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // get the values for all of their children
 
     let addressData = [];
+    let i = 0;
     structuredData.forEach(async (parent) => {
       console.log("Parent:", parent.name);
 
@@ -915,18 +927,20 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           recordId: parent.recordId,
         });
 
-        console.log("result for dropdown received");
+        console.log("result for parent dropdown received");
         console.log(dropdownValues);
 
         // Ensure results array is accessible and modifiable across multiple async calls
         let results = [];
 
         // Loop through each item in dropdownValues
-        for (const dropdownItem of dropdownValues) {
-          console.log("Processing ID:", dropdownItem.Id);
+        dropdownValues.forEach(async (dropdownItem) => {
+          //for (let dropdownItem of dropdownValues) {
+          console.log("Processing dropdownItem");
+          console.log(dropdownItem);
 
           // Loop through all children and process each
-          for (const child of parent.children) {
+          for (let child of parent.children) {
             console.log("  Child:", child);
 
             let [relationshipReferenceField, relationshipField] =
@@ -939,50 +953,123 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             console.log("recordId: " + this.recordId);
             console.log("parentId: " + dropdownItem.Id);
 
-            try {
-              const childDropdownValues = await getRelatedLookupRecord({
-                recordId: this.recordId,
-                parentId: dropdownItem.Id, // Use Id from dropdownValues for each child
-                tableName: child.tableName,
-                relationshipReferenceField,
-                relationshipField,
-              });
+            // If child is regular object
+            if (
+              relationshipField === undefined &&
+              relationshipReferenceField !== undefined
+            ) {
+              console.log("child is regular object");
+              let fieldName = relationshipReferenceField;
 
-              console.log("results from children dropdown");
-              console.log(childDropdownValues);
+              const value = await getRecordValue({
+                tableName: child.tableName,
+                fieldName: fieldName,
+                recordId: dropdownItem.Id, // parentId
+              });
 
               addressData.push({
-                placeholder: parent.placeholder,
-                values: childDropdownValues,
-                isDropdown: true,
-                recordId: dropdownItem.Id,
-              });
-              /*results.push({
-                placeholder: parent.placeholder,
-                values: childDropdownValues,
-                isDropdown: true,
-                recordId: dropdownItem.Id, // Use Id for better tracking/association
-              });*/
-            } catch (error) {
-              console.error(
-                `Error fetching value for ${child.placeholder}:`,
-                error
-              );
-              results.push({
-                placeholder: parent.placeholder,
-                value: "No value found",
-                error: `Error fetching data: ${error.message}`,
+                placeholder: child.placeholder,
+                value: value,
                 isDropdown: false,
-                recordId: dropdownItem.Id,
+                parentId: dropdownItem.Id,
+                parentValue: dropdownItem.value,
+                //recordId: dropdownItem.Id,
+              });
+            }
+            // If child is Lookup object
+            else if (
+              relationshipField !== undefined &&
+              relationshipReferenceField !== undefined
+            ) {
+              console.log("child is lookup object");
+
+              try {
+                const childDropdownValues = await getRelatedLookupRecord({
+                  recordId: this.recordId,
+                  parentId: dropdownItem.Id, // Use Id from dropdownValues for each child
+                  tableName: child.tableName,
+                  relationshipReferenceField,
+                  relationshipField,
+                });
+
+                console.log("results from children dropdown");
+                console.log(childDropdownValues);
+
+                // Find parent in results and add data to it
+
+                // Push an input field to results
+                addressData.push({
+                  placeholder: child.placeholder,
+                  value: childDropdownValues[0],
+                  isDropdown: false,
+                  parentId: dropdownItem.Id,
+                  parentValue: dropdownItem.value,
+                  //recordId: dropdownItem.Id,
+                });
+                /*results.push({
+                  placeholder: parent.placeholder,
+                  values: childDropdownValues,
+                  isDropdown: true,
+                  recordId: dropdownItem.Id, // Use Id for better tracking/association
+                });*/
+              } catch (error) {
+                console.error(
+                  `Error fetching value for ${child.placeholder}:`,
+                  error
+                );
+                /*results.push({
+                  placeholder: parent.placeholder,
+                  value: "No value found",
+                  error: `Error fetching data: ${error.message}`,
+                  isDropdown: false,
+                  recordId: dropdownItem.Id,
+                });*/
+              }
+            } else {
+              console.log("Error retrieving child data.");
+            }
+          }
+          console.log("final address data ");
+          console.log(addressData);
+
+          console.log("results until now");
+          console.log(this.placeholdersGenerated);
+
+          // Loop over `placeholdersGenerated` to find dropdown items
+          for (let dropdownItem of this.placeholdersGenerated) {
+            if (dropdownItem.isDropdown) {
+              // Replace `values` array with a new mutable copy
+              dropdownItem.values = dropdownItem.values.map((valueEntry) => {
+                // Create a new copy of each value object
+                let mutableValueEntry = { ...valueEntry };
+
+                // Check the `addressData` array to find entries matching `parentValue`
+                for (let addressEntry of addressData) {
+                  if (mutableValueEntry.value === addressEntry.parentValue) {
+                    // Add the placeholder and value to the mutable object
+                    mutableValueEntry[addressEntry.placeholder] =
+                      addressEntry.value;
+
+                    // Optional log to confirm assignment
+                    console.log(
+                      `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
+                    );
+                  }
+                }
+
+                // Return the updated mutable object to replace the original
+                return mutableValueEntry;
               });
             }
           }
-        }
 
-        console.log("final address data");
-        console.log(addressData);
+          console.log("modified this.placeholdersGenerated");
+          // Log the results to verify the changes
+          console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
 
-        return results;
+          //return results;
+          //}
+        });
       } catch (error) {
         console.error("Error in processing data:", error);
         return []; // Return an empty array or suitable error handling
