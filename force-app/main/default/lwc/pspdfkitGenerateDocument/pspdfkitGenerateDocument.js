@@ -1054,9 +1054,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             console.log(JSON.parse(JSON.stringify(dropdownItem)));
             if (dropdownItem.isDropdown) {
               // Replace `values` array with a new mutable copy
-              dropdownItem.values = dropdownItem.values.map((valueEntry) => {
+              dropdownItem.values = dropdownItem.values.map((value) => {
                 // Create a new copy of each value object
-                let mutableValueEntry = { valueEntry };
+                let mutableValueEntry = { value };
                 //let mutableValueEntry = valueEntry;
 
                 console.log("+++++++ mutableValueEntry");
@@ -1069,15 +1069,49 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 // Check the `addressData` array to find entries matching `parentValue`
                 for (let addressEntry of addressData) {
                   console.log("...for loop");
-                  console.log(addressEntry);
+                  //console.log(addressEntry);
                   if (
-                    mutableValueEntry.valueEntry === addressEntry.parentValue &&
-                    addressEntry.value !== null &&
-                    addressEntry.placeholder != null
+                    mutableValueEntry.value === addressEntry.parentValue &&
+                    addressEntry.placeholder.includes(
+                      dropdownItem.placeholder
+                    ) &&
+                    addressEntry.placeholder != null &&
+                    addressEntry.value !== null
+                    //addressEntry.placeholder != null
                   ) {
-                    // Add the placeholder and value to the mutable object
-                    mutableValueEntry[addressEntry.placeholder] =
-                      addressEntry.value;
+                    // Ensure 'Children' array exists
+                    if (!dropdownItem["Children"]) {
+                      dropdownItem["Children"] = [];
+                    }
+
+                    // Attempt to find the object in the 'Children' array where the key matches 'addressEntry.parentValue'
+                    let childEntry = dropdownItem["Children"].find((child) =>
+                      child.hasOwnProperty(addressEntry.parentValue)
+                    );
+
+                    // If no entry exists, create one
+                    if (!childEntry) {
+                      childEntry = {
+                        [addressEntry.parentValue]: [],
+                      };
+                      dropdownItem["Children"].push(childEntry);
+                    }
+
+                    // Prepare new entry object
+                    const newEntry = {
+                      [addressEntry.placeholder]: addressEntry.value,
+                    };
+
+                    // Check if the entry already exists to prevent duplicates
+                    let entryExists = childEntry[addressEntry.parentValue].some(
+                      (entry) =>
+                        entry[addressEntry.placeholder] === addressEntry.value
+                    );
+
+                    // Only add the new entry if it does not already exist
+                    if (!entryExists) {
+                      childEntry[addressEntry.parentValue].push(newEntry);
+                    }
 
                     // Optional log to confirm assignment
                     console.log(
@@ -1089,7 +1123,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 }
 
                 // Return the updated mutable object to replace the original
-                return mutableValueEntry;
+                return value;
               });
             }
           });
@@ -1127,8 +1161,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       //console.log("Fetched data:", results);
       //this.placeholdersGenerated = results;
       console.log("these are the new placeholders generated:");
-      //console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
-      console.log(JSON.stringify(this.placeholdersGenerated));
+      console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
+      //console.log(JSON.stringify(this.placeholdersGenerated));
     }, 5000);
 
     // Once the values have been fetched
