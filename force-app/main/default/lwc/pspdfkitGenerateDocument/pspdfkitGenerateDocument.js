@@ -856,9 +856,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             console.log("result for dropdwown parent received");
             console.log(dropdownValues);
 
+            const stringValues = dropdownValues.map((item) => item.value);
+            console.log("------ stringValues:");
+            console.log(stringValues);
+
             results.push({
               placeholder,
-              values: dropdownValues,
+              values: stringValues,
               isDropdown: true,
               templatePlaceholder: templatePlaceholder,
               recordId: this.recordId,
@@ -872,7 +876,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               placeholder,
               values: ["No values found"],
               error: `Error fetching data: ${error.message}`,
-              isDropdown: true,
+              isDropdown: false,
               templatePlaceholder: templatePlaceholder,
             });
           }
@@ -915,7 +919,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     let addressData = [];
     let i = 0;
     structuredData.forEach(async (parent) => {
-      console.log("Parent:", parent.name);
+      //console.log("Parent:", parent.name);
 
       // Fetch parent values
       // TODO: Parent can be a lookup too
@@ -927,7 +931,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           recordId: parent.recordId,
         });
 
-        console.log("result for parent dropdown received");
+        console.log("----------result for parent dropdown received");
         console.log(dropdownValues);
 
         // Ensure results array is accessible and modifiable across multiple async calls
@@ -1029,43 +1033,79 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               console.log("Error retrieving child data.");
             }
           }
-          console.log("final address data ");
-          console.log(addressData);
+        });
 
-          console.log("results until now");
-          console.log(this.placeholdersGenerated);
+        console.log("final address data ");
+        console.log(addressData);
 
-          // Loop over `placeholdersGenerated` to find dropdown items
-          for (let dropdownItem of this.placeholdersGenerated) {
-            if (dropdownItem.isDropdown) {
-              // Replace `values` array with a new mutable copy
-              dropdownItem.values = dropdownItem.values.map((valueEntry) => {
-                // Create a new copy of each value object
-                let mutableValueEntry = { ...valueEntry };
+        console.log("results until now, fixing it");
+        this.placeholdersGenerated.forEach((item) => {
+          if (item.isDropdown) {
+            // Map over each object in the `values` array and join the characters into complete strings
+            item.values = item.values.map((charObject) => {
+              return Object.values(charObject).join("");
+            });
+          }
+        });
+        console.log(this.placeholdersGenerated);
 
-                // Check the `addressData` array to find entries matching `parentValue`
-                for (let addressEntry of addressData) {
-                  if (mutableValueEntry.value === addressEntry.parentValue) {
-                    // Add the placeholder and value to the mutable object
-                    mutableValueEntry[addressEntry.placeholder] =
-                      addressEntry.value;
+        // Loop over `placeholdersGenerated` to find dropdown items
+        //for (let dropdownItem of this.placeholdersGenerated) {
+        this.placeholdersGenerated.forEach((dropdownItem) => {
+          console.log("this is the dropdownItem");
+          console.log(JSON.parse(JSON.stringify(dropdownItem)));
+          if (dropdownItem.isDropdown) {
+            // Replace `values` array with a new mutable copy
+            dropdownItem.values = dropdownItem.values.map((valueEntry) => {
+              // Create a new copy of each value object
+              let mutableValueEntry = { valueEntry };
+              //let mutableValueEntry = valueEntry;
 
-                    // Optional log to confirm assignment
-                    console.log(
-                      `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
-                    );
-                  }
+              console.log("+++++++ mutableValueEntry");
+              console.log(mutableValueEntry);
+
+              /*const combinedString =
+                  Object.values(mutableValueEntry).join("");
+                mutableValueEntry.value = combinedString;*/
+
+              // Check the `addressData` array to find entries matching `parentValue`
+              for (let addressEntry of addressData) {
+                console.log("...for loop");
+                //console.log(addressEntry);
+                if (
+                  mutableValueEntry.valueEntry === addressEntry.parentValue &&
+                  addressEntry.value !== null
+                ) {
+                  // Add the placeholder and value to the mutable object
+                  mutableValueEntry[addressEntry.placeholder] =
+                    addressEntry.value;
+
+                  // Optional log to confirm assignment
+                  console.log(
+                    `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
+                  );
+
+                  console.log(mutableValueEntry);
                 }
+              }
 
-                // Return the updated mutable object to replace the original
-                return mutableValueEntry;
-              });
-            }
+              // Return the updated mutable object to replace the original
+              return mutableValueEntry;
+            });
           }
 
-          console.log("modified this.placeholdersGenerated");
+          /*console.log("modified this.placeholdersGenerated");
           // Log the results to verify the changes
           console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
+          console.log("fixing it now");
+          this.placeholdersGenerated.forEach((item) => {
+            if (item.isDropdown) {
+              // Map over each object in the `values` array and join the characters into complete strings
+              item.values = item.values.map((charObject) => {
+                return Object.values(charObject).join("");
+              });
+            }
+          });*/
 
           //return results;
           //}
@@ -1083,8 +1123,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
-    //console.log("these are the new placeholders generated:");
-    //console.log(JSON.stringify(this.placeholdersGenerated));
+    console.log("these are the new placeholders generated:");
+    console.log(JSON.stringify(this.placeholdersGenerated));
 
     // Once the values have been fetched
     // load PSPDFKit
