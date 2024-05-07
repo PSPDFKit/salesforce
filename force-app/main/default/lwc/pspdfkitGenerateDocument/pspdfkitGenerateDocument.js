@@ -918,7 +918,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     let addressData = [];
     let i = 0;
-    structuredData.forEach(async (parent) => {
+    await structuredData.forEach(async (parent) => {
       //console.log("Parent:", parent.name);
 
       // Fetch parent values
@@ -1033,68 +1033,68 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               console.log("Error retrieving child data.");
             }
           }
-        });
+          console.log("final address data ");
+          console.log(addressData);
 
-        console.log("final address data ");
-        console.log(addressData);
+          console.log("results until now, fixing it");
+          this.placeholdersGenerated.forEach((item) => {
+            if (item.isDropdown) {
+              // Map over each object in the `values` array and join the characters into complete strings
+              item.values = item.values.map((charObject) => {
+                return Object.values(charObject).join("");
+              });
+            }
+          });
+          console.log(this.placeholdersGenerated);
 
-        console.log("results until now, fixing it");
-        this.placeholdersGenerated.forEach((item) => {
-          if (item.isDropdown) {
-            // Map over each object in the `values` array and join the characters into complete strings
-            item.values = item.values.map((charObject) => {
-              return Object.values(charObject).join("");
-            });
-          }
-        });
-        console.log(this.placeholdersGenerated);
+          // Loop over `placeholdersGenerated` to find dropdown items
+          //for (let dropdownItem of this.placeholdersGenerated) {
+          this.placeholdersGenerated.forEach((dropdownItem) => {
+            console.log("this is the dropdownItem");
+            console.log(JSON.parse(JSON.stringify(dropdownItem)));
+            if (dropdownItem.isDropdown) {
+              // Replace `values` array with a new mutable copy
+              dropdownItem.values = dropdownItem.values.map((valueEntry) => {
+                // Create a new copy of each value object
+                let mutableValueEntry = { valueEntry };
+                //let mutableValueEntry = valueEntry;
 
-        // Loop over `placeholdersGenerated` to find dropdown items
-        //for (let dropdownItem of this.placeholdersGenerated) {
-        this.placeholdersGenerated.forEach((dropdownItem) => {
-          console.log("this is the dropdownItem");
-          console.log(JSON.parse(JSON.stringify(dropdownItem)));
-          if (dropdownItem.isDropdown) {
-            // Replace `values` array with a new mutable copy
-            dropdownItem.values = dropdownItem.values.map((valueEntry) => {
-              // Create a new copy of each value object
-              let mutableValueEntry = { valueEntry };
-              //let mutableValueEntry = valueEntry;
+                console.log("+++++++ mutableValueEntry");
+                //console.log(mutableValueEntry);
 
-              console.log("+++++++ mutableValueEntry");
-              console.log(mutableValueEntry);
-
-              /*const combinedString =
+                /*const combinedString =
                   Object.values(mutableValueEntry).join("");
                 mutableValueEntry.value = combinedString;*/
 
-              // Check the `addressData` array to find entries matching `parentValue`
-              for (let addressEntry of addressData) {
-                console.log("...for loop");
-                //console.log(addressEntry);
-                if (
-                  mutableValueEntry.valueEntry === addressEntry.parentValue &&
-                  addressEntry.value !== null
-                ) {
-                  // Add the placeholder and value to the mutable object
-                  mutableValueEntry[addressEntry.placeholder] =
-                    addressEntry.value;
+                // Check the `addressData` array to find entries matching `parentValue`
+                for (let addressEntry of addressData) {
+                  console.log("...for loop");
+                  console.log(addressEntry);
+                  if (
+                    mutableValueEntry.valueEntry === addressEntry.parentValue &&
+                    addressEntry.value !== null &&
+                    addressEntry.placeholder != null
+                  ) {
+                    // Add the placeholder and value to the mutable object
+                    mutableValueEntry[addressEntry.placeholder] =
+                      addressEntry.value;
 
-                  // Optional log to confirm assignment
-                  console.log(
-                    `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
-                  );
+                    // Optional log to confirm assignment
+                    console.log(
+                      `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
+                    );
 
-                  console.log(mutableValueEntry);
+                    console.log(mutableValueEntry);
+                  }
                 }
-              }
 
-              // Return the updated mutable object to replace the original
-              return mutableValueEntry;
-            });
-          }
+                // Return the updated mutable object to replace the original
+                return mutableValueEntry;
+              });
+            }
+          });
 
-          /*console.log("modified this.placeholdersGenerated");
+          /*console.log("modified within this.placeholdersGenerated");
           // Log the results to verify the changes
           console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
           console.log("fixing it now");
@@ -1123,8 +1123,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
-    console.log("these are the new placeholders generated:");
-    console.log(JSON.stringify(this.placeholdersGenerated));
+    window.setTimeout(() => {
+      //console.log("Fetched data:", results);
+      //this.placeholdersGenerated = results;
+      console.log("these are the new placeholders generated:");
+      //console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
+      console.log(JSON.stringify(this.placeholdersGenerated));
+    }, 5000);
 
     // Once the values have been fetched
     // load PSPDFKit
