@@ -17,6 +17,9 @@ export default class CustomLookUp extends LightningElement {
   @api selectedRole;
   @track hasData = false;
 
+  @api children;
+  @track childrenInputs = [];
+
   @track dropdownOptions = [];
   @track selectedOption = "";
 
@@ -25,6 +28,10 @@ export default class CustomLookUp extends LightningElement {
     console.log("dropdown options set");
     console.log(dropdownOptions);
     return this.dropdownOptions;
+  }
+
+  get hasChildren() {
+    return this.childrenInputs.length > 0;
   }
 
   /*set dropDownOptionsApi(value) {
@@ -62,6 +69,48 @@ export default class CustomLookUp extends LightningElement {
     this.selectedOption = event.detail.value;
     console.log("Role selected: ", this.selectedOption);
     this.selectedRole = this.selectedOption;
+
+    this.selectedOption = event.detail.value;
+    this.updateChildrenInputs();
+  }
+
+  updateChildrenInputs() {
+    // Reset current children inputs
+    this.childrenInputs = [];
+
+    console.log("this.children");
+    console.log(JSON.parse(JSON.stringify(this.children)));
+
+    // Find the object in the children array that corresponds to the selected option
+    let selectedChildrenObj = this.children.find((child) =>
+      child.hasOwnProperty(this.selectedOption)
+    );
+
+    // Check if we found the corresponding children object and if it has the selectedOption as a key
+    if (selectedChildrenObj && selectedChildrenObj[this.selectedOption]) {
+      let selectedChildren = selectedChildrenObj[this.selectedOption];
+      selectedChildren.forEach((childObject) => {
+        // For each property in the child object, add it to the inputs array
+        Object.entries(childObject).forEach(([key, value]) => {
+          console.log("key " + key + " value " + value);
+
+          this.childrenInputs.push({
+            label: key,
+            value: value,
+          });
+        });
+      });
+    }
+  }
+
+  handleChildInputChange(event) {
+    let label = event.target.label;
+    let newValue = event.target.value;
+
+    let childIndex = this.childrenInputs.findIndex((c) => c.label === label);
+    if (childIndex !== -1) {
+      this.childrenInputs[childIndex].value = newValue;
+    }
   }
 
   handleSearchChange(event) {

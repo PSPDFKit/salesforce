@@ -19,14 +19,27 @@
         </div>
     </template>
 
+    <template if:true={hasChildren}>
+        <!-- Dynamically render input fields for each child -->
+        <div class="slds-m-top_small">
+            <template for:each={childrenInputs} for:item="child">
+                <div key={child.key}>
+                    <lightning-input label={child.label}
+                                     value={child.value}
+                                     onchange={handleChildInputChange}>
+                    </lightning-input>
+                </div>
+            </template>
+        </div>
+    </template>
+
     <template if:true={showDropdown}>
         <div class="slds-m-top_small">
             <lightning-combobox name="options"
-                                label={placeholderName}
+                                label={recordId}
                                 value={selectedOption}
                                 placeholder="Select an Option"
                                 options={dropdownOptions}
-                                id={placeholderName}
                                 onchange={handleOptionChange}></lightning-combobox>
         </div>
     </template>
