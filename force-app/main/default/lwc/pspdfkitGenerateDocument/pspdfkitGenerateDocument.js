@@ -1183,16 +1183,11 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     console.log("Fetched data:", results);
     this.placeholdersGenerated = results;
     window.setTimeout(() => {
-      //console.log("Fetched data:", results);
-      //this.placeholdersGenerated = results;
-      console.log("these are the new placeholders generated:");
-      console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
-      //console.log(JSON.stringify(this.placeholdersGenerated));
-    }, 5000);
+      this.loadPSPDFKit();
+    }, 2000);
 
     // Once the values have been fetched
     // load PSPDFKit
-    this.loadPSPDFKit();
 
     return results;
   }
