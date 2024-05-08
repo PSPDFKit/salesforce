@@ -421,15 +421,18 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       //const searchValue = element.currentSearchTerm;
       //console.log(`Search Term: ${searchValue}`);
 
+      console.log("finding template placeholder");
+      console.log(this.placeholdersGenerated);
+      console.log(element.placeholderName);
       const templatePlaceholderString = this.findTemplatePlaceholder(
         this.placeholdersGenerated,
         element.placeholderName
       );
 
-      console.log("element");
+      //console.log("element");
       //console.log(JSON.parse(JSON.stringify(element)));
-      console.log(element.childrenInput);
-      console.log(element.childrenInputApi);
+      //console.log(element.childrenInput);
+      //console.log(element.childrenInputApi);
       if (element.childrenInputApi) {
         for (let i = 0; i < element.childrenInputApi.length; i++) {
           console.log(element.childrenInputApi[i]);

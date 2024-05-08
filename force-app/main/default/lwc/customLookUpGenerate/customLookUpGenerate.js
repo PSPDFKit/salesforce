@@ -72,10 +72,13 @@ export default class CustomLookUp extends LightningElement {
     this.selectedRole = this.selectedOption;
 
     this.selectedOption = event.detail.value;
-    /*if (hasChildren()) {
+
+    console.log("children length");
+    console.log(this.children);
+    if (this.children) {
       this.updateChildrenInputs();
-    }*/
-    this.updateChildrenInputs();
+    }
+    //this.updateChildrenInputs();
   }
 
   updateChildrenInputs() {
@@ -99,7 +102,7 @@ export default class CustomLookUp extends LightningElement {
         console.log(childObject);
 
         Object.entries(childObject).forEach(([key, value]) => {
-          if (typeof value === "string") {
+          if (typeof value === "string" && key !== "templatePlaceholder") {
             // Push a simple object with label and value
             this.childrenInputs.push({
               label: key,
