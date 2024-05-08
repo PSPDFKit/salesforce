@@ -19,6 +19,7 @@ export default class CustomLookUp extends LightningElement {
 
   @api children;
   @track childrenInputs = [];
+  @api childrenInputApi;
 
   @track dropdownOptions = [];
   @track selectedOption = "";
@@ -71,12 +72,16 @@ export default class CustomLookUp extends LightningElement {
     this.selectedRole = this.selectedOption;
 
     this.selectedOption = event.detail.value;
+    /*if (hasChildren()) {
+      this.updateChildrenInputs();
+    }*/
     this.updateChildrenInputs();
   }
 
   updateChildrenInputs() {
     // Reset current children inputs
     this.childrenInputs = [];
+    this.childrenInputApi = [];
 
     console.log("this.children");
     console.log(JSON.parse(JSON.stringify(this.children)));
@@ -90,14 +95,26 @@ export default class CustomLookUp extends LightningElement {
     if (selectedChildrenObj && selectedChildrenObj[this.selectedOption]) {
       let selectedChildren = selectedChildrenObj[this.selectedOption];
       selectedChildren.forEach((childObject) => {
-        // For each property in the child object, add it to the inputs array
-        Object.entries(childObject).forEach(([key, value]) => {
-          console.log("key " + key + " value " + value);
+        console.log("child object selected");
+        console.log(childObject);
 
-          this.childrenInputs.push({
-            label: key,
-            value: value,
-          });
+        Object.entries(childObject).forEach(([key, value]) => {
+          if (typeof value === "string") {
+            // Push a simple object with label and value
+            this.childrenInputs.push({
+              label: key,
+              value: value,
+            });
+
+            // If the key ends with a recognized property name, add a more detailed object
+            if (key !== "templatePlaceholder") {
+              this.childrenInputApi.push({
+                label: key,
+                value: value,
+                templatePlaceholder: childObject.templatePlaceholder,
+              });
+            }
+          }
         });
       });
     }

@@ -427,7 +427,20 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       );
 
       console.log("element");
-      //console.log(element);
+      //console.log(JSON.parse(JSON.stringify(element)));
+      console.log(element.childrenInput);
+      console.log(element.childrenInputApi);
+      if (element.childrenInputApi) {
+        for (let i = 0; i < element.childrenInputApi.length; i++) {
+          console.log(element.childrenInputApi[i]);
+
+          if (element.childrenInputApi[i].label !== "templatePlaceholder")
+            console.log(element.childrenInputApi[i]);
+          filledPlaceholdersData[
+            element.childrenInputApi[i].templatePlaceholder
+          ] = element.childrenInputApi[i].value;
+        }
+      }
       console.log(element.placeholderName);
       console.log(templatePlaceholderString);
 
@@ -695,7 +708,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           placeholder: "Date",
           value: formattedDate,
           isDropdown: false,
-          templatePlaceholder: templatePlaceholder,
+          //templatePlaceholder: templatePlaceholder,
+          templatePlaceholder: "DATE",
         });
       }
       // It's a lookup field without relation
@@ -773,13 +787,14 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             tableName,
           });
 
-          results.push({
+          // Don't push it to the UI
+          /*results.push({
             placeholder,
             //values: dropdownValues,
             isDropdown: false,
             templatePlaceholder: templatePlaceholder,
             recordId: this.recordId,
-          });
+          });*/
 
           /*
         
@@ -977,6 +992,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 isDropdown: false,
                 parentId: dropdownItem.Id,
                 parentValue: dropdownItem.value,
+                templatePlaceholder:
+                  child.placeholder +
+                  "+" +
+                  child.tableName +
+                  "." +
+                  child.databaseField,
                 //recordId: dropdownItem.Id,
               });
             }
@@ -1008,7 +1029,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                   isDropdown: false,
                   parentId: dropdownItem.Id,
                   parentValue: dropdownItem.value,
-                  //recordId: dropdownItem.Id,
+                  // TODO: create template placeholder
                 });
                 /*results.push({
                   placeholder: parent.placeholder,
@@ -1050,8 +1071,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           // Loop over `placeholdersGenerated` to find dropdown items
           //for (let dropdownItem of this.placeholdersGenerated) {
           this.placeholdersGenerated.forEach((dropdownItem) => {
-            console.log("this is the dropdownItem");
-            console.log(JSON.parse(JSON.stringify(dropdownItem)));
+            //console.log("this is the dropdownItem");
+            //console.log(JSON.parse(JSON.stringify(dropdownItem)));
             if (dropdownItem.isDropdown) {
               // Replace `values` array with a new mutable copy
               dropdownItem.values = dropdownItem.values.map((value) => {
@@ -1059,7 +1080,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 let mutableValueEntry = { value };
                 //let mutableValueEntry = valueEntry;
 
-                console.log("+++++++ mutableValueEntry");
+                //console.log("+++++++ mutableValueEntry");
                 //console.log(mutableValueEntry);
 
                 /*const combinedString =
@@ -1068,7 +1089,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
                 // Check the `addressData` array to find entries matching `parentValue`
                 for (let addressEntry of addressData) {
-                  console.log("...for loop");
+                  //console.log("...for loop");
                   //console.log(addressEntry);
                   if (
                     mutableValueEntry.value === addressEntry.parentValue &&
@@ -1100,6 +1121,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                     // Prepare new entry object
                     const newEntry = {
                       [addressEntry.placeholder]: addressEntry.value,
+                      templatePlaceholder: addressEntry.templatePlaceholder,
                     };
 
                     // Check if the entry already exists to prevent duplicates
@@ -1118,7 +1140,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                       `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
                     );
 
-                    console.log(mutableValueEntry);
+                    //console.log(mutableValueEntry);
                   }
                 }
 

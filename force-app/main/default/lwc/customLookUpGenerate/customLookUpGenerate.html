@@ -21,7 +21,7 @@
 
     <template if:true={hasChildren}>
         <!-- Dynamically render input fields for each child -->
-        <div class="slds-m-top_small">
+        <div class="slds-m-top_small" key={child.value}>
             <template for:each={childrenInputs} for:item="child">
                 <div key={child.key}>
                     <lightning-input label={child.label}
