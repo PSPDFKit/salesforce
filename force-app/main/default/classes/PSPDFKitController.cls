@@ -311,6 +311,22 @@ global with sharing class PSPDFKitController {
   }
 
   @AuraEnabled(cacheable=true)
+  public static String getRelatedObjectFieldsString(
+    Id recordId,
+    String availableObject
+  ) {
+    // Fetch the record with the Related_Objects__c field
+    BD_Document_Templates__c templateRecord = [
+      SELECT Related_Objects__c
+      FROM BD_Document_Templates__c
+      WHERE Id = :recordId
+      LIMIT 1
+    ];
+
+    return templateRecord.Related_Objects__c;
+  }
+
+  //@AuraEnabled(cacheable=true)
   public static Map<String, List<String>> getRelatedObjectFields(
     Id recordId,
     String availableObject
@@ -472,22 +488,39 @@ global with sharing class PSPDFKitController {
 
   @AuraEnabled(cacheable=true)
   public static List<String> getRelatedLookupRecord(
-    String recordId,
     String parentId,
+    String childId,
     String tableName,
     String relationshipReferenceField,
     String relationshipField
   ) {
-    // Generate dynamic SOQL query strings
-    String baseQuery =
-      'SELECT ' +
-      relationshipReferenceField +
-      ' FROM ' +
-      tableName +
-      ' WHERE Id = :parentId';
-    List<SObject> records = Database.query(baseQuery);
-    if (records.isEmpty()) {
-      return new List<String>{ 'Record not found' };
+    List<SObject> records;
+    if (String.isNotBlank(parentId)) {
+      // Generate dynamic SOQL query strings
+      String baseQuery =
+        'SELECT ' +
+        relationshipReferenceField +
+        ' FROM ' +
+        tableName +
+        ' WHERE Case__c = :parentId';
+      records = Database.query(baseQuery);
+      if (records.isEmpty()) {
+        //return new List<String>{ 'Record not found' };
+        return new List<String>{ baseQuery };
+      }
+    } else {
+      // Generate dynamic SOQL query strings
+      String baseQuery =
+        'SELECT ' +
+        relationshipReferenceField +
+        ' FROM ' +
+        tableName +
+        ' WHERE Id = :childId';
+      records = Database.query(baseQuery);
+      if (records.isEmpty()) {
+        //return new List<String>{ 'Record not found' };
+        return new List<String>{ baseQuery };
+      }
     }
 
     List<String> allRelatedValues = new List<String>();

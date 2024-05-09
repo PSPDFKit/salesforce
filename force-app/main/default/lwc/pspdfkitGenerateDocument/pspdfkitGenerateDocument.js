@@ -429,39 +429,56 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         element.placeholderName
       );
 
-      //console.log("element");
-      //console.log(JSON.parse(JSON.stringify(element)));
+      console.log("element");
+      console.log(JSON.stringify(element));
       //console.log(element.childrenInput);
       //console.log(element.childrenInputApi);
       if (element.childrenInputApi) {
-        for (let i = 0; i < element.childrenInputApi.length; i++) {
-          console.log(element.childrenInputApi[i]);
-
-          if (element.childrenInputApi[i].label !== "templatePlaceholder")
-            console.log(element.childrenInputApi[i]);
-          filledPlaceholdersData[
-            element.childrenInputApi[i].templatePlaceholder
-          ] = element.childrenInputApi[i].value;
-        }
-      }
-      console.log(element.placeholderName);
-      console.log(templatePlaceholderString);
-
-      // Search for element.placeholderName in this.placeholdersGenerated
-      // and fetch the templatePlacholder from there.
-
-      let placeholderName = templatePlaceholderString;
-      let placeholderValue = element.searchKey;
-      let selectedRole = element.selectedRole;
-
-      if (element.selectedRole) {
+        // Add parent first
+        let placeholderName = templatePlaceholderString;
+        let selectedRole = element.selectedRole;
         filledPlaceholdersData[placeholderName] = selectedRole;
+
+        for (let i = 0; i < element.childrenInputApi.length; i++) {
+          //console.log(element.childrenInputApi[i]);
+
+          if (element.childrenInputApi[i].label !== "templatePlaceholder") {
+            console.log(element.childrenInputApi[i]);
+            //element.childrenInputApi[i].templatePlaceholder =
+            filledPlaceholdersData[
+              element.childrenInputApi[i].templatePlaceholder
+            ] = element.childrenInputApi[i].value;
+          }
+        }
       } else {
-        filledPlaceholdersData[placeholderName] = placeholderValue;
+        console.log(element.placeholderName);
+        console.log(templatePlaceholderString);
+
+        // Search for element.placeholderName in this.placeholdersGenerated
+        // and fetch the templatePlacholder from there.
+
+        let placeholderName = templatePlaceholderString;
+        let placeholderValue = element.searchKey;
+        let selectedRole = element.selectedRole;
+
+        console.log(
+          "Adding regular value for " +
+            placeholderName +
+            " selectedRole: " +
+            selectedRole +
+            " placeholderValue: " +
+            placeholderValue
+        );
+
+        if (element.selectedRole) {
+          filledPlaceholdersData[placeholderName] = selectedRole;
+        } else {
+          filledPlaceholdersData[placeholderName] = placeholderValue;
+        }
       }
     });
     console.log("final placeholder data");
-    console.log(filledPlaceholdersData);
+    console.log(JSON.parse(JSON.stringify(filledPlaceholdersData)));
 
     // Fetch all placeholders AND their data
     // and send it to the VisualForce page
@@ -788,6 +805,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             placeholder,
             selectAtGenerate,
             tableName,
+            templatePlaceholder,
           });
 
           // Don't push it to the UI
@@ -843,6 +861,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         } else {
           console.log("Parent value found, look for children values");
 
+          // Push parent to structured data
+          // so that children data can be
+          // fetched later.
           let parent = structuredData.some((p) => p.name === databaseField);
           if (!parent) {
             structuredData.push({
@@ -861,42 +882,90 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             parent.tableName = tableName;
             parent.recordId = this.recordId;
           }
-          // handle this later
-          // fetch values for parents
 
-          try {
-            const dropdownValues = await getRecordList({
-              tableName,
-              databaseField,
-              recordId,
-            });
+          // Related Record with Lookup
+          if (databaseField.includes(".")) {
+            console.log("--------------------Related Field with Lookup");
+            console.log(this.recordId);
 
-            console.log("result for dropdwown parent received");
-            console.log(dropdownValues);
+            let relationshipReferenceField;
+            let relationshipField;
+            [relationshipReferenceField, relationshipField] =
+              databaseField.split(".");
 
-            const stringValues = dropdownValues.map((item) => item.value);
-            console.log("------ stringValues:");
-            console.log(stringValues);
-
-            results.push({
-              placeholder,
-              values: stringValues,
-              isDropdown: true,
-              templatePlaceholder: templatePlaceholder,
-              recordId: this.recordId,
-            });
-          } catch (error) {
-            console.error(
-              `Error fetching dropdown values for placeholder:`,
-              error
+            console.log(
+              "relationshipReferenceField:  " + relationshipReferenceField
             );
-            results.push({
-              placeholder,
-              values: ["No values found"],
-              error: `Error fetching data: ${error.message}`,
-              isDropdown: false,
-              templatePlaceholder: templatePlaceholder,
-            });
+            console.log("relationshipField:  " + relationshipField);
+
+            try {
+              const dropdownValues = await getRelatedLookupRecord({
+                parentId: this.recordId,
+                childId: "",
+                tableName,
+                relationshipReferenceField,
+                relationshipField,
+              });
+
+              console.log("results from dropdown");
+              console.log(dropdownValues);
+
+              results.push({
+                placeholder,
+                values: dropdownValues,
+                isDropdown: true,
+                templatePlaceholder: templatePlaceholder,
+                recordId: this.recordId,
+              });
+            } catch (error) {
+              console.error(`Error fetching value for ${placeholder}:`, error);
+              results.push({
+                placeholder,
+                value: "No value found",
+                error: `Error fetching data: ${error.message}`,
+                isDropdown: false,
+                templatePlaceholder: templatePlaceholder,
+              });
+            }
+          }
+          // Regular Field with Lookup
+          else {
+            console.log("Regular Field with Lookup");
+
+            try {
+              const dropdownValues = await getRecordList({
+                tableName,
+                databaseField,
+                recordId,
+              });
+
+              console.log("result for dropdwown parent received");
+              console.log(dropdownValues);
+
+              const stringValues = dropdownValues.map((item) => item.value);
+              console.log("------ stringValues:");
+              console.log(stringValues);
+
+              results.push({
+                placeholder,
+                values: stringValues,
+                isDropdown: true,
+                templatePlaceholder: templatePlaceholder,
+                recordId: this.recordId,
+              });
+            } catch (error) {
+              console.error(
+                `Error fetching dropdown values for placeholder:`,
+                error
+              );
+              results.push({
+                placeholder,
+                values: ["No values found"],
+                error: `Error fetching data: ${error.message}`,
+                isDropdown: false,
+                templatePlaceholder: templatePlaceholder,
+              });
+            }
           }
         }
       }
@@ -1012,9 +1081,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               console.log("child is lookup object");
 
               try {
-                const childDropdownValues = await getRelatedLookupRecord({
-                  recordId: this.recordId,
-                  parentId: dropdownItem.Id, // Use Id from dropdownValues for each child
+                let childDropdownValues = await getRelatedLookupRecord({
+                  //recordId: this.recordId,
+                  childId: dropdownItem.Id, // Use Id from dropdownValues for each child
+                  parentId: "",
                   tableName: child.tableName,
                   relationshipReferenceField,
                   relationshipField,
@@ -1025,6 +1095,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
                 // Find parent in results and add data to it
 
+                console.log(
+                  "templatePlaceholder: " + child.templatePlaceholder
+                );
+
                 // Push an input field to results
                 addressData.push({
                   placeholder: child.placeholder,
@@ -1032,7 +1106,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                   isDropdown: false,
                   parentId: dropdownItem.Id,
                   parentValue: dropdownItem.value,
-                  // TODO: create template placeholder
+                  templatePlaceholder: child.templatePlaceholder,
                 });
                 /*results.push({
                   placeholder: parent.placeholder,
@@ -1092,8 +1166,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
                 // Check the `addressData` array to find entries matching `parentValue`
                 for (let addressEntry of addressData) {
-                  //console.log("...for loop");
-                  //console.log(addressEntry);
+                  console.log("...for loop");
+                  console.log(addressEntry);
+                  //console.log(JSON.stringify(addressEntry));
                   if (
                     mutableValueEntry.value === addressEntry.parentValue &&
                     addressEntry.placeholder.includes(
@@ -1126,7 +1201,6 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                       [addressEntry.placeholder]: addressEntry.value,
                       templatePlaceholder: addressEntry.templatePlaceholder,
                     };
-
                     // Check if the entry already exists to prevent duplicates
                     let entryExists = childEntry[addressEntry.parentValue].some(
                       (entry) =>

@@ -13,9 +13,10 @@ import getRoleFields from "@salesforce/apex/PSPDFKitController.getRoleFields";
 import fetchAttachedDocumentFile from "@salesforce/apex/PSPDFKitController.fetchAttachedDocumentFile";
 import getTemplateJson from "@salesforce/apex/PSPDFKitController.getTemplateJson";
 import getAvailableObject from "@salesforce/apex/PSPDFKitController.getAvailableObject";
-import getRelatedObjectFields from "@salesforce/apex/PSPDFKitController.getRelatedObjectFields";
+//import getRelatedObjectFields from "@salesforce/apex/PSPDFKitController.getRelatedObjectFields";
+import getRelatedObjectFieldsString from "@salesforce/apex/PSPDFKitController.getRelatedObjectFieldsString";
 
-import getJunctionAndRoleFields from "@salesforce/apex/ObjectFieldRetriever.getJunctionAndRoleFields";
+//import getJunctionAndRoleFields from "@salesforce/apex/ObjectFieldRetriever.getJunctionAndRoleFields";
 
 import { updateRecord } from "lightning/uiRecordApi";
 
@@ -73,7 +74,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
   }*/
 
   @track relatedObjects;
-  @wire(getRelatedObjectFields, {
+  @wire(getRelatedObjectFieldsString, {
     recordId: "$recordId",
     availableObject: "$availableObject",
   })
@@ -81,6 +82,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
     if (data) {
       console.log("related objects");
       this.relatedObjects = data;
+      console.log(data);
       //console.log(JSON.stringify(this.relatedObjects));
       //this.dropDownFields = data;
     } else if (error) {
@@ -456,12 +458,60 @@ export default class PSPDFKitFileSelector extends LightningElement {
 
       let tableNameDifferent = this.availableObject !== tableName;
 
-      searchTerms.push({
-        placeholder: keyValue,
-        databaseField: databaseField,
-        tableName: tableName,
-        selectAtGenerate: tableNameDifferent,
-      });
+      // Check if the referenceField is given in related objects
+      let referenceField = "";
+      if (tableNameDifferent) {
+        console.log("this.relatedObjects " + this.relatedObjects);
+
+        let entries = this.relatedObjects.split(";");
+
+        entries.forEach((entry) => {
+          let baseValue;
+          let parameter = null;
+
+          // Check if the entry contains brackets
+          let startIndex = entry.indexOf("[");
+          let endIndex = entry.indexOf("]");
+
+          if (startIndex !== -1 && endIndex !== -1) {
+            // Extract the base value and the parameter
+            baseValue = entry.substring(0, startIndex);
+            parameter = entry.substring(startIndex + 1, endIndex);
+          } else {
+            // No brackets, the entire entry is the base value
+            baseValue = entry;
+          }
+
+          console.log("baseValue: " + baseValue);
+          console.log("Parameter: " + parameter);
+
+          // Now compare baseValue with tableName
+          if (baseValue === tableName) {
+            console.log("Match found:", baseValue);
+            if (parameter !== null) {
+              console.log("Parameter:", parameter);
+              referenceField = parameter;
+            }
+          }
+        });
+      }
+
+      if (tableNameDifferent && referenceField !== "") {
+        searchTerms.push({
+          placeholder: keyValue,
+          databaseField: databaseField,
+          tableName: tableName,
+          selectAtGenerate: tableNameDifferent,
+          referenceField: referenceField,
+        });
+      } else {
+        searchTerms.push({
+          placeholder: keyValue,
+          databaseField: databaseField,
+          tableName: tableName,
+          selectAtGenerate: tableNameDifferent,
+        });
+      }
 
       // Check if searchValue contains "Role:" and process accordingly
       /*if (searchValue && searchValue.includes("Role:")) {
