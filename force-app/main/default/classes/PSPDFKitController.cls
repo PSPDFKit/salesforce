@@ -420,16 +420,34 @@ global with sharing class PSPDFKitController {
   public static List<Map<String, String>> getRecordList(
     String tableName,
     String databaseField,
-    String recordId
+    String recordId,
+    String referenceField
   ) {
-    // Use "Case__c" as the relationship field for role-related queries
-    List<SObject> records = Database.query(
-      'SELECT ' +
-        databaseField +
-        ', Id FROM ' +
-        tableName +
-        ' WHERE Case__c = :recordId'
-    );
+    // If reference field connecting related object
+    // has been given, use it, otherwise use default.
+    List<SObject> records;
+    if (String.isNotBlank(referenceField)) {
+      // Use "Case__c" as the relationship field for role-related queries
+      records = Database.query(
+        'SELECT ' +
+          databaseField +
+          ', Id FROM ' +
+          tableName +
+          ' WHERE ' +
+          referenceField +
+          ' = :recordId'
+      );
+    } else {
+      // Use "Case__c" as the relationship field for role-related queries
+      records = Database.query(
+        'SELECT ' +
+          databaseField +
+          ', Id FROM ' +
+          tableName +
+          ' WHERE Case__c = :recordId'
+      );
+    }
+
     List<Map<String, String>> values = new List<Map<String, String>>();
     for (SObject record : records) {
       Map<String, String> recordMap = new Map<String, String>();
@@ -492,10 +510,27 @@ global with sharing class PSPDFKitController {
     String childId,
     String tableName,
     String relationshipReferenceField,
-    String relationshipField
+    String relationshipField,
+    String referenceField
   ) {
     List<SObject> records;
-    if (String.isNotBlank(parentId)) {
+    // If a custom referenceField was given in the related object
+    if (String.isNotBlank(referenceField)) {
+      // Generate dynamic SOQL query strings
+      String baseQuery =
+        'SELECT ' +
+        String.escapeSingleQuotes(relationshipReferenceField) +
+        ' FROM ' +
+        String.escapeSingleQuotes(tableName) +
+        ' WHERE ' +
+        String.escapeSingleQuotes(referenceField) +
+        ' = :parentId';
+      records = Database.query(baseQuery);
+      if (records.isEmpty()) {
+        //return new List<String>{ 'Record not found' };
+        return new List<String>{ baseQuery };
+      }
+    } else if (String.isNotBlank(parentId)) {
       // Generate dynamic SOQL query strings
       String baseQuery =
         'SELECT ' +
@@ -505,8 +540,8 @@ global with sharing class PSPDFKitController {
         ' WHERE Case__c = :parentId';
       records = Database.query(baseQuery);
       if (records.isEmpty()) {
-        //return new List<String>{ 'Record not found' };
-        return new List<String>{ baseQuery };
+        return new List<String>{ 'Error in retrieving data - parent' };
+        //return new List<String>{ baseQuery };
       }
     } else {
       // Generate dynamic SOQL query strings
@@ -519,7 +554,8 @@ global with sharing class PSPDFKitController {
       records = Database.query(baseQuery);
       if (records.isEmpty()) {
         //return new List<String>{ 'Record not found' };
-        return new List<String>{ baseQuery };
+        //return new List<String>{ baseQuery };
+        return new List<String>{ 'Error in retrieving data - child' };
       }
     }
 

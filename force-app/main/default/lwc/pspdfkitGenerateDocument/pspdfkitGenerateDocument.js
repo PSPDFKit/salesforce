@@ -693,10 +693,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       placeholder,
       selectAtGenerate,
       tableName,
+      referenceField,
     } of this.placeholders) {
       console.log("reconstructing placeholders");
       console.log("placeholder: " + placeholder);
       console.log("rest: " + tableName + "." + databaseField);
+      console.log("referenceField: " + referenceField);
       // Reconstruct the displayname + placeholder if necessary
       let templatePlaceholder = "";
       if (
@@ -777,6 +779,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log(tableName);
         console.log(databaseField);
         console.log(this.recordId);
+        console.log(placeholder);
         let recordId = await this.recordId;
 
         if (placeholder.includes(".")) {
@@ -881,6 +884,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             parent.selectAtGenerate = selectAtGenerate;
             parent.tableName = tableName;
             parent.recordId = this.recordId;
+            parent.referenceField = referenceField;
           }
 
           // Related Record with Lookup
@@ -897,6 +901,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               "relationshipReferenceField:  " + relationshipReferenceField
             );
             console.log("relationshipField:  " + relationshipField);
+            console.log("sending referenceField: " + referenceField);
 
             try {
               const dropdownValues = await getRelatedLookupRecord({
@@ -905,6 +910,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 tableName,
                 relationshipReferenceField,
                 relationshipField,
+                referenceField: referenceField,
               });
 
               console.log("results from dropdown");
@@ -937,6 +943,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 tableName,
                 databaseField,
                 recordId,
+                referenceField,
               });
 
               console.log("result for dropdwown parent received");
@@ -1081,13 +1088,18 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               console.log("child is lookup object");
 
               try {
+                //if (referenceField !== ""){}
+                let referenceField = "BD_Case__c";
+                //console.log("sending in: " + referenceField);
+
                 let childDropdownValues = await getRelatedLookupRecord({
                   //recordId: this.recordId,
                   childId: dropdownItem.Id, // Use Id from dropdownValues for each child
                   parentId: "",
                   tableName: child.tableName,
-                  relationshipReferenceField,
-                  relationshipField,
+                  relationshipReferenceField: relationshipReferenceField,
+                  relationshipField: relationshipField,
+                  //referenceField: referenceField,
                 });
 
                 console.log("results from children dropdown");
@@ -1166,8 +1178,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
                 // Check the `addressData` array to find entries matching `parentValue`
                 for (let addressEntry of addressData) {
-                  console.log("...for loop");
-                  console.log(addressEntry);
+                  //console.log("...for loop");
+                  //console.log(addressEntry);
                   //console.log(JSON.stringify(addressEntry));
                   if (
                     mutableValueEntry.value === addressEntry.parentValue &&
@@ -1213,9 +1225,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                     }
 
                     // Optional log to confirm assignment
-                    console.log(
+                    /*console.log(
                       `Added placeholder "${addressEntry.placeholder}" with value "${addressEntry.value}" to dropdown item.`
-                    );
+                    );*/
 
                     //console.log(mutableValueEntry);
                   }
