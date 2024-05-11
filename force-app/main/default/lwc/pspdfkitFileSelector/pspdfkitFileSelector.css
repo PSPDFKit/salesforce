@@ -11,6 +11,7 @@
   line-height: 140%;
   max-width: 100%;
   width: 500px;
+  overflow-x: auto;
 }
 
 .heading {
@@ -91,6 +92,7 @@
   }
   .wrapper{
     width: 274px;
+    height: 100vh;
   }
   
   .fileUpload {
@@ -108,7 +110,7 @@
   
   .wrapper {
     width: 1000px;
-    height: 293px;
+    height: 100vh;
   }
   
   .icon {
@@ -145,7 +147,7 @@
 @media only screen and (max-width: 564px) {
   .wrapper {
     width: 540px;
-    height: 280px;
+    height: 100vh;
     margin-bottom: 12px;
   }
 
@@ -162,8 +164,9 @@
 
 @media only screen and (max-width: 320px) {
   .wrapper {
-    height: 360px;
+    height: 100vh;
     max-width: 295px;
+  
   }
 
   .fileUpload {

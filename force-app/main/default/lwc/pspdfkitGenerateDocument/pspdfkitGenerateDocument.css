@@ -1,7 +1,20 @@
-.page{
+
+.page {
   display: grid;
-  grid-template-columns: 1fr 3fr; 
+  grid-template-columns: minmax(250px, 290px) auto; 
   gap: 11px;
+}
+
+.viewer {
+  width: 100%;  
+  height: 100vh;
+  overflow: hidden; 
+}
+
+.viewer iframe {
+  width: 100%;  
+  height: 100vh; 
+  border: none;
 }
 
 .wrapper {
@@ -9,8 +22,10 @@
   background: #ffffff;
   font-weight: 510;
   line-height: 140%;
-  max-width: 100%;
+  width: 100%;
+  max-width: 290px;
   width: 500px;
+  overflow-x: auto;
 }
 
 .heading {
