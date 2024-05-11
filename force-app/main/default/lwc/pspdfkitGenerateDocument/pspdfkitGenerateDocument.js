@@ -798,6 +798,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               selectAtGenerate: null,
               tableName: null,
               recordId: this.recordId,
+              referenceField: referenceField,
             };
             structuredData.push(parent);
           } else {
@@ -809,6 +810,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             selectAtGenerate,
             tableName,
             templatePlaceholder,
+            referenceField,
           });
 
           // Don't push it to the UI
@@ -877,6 +879,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               selectAtGenerate,
               tableName,
               recordId,
+              referenceField,
             });
           } else if (parent && parent.databaseField === null) {
             parent.databaseField = databaseField;
@@ -915,6 +918,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
               console.log("results from dropdown");
               console.log(dropdownValues);
+              console.log(
+                "results from dropdown 2 " + JSON.stringify(dropdownValues)
+              );
 
               results.push({
                 placeholder,
@@ -1013,7 +1019,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     let addressData = [];
     let i = 0;
     await structuredData.forEach(async (parent) => {
-      //console.log("Parent:", parent.name);
+      console.log("Parent:", parent.name);
 
       // Fetch parent values
       // TODO: Parent can be a lookup too
@@ -1023,6 +1029,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           tableName: parent.tableName,
           databaseField: parent.databaseField,
           recordId: parent.recordId,
+          referenceField: parent.referenceField,
         });
 
         console.log("----------result for parent dropdown received");
@@ -1045,11 +1052,17 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               child.databaseField.split(".");
 
             console.log(
-              "relationshipReferenceField: " + relationshipReferenceField
+              "relationshipReferenceField: " +
+                relationshipReferenceField +
+                " relationshipField: " +
+                relationshipField +
+                " recordId: " +
+                this.recordId +
+                " parentId: " +
+                dropdownItem.Id +
+                " referenceFieldFinal: " +
+                parent.referenceField
             );
-            console.log("relationshipField: " + relationshipField);
-            console.log("recordId: " + this.recordId);
-            console.log("parentId: " + dropdownItem.Id);
 
             // If child is regular object
             if (
@@ -1085,25 +1098,41 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               relationshipField !== undefined &&
               relationshipReferenceField !== undefined
             ) {
-              console.log("child is lookup object");
+              console.log("++++++++++++++++++++ child is lookup object");
 
+              let childDropdownValues;
               try {
                 //if (referenceField !== ""){}
-                let referenceField = "BD_Case__c";
-                //console.log("sending in: " + referenceField);
+                //let referenceField = "BD_Case__c";
+                console.log("sending in: " + parent.referenceField);
 
-                let childDropdownValues = await getRelatedLookupRecord({
-                  //recordId: this.recordId,
-                  childId: dropdownItem.Id, // Use Id from dropdownValues for each child
-                  parentId: "",
-                  tableName: child.tableName,
-                  relationshipReferenceField: relationshipReferenceField,
-                  relationshipField: relationshipField,
-                  //referenceField: referenceField,
-                });
+                if (parent.referenceField) {
+                  childDropdownValues = await getRelatedLookupRecord({
+                    //recordId: this.recordId,
+                    childId: dropdownItem.Id, // Use Id from dropdownValues for each child
+                    parentId: parent.recordId,
+                    tableName: child.tableName,
+                    relationshipReferenceField: relationshipReferenceField,
+                    relationshipField: relationshipField,
+                    referenceField: parent.referenceField,
+                  });
+                } else {
+                  childDropdownValues = await getRelatedLookupRecord({
+                    //recordId: this.recordId,
+                    childId: dropdownItem.Id, // Use Id from dropdownValues for each child
+                    parentId: "",
+                    tableName: child.tableName,
+                    relationshipReferenceField: relationshipReferenceField,
+                    relationshipField: relationshipField,
+                    referenceField: parent.referenceField,
+                  });
+                }
 
-                console.log("results from children dropdown");
-                console.log(childDropdownValues);
+                console.log(
+                  "results from children dropdown ",
+                  childDropdownValues
+                );
+                //console.log(childDropdownValues);
 
                 // Find parent in results and add data to it
 
@@ -1128,8 +1157,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 });*/
               } catch (error) {
                 console.error(
-                  `Error fetching value for ${child.placeholder}:`,
-                  error
+                  `Error fetching value for ${child.placeholder}:` +
+                    error +
+                    " " +
+                    JSON.stringify(childDropdownValues)
                 );
                 /*results.push({
                   placeholder: parent.placeholder,
@@ -1256,6 +1287,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           //}
         });
       } catch (error) {
+        console.log("Could not fetch data for parent.");
         console.error("Error in processing data:", error);
         return []; // Return an empty array or suitable error handling
       }
