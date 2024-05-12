@@ -9,13 +9,15 @@
                        autocomplete="off"
                        role="textbox"
                        placeholder={searchKey}
-                       oninput={handleSearchChange} 
+                       
                        value={searchKey}/>
-                <span class="slds-icon_container slds-icon-utility-down">
+                
+                <!--oninput={handleSearchChange}-->
+                <!--<span class="slds-icon_container slds-icon-utility-down">
                     <lightning-icon icon-name="utility:down" size="small" alternative-text="Show More"></lightning-icon>
-                </span>
+                </span>-->
             </div>
-            <div id="listbox-id-1" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox" style="display:flex">
+            <!--<div id="listbox-id-1" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox" style="display:flex">
                 <ul class="slds-listbox slds-listbox_vertical" role="group" aria-label="Suggested for you">
                     <template for:each={searchResults} for:item="result">
                         <li key={result} data-id={result} role="presentation" class="slds-listbox__item">
@@ -27,7 +29,7 @@
                         </li>
                     </template>
                 </ul>
-            </div>
+            </div>-->
         </div>
     </div>
 </template>

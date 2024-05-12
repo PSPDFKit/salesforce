@@ -24,10 +24,13 @@ export default class CustomLookUp extends LightningElement {
   @track dropdownOptions = [];
   @track selectedOption = "";
 
+  @track hasLabel = false;
+
   @api
   get dropDownOptionsApi() {
     console.log("dropdown options set");
     console.log(dropdownOptions);
+
     return this.dropdownOptions;
   }
 
