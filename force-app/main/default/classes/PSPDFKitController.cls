@@ -139,6 +139,34 @@ global with sharing class PSPDFKitController {
     }
   }
 
+  @AuraEnabled
+  public static Map<String, String> getbase64DataForSigning(String strId) {
+    try {
+      Map<String, String> filedNameVsValue = new Map<String, String>();
+      ContentVersion newList = [
+        SELECT
+          Id,
+          VersionData,
+          FileType,
+          Title,
+          FileExtension,
+          ContentDocumentId,
+          PathOnClient
+        FROM ContentVersion
+        WHERE Id = :strId AND IsLatest = TRUE
+      ];
+      filedNameVsValue.put('ContentDocumentId', newList.ContentDocumentId);
+      filedNameVsValue.put('PathOnClient', newList.PathOnClient);
+      filedNameVsValue.put(
+        'VersionData',
+        EncodingUtil.Base64Encode(newList.VersionData)
+      );
+      return filedNameVsValue;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   //@AuraEnabled
   @RemoteAction
   public static String getFileAsArrayBuffer(String fileName) {

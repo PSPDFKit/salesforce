@@ -104,7 +104,11 @@
             }
         };
 
+
+        console.log("checking recId");
+        console.log(recId);
         if (recId != null) {
+
             pdf = '{!conbase}';
             if (pdf != '') {
                 var base64str = pdf;
@@ -187,6 +191,10 @@
             return arrayBuffer;
         }
 
+        function isEmptyObject(obj) {
+            return Object.keys(obj).length === 0 && obj.constructor === Object;
+        }
+
         function loadPSPDFKit(placeholderData) {
             pdf.arrayBuffer().then(async val => {
 
@@ -196,7 +204,7 @@
 
 
                 let document = val;
-                if (placeholderData != null) {
+                if (placeholderData != null && typeof placeholderData === 'object' && !isEmptyObject(placeholderData)) {
                     document = fillTemplate(val, placeholderData);
                 } else {
                     document = val;
@@ -371,6 +379,7 @@
                             var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
                             pendingDocumentObject.BD_Case__c = caseId; // This is how you link it to CMS_Case__c
                             // Set other necessary fields of BD_Pending_Documents__c
+                            pendingDocumentObject.Id = this.documentId;
                             pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
 
                             // Assuming there's a lookup or master-detail field on BD_Pending_Documents__c that relates to the ContentVersion or ContentDocument
