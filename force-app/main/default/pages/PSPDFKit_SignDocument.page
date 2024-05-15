@@ -1,0 +1,468 @@
+<apex:page controller="PSPDFKitController">
+    <!-- PSPDF Init div -->
+    <div id="pspdfkit" style="width: 100%; height: 100vh;"></div>
+
+    <script type="text/javascript"> __sfdcSessionId = '{!$Api.Session_Id}';</script>
+    <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
+    <!--<script src="{!$Resource.PSPDFKit20241}" type="text/javascript"></script>-->
+    <script src="{!$Resource.PSPDFKit20241}" type="text/javascript"></script>
+    <script src="{!$Resource.docxtemplater}" type="text/javascript"></script>
+    <script src="{!$Resource.inspectModule}" type="text/javascript"></script>
+    <script src="{!$Resource.pizzip}" type="text/javascript"></script>
+    <script type="text/javascript">
+
+
+        // Load Template
+        /*********************************/
+        function loadPlaceholdersFromTemplate(templateArrayBuffer) {
+            //let template = "TestTemplate";
+
+            console.log("loadPlaceholdersFromTemplate: ", templateArrayBuffer);
+
+            // Get the template from Salesforce
+            /*sforce.connection.query(
+                "SELECT VersionData FROM ContentVersion WHERE Title = 'TestTemplate'",
+                {
+                    onSuccess: function (result) {
+                        var records = result.getArray("records");
+                        // File loaded as Base64
+                        var versionData = records[0].VersionData;
+
+                        let binaryString = atob(versionData);
+
+                        let len = binaryString.length;
+                        let bytes = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+
+                        // File converted into ArrayBuffer
+                        let arrayBuffer = bytes.buffer;
+                        console.log("File as Array Buffer");
+                        console.log(arrayBuffer);
+                        loadPSPDFKitCustom(arrayBuffer);
+
+                    },
+                    onFailure: function (error) {
+                        console.log("An error has occurred: " + error);
+                    }
+                }
+            );*/
+            loadPSPDFKitCustom(templateArrayBuffer);
+
+        }
+
+        async function loadPSPDFKitCustom(arrayBufferTemplate) {
+            console.log("in loadPSPDFKit custom");
+            let tags = await getPlacholderTags(arrayBufferTemplate);
+            console.log("tags found");
+            console.log(tags);
+
+            window.parent.postMessage({
+                type: 'lwcEvent',
+                value: tags
+            }, '*');
+
+        }
+
+        async function getPlacholderTags(blob) {
+            const iModule = window.iModule;
+            let arrayBufferTemplate = await blob.arrayBuffer();
+            const zip = new PizZip(arrayBufferTemplate);
+            console.log("zip");
+            const doc = new docxtemplater(zip, {
+                delimiters: { start: "{{", end: "}}" },
+                modules: [iModule]
+            });
+            console.log("doc");
+            const tags = iModule.getAllTags();
+            return tags;
+        }
+        /*********************************/
+
+        var recId = '{!fileDetail}';
+        var updatedFile;
+        var tempInstance = null;
+        var contVersion;
+        var state;
+        var pdf;
+        //var baseUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_lib}/`;
+        //var baseCoreUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_core}/`;
+        //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-1/";
+
+        //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-2/pspdfkit-lib/";
+        // Cloudfare
+        var baseUrl = "https://pspdfkit-static.org/";
+
+        const saveButton = {
+            type: "custom",
+            id: "download-pdf",
+            title: "Save",
+            onPress: () => {
+                //saveFileToSalesforce();
+                //saveFileToPendingDocuments();
+                saveUpdatedFile();
+            }
+        };
+
+
+        console.log("checking recId");
+        console.log(recId);
+        if (recId != null) {
+
+            pdf = '{!conbase}';
+            if (pdf != '') {
+                var base64str = pdf;
+                var binary = atob(base64str.replace(/\s/g, ''));
+                var len = binary.length;
+                var buffer = new ArrayBuffer(len);
+                var view = new Uint8Array(buffer);
+                for (var i = 0; i < len; i++) {
+                    view[i] = binary.charCodeAt(i);
+                }
+                pdf = new Blob([view]);
+                loadPSPDFKit(null);
+            }
+        }
+
+        window.addEventListener('message', handleOpenAndSaveFiles);
+
+        let documentId;
+        let recordId;
+        let pendingDocumentId;
+        function handleOpenAndSaveFiles(event) {
+
+            console.log("in handleOpenAndSaveFiles");
+            console.log(event);
+            // 1. Template selected, load template
+            // find placeholders and send back.
+            console.log(event);
+            if (event.data.template === true) {
+                console.log("VF papge: template received in VF page");
+                state = event.data.state;
+                contVersion = event.data;
+                pdf = event.data.versionData;
+
+                loadPlaceholdersFromTemplate(pdf);
+
+                // Show viewer with template document
+                loadPSPDFKit(null);
+            } else if (event.data.template === false) {
+
+                // 2. Placholders filled, loadPSPDFKit
+                // and generate final document.
+
+                console.log("VF page: message received");
+                console.log("VF page: placeholders received:");
+                let placeholders = event.data.placeholders;
+                console.log(placeholders);
+                state = event.data.state;
+                contVersion = event.data;
+                pdf = event.data.versionData;
+                console.log("VF page: pdf data: ");
+                console.log(pdf);
+                console.log(tempInstance);
+
+                console.log("VF Record Id received");
+                console.log(event.data.recordId);
+                this.recordId = event.data.recordId;
+
+                this.ContentDocumentId = event.data.ContentDocumentId;
+                this.documentId = event.data.documentId;
+                console.log("VF pendingDocumentId received");
+                this.pendingDocumentId = event.data.pendingDocumentId
+
+                // Template should not be shown when 
+                // generating the document
+                if (pdf != '') {
+                    if (tempInstance == null) {
+                        loadPSPDFKit(placeholders);
+                    } else {
+                        PSPDFKit.unload(tempInstance);
+                        loadPSPDFKit(placeholders);
+                    }
+                }
+            }
+        }
+
+        function fillTemplate(templateArrayBuffer, jsonData) {
+            const iModule = window.iModule;
+            const zip = new PizZip(templateArrayBuffer);
+            const doc = new docxtemplater(zip, {
+                delimiters: { start: "{{", end: "}}" },
+                modules: [iModule]
+            });
+
+            doc.setData(jsonData);
+            doc.render();
+
+            const arrayBuffer = doc.getZip().generate({ type: "arraybuffer", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+            return arrayBuffer;
+        }
+
+        function isEmptyObject(obj) {
+            return Object.keys(obj).length === 0 && obj.constructor === Object;
+        }
+
+        function loadPSPDFKit(placeholderData) {
+            pdf.arrayBuffer().then(async val => {
+
+                console.log("is PSPDFKit defined?");
+                console.log(PSPDFKit);
+                console.log(placeholderData);
+
+
+                let document = val;
+                if (placeholderData != null && typeof placeholderData === 'object' && !isEmptyObject(placeholderData)) {
+                    document = fillTemplate(val, placeholderData);
+                } else {
+                    document = val;
+                }
+
+
+
+                // Fill template with placeholder data - needs to be re-used later
+                /*let filledDocumentDocx = await PSPDFKit.populateDocumentTemplate(
+                    {
+                        document: val,
+                        baseUrl,
+                        //licenseKey: "YOUR_LICENSE_KEY"
+                    },
+                    {
+                        config: {
+                            delimiter: {
+                                start: "{{",
+                                end: "}}"
+                            }
+                        },
+                        model: {
+                            "Placeholder1": "Pavitter",
+                        }
+                    }
+                );
+
+                console.log("template filled");
+
+                // Convert filled document to PDF
+                let filledDocumentPDF = await PSPDFKit.convertToPDF(
+                    {
+                        document: filledDocumentDocx,
+                        baseUrl,
+                        //licenseKey: "YOUR_LICENSE_KEY"
+                    },
+                    //PSPDFKit.Conformance.PDFA_4F
+                );*/
+
+
+                console.log("document to be loaded");
+                console.log(document);
+
+                let licenseKey = 'vCR5dwIXsXHZsHQoufWEefkm8URHmt9zBymfQ5rWYpggjx_xYADpAXOHYxcdt_PbwurRb_c52uN5BrbRl0ta5wnVrcTnfSM4jASkm6QuPPiuhEI0xdglf_s-V-4aFMCK9u9XT0vJ3XPU4zyiMdem6Wd5sNvUEfP_fWPsbm1DnRMAJJl3vmXshBTlGtjlJYXwNn69OkOq6K9q7qGFHIx95iCXSQLSjRfpyEtWr0wjwLlUykC7tIt9qX8oGO-STn6hplnJzRWRFs_EdP4-YqzcLMaaY-GMKnOUSU5wrThJ7Bb6LJEWBTRX2XraeB6UFqM0rwMqcso8CnoDq1l3Qn_aNZS_6wmcj3K1azVL8NuMyBmu87nwzwlegvXjSqWIXHptd_FUqXX3Npze4CymDYNoRJuJy8s3bv1ikBvXkMKwQR8d1ayy8fs9tzcRyWamyzfzsCNjv1duLSGIkluTxIZMeYU2hd3nsFsFY7Bnot2MLGZI2udJ7iIFTx3QBS_zRFdQjJ_FLl9viOFVtjG_Rklfzqvn2675leoU7de7DBUOnUWQk8oZRUAvMmber1GzORnKeE1M37Wd5YxS20tQYrjRNr0BdaTOMEUshCyCI1EEjWrCy_zdlng2l2jZtrlYZkNsEwiGz8Cvn9UtmgVHg0UQPfzDYB8tk7Hv51rh5RR9xEllaFZMc82py7G_GjSHIRLyKJWiD_eaHbWxPEnzZszNhmqpA6Jx4Y-jVAPE-bub3LG6dd5nfzCHlbMOJTiNPHrSayPmX3QRTV14MpDcyRu8uZGhalXvx3IYcMPx_SLEXattbzdcT6OWH6nFmmrztq63pJ2IgnfDbeZ0XlarWKu0SYEMAq8fBl41tFFVYdztD6PU2qULlY3SyTQyL_FnQxw4oSgFTBXeyr80Mlj03FZf710WxYF1-JuWUQq4GlOlknuXqmVdjgCF4R__lKm0IPr0xCvTq4r5f9t7zXP3LT12QcQ5QtRXPi6By11pZMkTlKGbfzRbDuf2ksVAMhOSuPmYf3C-xZBdPGvm6r95ltSFxIdYNILrwJ2IjYs2RW3JxDWFpwK4MYpEiADzQP3SiKBgqKncfTcInoFmd5kM8mFddavDbw4uoaNLIUaSXphq_qgucHk5LQP7sHFjzfqVVWxYR_U6_NUZyvpUn-1Wv6YO9K5JzeR-lnCTxOxPIE-iA01qDhj2lZ-sJYy_zK0D19uPk9b8agtDudqWlQPebCtc6cHpfe3Wq16rlwiFheL4pVI=';
+
+                PSPDFKit.load({
+                    licenseKey,
+                    //inlineWorkers: true,
+                    baseUrl,
+                    //baseCoreUrl,
+                    container: "#pspdfkit",
+                    document: document,
+                    toolbarItems: PSPDFKit.defaultToolbarItems
+                        .filter((item) => item.type !== "signature")
+                        .reduce((acc = [], item) => {
+                            if (item.type === "ink") {
+                                return acc.concat([
+                                    item,
+                                    { type: "signature", dropdownGroup: "additional-tools" },
+                                    { type: "form-creator", dropdownGroup: "additional-tools" },
+                                    {
+                                        type: "content-editor",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-text-highlighter",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-rectangle",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                ]);
+                            }
+
+                            return acc.concat([item]);
+                        }, [])
+                        .concat([saveButton]),
+                    //disableWebAssemblyStreaming: true,
+                    //productId: PSPDFKit.ProductId.Salesforce,
+                })
+                    .then(instance => { tempInstance = instance; })
+                    .catch(error => { console.log(error); });
+            })
+        }
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    let result = reader.result;
+                    let base64 = 'base64,';
+                    let content = result.indexOf(base64) + base64.length;
+                    let fileContents = result.substring(content);
+                    resolve(fileContents);
+                }
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function saveFileToSalesforce() {
+            tempInstance.exportPDF().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/pdf" });
+                getBase64(blob).then((result) => {
+                    updatedFile = result;
+                    var Object = new sforce.SObject('contentVersion');
+                    if (state == 'salesforce') {
+                        Object.ContentDocumentId = contVersion.ContentDocumentId;
+                        Object.PathOnClient = contVersion.PathOnClient;
+                        Object.VersionData = updatedFile;
+                        var res = sforce.connection.create([Object]);
+                        res[0].success === 'true' ? alert('File updated') : alert('File not updated: ' + res[0].errors.message);
+                    } else if (state == 'local') {
+                        Object.Title = contVersion.fName;
+                        Object.PathOnClient = contVersion.fName;
+                        Object.VersionData = updatedFile;
+                        Object.contentLocation = 'S';
+                        var res = sforce.connection.create([Object]);
+                        res[0].success === 'true' ? alert('File Saved Successfully') : alert('File not saved: ' + res[0].errors.message);
+                    }
+                    else if ('{!contVersion}' != null) {
+                        Object.ContentDocumentId = '{!contVersion.ContentDocumentId}';
+                        Object.PathOnClient = '{!contVersion.PathOnClient}';
+                        Object.VersionData = updatedFile;
+                        var res = sforce.connection.create([Object]);
+                        res[0].success === 'true' ? alert('File updated') : alert('File not updated: ' + res[0].errors.message);
+                    }
+                });
+            });
+        }
+
+        function saveUpdatedFile() {
+            // Ensure that this.ContentDocumentId, this.recordId, and this.pendingDocumentId are available
+            if (!this.ContentDocumentId || !this.caseId || !this.pendingDocumentId) {
+                alert('ContentDocumentId, recordId, or pendingDocumentId is missing.');
+                console.log('ContentDocumentId:', this.ContentDocumentId);
+                console.log('recordId:', this.recordId);
+                console.log('pendingDocumentId:', this.pendingDocumentId);
+                return;
+            }
+        
+            tempInstance.exportPDF().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/pdf" });
+                getBase64(blob).then((result) => {
+                    const updatedFile = result;
+        
+                    var contentVersionObject = new sforce.SObject('ContentVersion');
+                    contentVersionObject.ContentDocumentId = this.ContentDocumentId; // Link to existing ContentDocumentId
+                    contentVersionObject.VersionData = updatedFile;
+                    contentVersionObject.Title = this.documentId || 'Default Title'; // Set a default title if documentId is not available
+                    contentVersionObject.PathOnClient = this.documentId || 'file.pdf';
+        
+                    // Save the new ContentVersion
+                    var cvResult = sforce.connection.create([contentVersionObject]);
+                    if (cvResult[0].success === 'true') {
+                        var newContentVersionId = cvResult[0].id;
+        
+                        // Update BD_Pending_Documents__c with the new ContentVersion ID
+                        var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
+                        pendingDocumentObject.Id = this.recordId; // Use the retrieved pendingDocumentId
+                        pendingDocumentObject.Name = newContentVersionId; // Update the Name field with the new ContentVersion ID
+        
+                        var pdResult = sforce.connection.update([pendingDocumentObject]);
+                        console.log(pdResult);
+                        if (pdResult[0].success === 'true') {
+                            alert('Document updated and linked successfully.');
+                        } else {
+                            alert('Error updating pending document record: ' + pdResult[0].errors.message);
+                        }
+                    } else {
+                        alert('Error saving content version: ' + cvResult[0].errors.message);
+                        console.log(cvResult);
+                    }
+                });
+            });
+        }
+        
+
+        function saveFileToPendingDocuments() {
+            tempInstance.exportPDF().then((buffer) => {
+                const blob = new Blob([buffer], { type: "application/pdf" });
+                getBase64(blob).then((result) => {
+                    updatedFile = result;
+                    var contentVersionObject = new sforce.SObject('ContentVersion');
+                    // Set other necessary attributes for contentVersionObject...
+                    contentVersionObject.VersionData = updatedFile;
+                    contentVersionObject.Title = contVersion.fName || 'Default Title'; // Set a default title if fName is not availa
+                    contentVersionObject.PathOnClient = contVersion.PathOnClient || 'file.pdf';
+
+                    // ...other settings for contentVersionObject
+
+                    // Save the ContentVersion
+                    var cvResult = sforce.connection.create([contentVersionObject]);
+                    if (cvResult[0].success === 'true') {
+                        // Now create the ContentDocumentLink
+                        var contentDocumentLinkObject = new sforce.SObject('ContentDocumentLink');
+
+                        var cvId = cvResult[0].id;
+                        // Query to get ContentDocumentId
+                        var query = "SELECT ContentDocumentId FROM ContentVersion WHERE Id = '" + cvId + "'";
+                        var queryResult = sforce.connection.query(query);
+                        var records = queryResult.getArray("records");
+                        console.log("Content Document Id");
+                        console.log(records);
+                        console.log("case id");
+                        console.log(caseId);
+                        var contentDocumentId = records[0].ContentDocumentId;
+                        contentDocumentLinkObject.ContentDocumentId = contentDocumentId;
+                        contentDocumentLinkObject.LinkedEntityId = caseId;
+                        contentDocumentLinkObject.ShareType = 'V';
+                        // ... other settings for contentDocumentLinkObject
+
+                        var cdlResult = sforce.connection.create([contentDocumentLinkObject]);
+                        console.log(cdlResult);
+                        if (cdlResult[0].success === 'true') {
+                            // Here you create the BD_Pending_Documents__c record and link it to the CMS_Case__c
+                            var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
+                            pendingDocumentObject.BD_Case__c = caseId; // This is how you link it to CMS_Case__c
+                            // Set other necessary fields of BD_Pending_Documents__c
+                            pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
+
+                            // Assuming there's a lookup or master-detail field on BD_Pending_Documents__c that relates to the ContentVersion or ContentDocument
+                            pendingDocumentObject.Name = cvResult[0].id;
+                            pendingDocumentObject.BD_Status__c = "Pending Approval";
+
+                            var pdResult = sforce.connection.create([pendingDocumentObject]);
+                            console.log(pdResult);
+                            if (pdResult[0].success === 'true') {
+                                alert('Pending document record created and linked successfully.');
+                            } else {
+                                alert('Error creating pending document record: ' + pdResult[0].errors.message);
+                            }
+                        } else {
+                            alert('Error linking content document to case: ' + cdlResult[0].errors.message);
+                        }
+                    } else {
+                        alert('Error saving content version: ' + cvResult[0].errors.message);
+                        console.log(cvResult);
+                    }
+                });
+            });
+        }
+
+
+        function openSalesforceFile(recordId) {
+            if (window.location.href != window.location.origin + "/apex/PSPDFKit_InitPSPDFKit?id=" + recordId) {
+                window.open('/apex/PSPDFKit_InitPSPDFKit?id=' + recordId, '_self');
+            }
+        }
+    </script>
+</apex:page>
