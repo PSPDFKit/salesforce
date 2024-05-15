@@ -410,6 +410,107 @@ export default class PSPDFKitFileSelector extends LightningElement {
     }
   }
 
+  splitValuesIntoComponents(keyValue, searchValue, placeholder) {
+    let parts;
+    if (searchValue !== "") {
+      parts = searchValue.split(".").map((part) => part.trim());
+    } else {
+      parts = placeholder.split(".").map((part) => part.trim());
+    }
+
+    let tableName;
+    let databaseField;
+    // Invalid format, fallback to the entire string
+    // and select the correct value in the UI.
+    if (parts.length < 2) {
+      tableName = parts[0];
+      databaseField = parts[0];
+    } else {
+      tableName = parts[0]; // Before the first '.'
+      databaseField = parts.slice(1).join("."); // Join everything after the first '.'
+    }
+
+    let tableNameDifferent = this.availableObject !== tableName;
+
+    // Check if the referenceField is given in related objects
+    let referenceField = "";
+    if (tableNameDifferent) {
+      console.log("this.relatedObjects " + this.relatedObjects);
+
+      let entries = this.relatedObjects.split(";");
+
+      entries.forEach((entry) => {
+        let baseValue;
+        let parameter = null;
+
+        // Check if the entry contains brackets
+        let startIndex = entry.indexOf("[");
+        let endIndex = entry.indexOf("]");
+
+        if (startIndex !== -1 && endIndex !== -1) {
+          // Extract the base value and the parameter
+          baseValue = entry.substring(0, startIndex);
+          parameter = entry.substring(startIndex + 1, endIndex);
+        } else {
+          // No brackets, the entire entry is the base value
+          baseValue = entry;
+        }
+
+        //console.log("baseValue: " + baseValue);
+        //console.log("Parameter: " + parameter);
+
+        // Now compare baseValue with tableName
+        if (baseValue === tableName) {
+          console.log("Match found:", baseValue);
+          if (parameter !== null) {
+            console.log("Parameter:", parameter);
+            referenceField = parameter;
+          }
+        }
+      });
+    }
+
+    if (tableNameDifferent && referenceField !== "") {
+      /*searchTerms.push({
+        placeholder: keyValue,
+        databaseField: databaseField,
+        tableName: tableName,
+        selectAtGenerate: tableNameDifferent,
+        referenceField: referenceField,
+      });*/
+      return {
+        placeholder: keyValue,
+        databaseField: databaseField,
+        tableName: tableName,
+        selectAtGenerate: tableNameDifferent,
+        referenceField: referenceField,
+      };
+    } else {
+      /*searchTerms.push({
+        placeholder: keyValue,
+        databaseField: databaseField,
+        tableName: tableName,
+        selectAtGenerate: tableNameDifferent,
+      });*/
+      return {
+        placeholder: keyValue,
+        databaseField: databaseField,
+        tableName: tableName,
+        selectAtGenerate: tableNameDifferent,
+      };
+    }
+  }
+
+  parseCondition(databaseField) {
+    const regex = /(==|!=|=!|<=|>=|<|>)/;
+    const parts = databaseField.split(regex);
+    if (parts.length !== 3) {
+      throw new Error("Invalid condition format");
+    }
+    const [leftSide, operator, rightSide] = parts;
+    return { leftSide, operator, rightSide };
+  }
+
   async collectLookupValuesToSave() {
     // Step 1: Populate lookupResults with keys and searchKeys from the LWC elements
     const lookupElements = this.template.querySelectorAll("c-custom-look-up");
@@ -426,111 +527,57 @@ export default class PSPDFKitFileSelector extends LightningElement {
         `Key Value: ${keyValue}, Search Value: ${searchValue}, Placeholder: ${placeholder}`
       );
 
-      //let parts = value.split(":").map((part) => part.trim()); // Split the string on ':' and trim whitespace
+      // If it's a condition, do someting here
+      // TODO:
+      if (keyValue.includes("Condition")) {
+        console.log("...Condition found");
 
-      console.log("available object when saving");
-      //console.log(element.objectApiName);
-      console.log(this.availableObject);
+        let conditionParsed;
+        if (searchValue !== "") {
+          conditionParsed = this.parseCondition(searchValue);
+        } else {
+          conditionParsed = this.parseCondition(placeholder);
+        }
+        console.log("conditionParsed");
+        console.log(conditionParsed);
 
-      // If the available object is the same
-      // as the tableName, it's a regular field
-      // otherwise it's a field that can have
-      // multiple options and has to be selected
-      // at the time of generating the document
-      let parts;
-      if (searchValue !== "") {
-        parts = searchValue.split(".").map((part) => part.trim());
+        let leftSideObject = this.splitValuesIntoComponents(
+          keyValue,
+          "",
+          conditionParsed.leftSide
+        );
+        let rightSideObject = this.splitValuesIntoComponents(
+          keyValue,
+          "",
+          conditionParsed.rightSide
+        );
+
+        console.log("here are both sides parse");
+        console.log(leftSideObject);
+        console.log(rightSideObject);
+
+        let objectToPush = {
+          isCondition: true,
+          leftOperand: leftSideObject,
+          rightOperand: rightSideObject,
+          operator: conditionParsed.operator,
+        };
+
+        searchTerms.push(objectToPush);
       } else {
-        parts = placeholder.split(".").map((part) => part.trim());
+        // If the available object is the same
+        // as the tableName, it's a regular field
+        // otherwise it's a field that can have
+        // multiple options and has to be selected
+        // at the time of generating the document
+
+        let objectToPush = this.splitValuesIntoComponents(
+          keyValue,
+          searchValue,
+          placeholder
+        );
+        searchTerms.push(objectToPush);
       }
-
-      let tableName;
-      let databaseField;
-      // Invalid format, fallback to the entire string
-      // and select the correct value in the UI.
-      if (parts.length < 2) {
-        tableName = parts[0];
-        databaseField = parts[0];
-      } else {
-        tableName = parts[0]; // Before the first '.'
-        databaseField = parts.slice(1).join("."); // Join everything after the first '.'
-      }
-
-      let tableNameDifferent = this.availableObject !== tableName;
-
-      // Check if the referenceField is given in related objects
-      let referenceField = "";
-      if (tableNameDifferent) {
-        console.log("this.relatedObjects " + this.relatedObjects);
-
-        let entries = this.relatedObjects.split(";");
-
-        entries.forEach((entry) => {
-          let baseValue;
-          let parameter = null;
-
-          // Check if the entry contains brackets
-          let startIndex = entry.indexOf("[");
-          let endIndex = entry.indexOf("]");
-
-          if (startIndex !== -1 && endIndex !== -1) {
-            // Extract the base value and the parameter
-            baseValue = entry.substring(0, startIndex);
-            parameter = entry.substring(startIndex + 1, endIndex);
-          } else {
-            // No brackets, the entire entry is the base value
-            baseValue = entry;
-          }
-
-          console.log("baseValue: " + baseValue);
-          console.log("Parameter: " + parameter);
-
-          // Now compare baseValue with tableName
-          if (baseValue === tableName) {
-            console.log("Match found:", baseValue);
-            if (parameter !== null) {
-              console.log("Parameter:", parameter);
-              referenceField = parameter;
-            }
-          }
-        });
-      }
-
-      if (tableNameDifferent && referenceField !== "") {
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: databaseField,
-          tableName: tableName,
-          selectAtGenerate: tableNameDifferent,
-          referenceField: referenceField,
-        });
-      } else {
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: databaseField,
-          tableName: tableName,
-          selectAtGenerate: tableNameDifferent,
-        });
-      }
-
-      // Check if searchValue contains "Role:" and process accordingly
-      /*if (searchValue && searchValue.includes("Role:")) {
-        // If it does contain "Role:", remove "Role: " from the searchValue
-        //const cleanedSearchValue = searchValue.replace("Role: ", "");
-        const cleanedSearchValue = searchValue;
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: cleanedSearchValue, // Assuming you want the cleaned value
-          tableName: "CMS_Role__c", // Assuming this is the correct table to use for role-based values
-        });
-      } else {
-        // If it does not contain "Role:", use the original logic
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: searchValue,
-          tableName: this.objectApiName, // Use the object API name from the component's property
-        });
-      }*/
     });
 
     console.log("search terms to be saved: ");
