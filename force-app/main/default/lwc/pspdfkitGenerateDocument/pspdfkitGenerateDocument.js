@@ -684,6 +684,59 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log("result of getRoleFields:", resultRoles);*/
   }
 
+  async getLookUpValue(placeholder, databaseField, tableName) {
+    // Is it a regular field
+    // TODO
+
+    // Is it a regular lookup field
+    console.log("...condition, found a lookup field: " + databaseField);
+    console.log("...condition, in table: " + tableName);
+    let relationshipReferenceField;
+    let relationshipField;
+    [relationshipReferenceField, relationshipField] = databaseField.split(".");
+
+    console.log(
+      "...condition, relationshipReferenceField:  " + relationshipReferenceField
+    );
+    console.log("...condition, relationshipField:  " + relationshipField);
+    try {
+      const value = await getRelatedRecord({
+        recordId: this.recordId,
+        tableName,
+        relationshipReferenceField,
+        relationshipField,
+      });
+
+      return value;
+    } catch (error) {
+      console.error(
+        `Error fetching condition value for ${placeholder}:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  evaluateCondition(leftOperand, operator, rightOperand) {
+    switch (operator) {
+      case "==":
+        return leftOperand == rightOperand;
+      case "!=":
+      case "=!":
+        return leftOperand != rightOperand;
+      case "<":
+        return leftOperand < rightOperand;
+      case "<=":
+        return leftOperand <= rightOperand;
+      case ">":
+        return leftOperand > rightOperand;
+      case ">=":
+        return leftOperand >= rightOperand;
+      default:
+        throw new Error("Invalid operator");
+    }
+  }
+
   async getAllRecordsNew() {
     const results = [];
     let structuredData = [];
@@ -694,127 +747,183 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       selectAtGenerate,
       tableName,
       referenceField,
+      isCondition,
+      leftOperand,
+      rightOperand,
+      operator,
     } of this.placeholders) {
-      console.log("reconstructing placeholders");
-      console.log("placeholder: " + placeholder);
-      console.log("rest: " + tableName + "." + databaseField);
-      console.log("referenceField: " + referenceField);
-      // Reconstruct the displayname + placeholder if necessary
-      let templatePlaceholder = "";
-      if (
-        placeholder !==
-        tableName + "." + databaseField /*&&
-        !placeholder.includes(".")*/
-      ) {
-        templatePlaceholder =
-          placeholder + "+" + tableName + "." + databaseField;
-      } else {
-        templatePlaceholder = placeholder;
-      }
+      if (isCondition) {
+        // if left value is not static, get it's value
+        let leftValue;
+        if (leftOperand.tableName !== leftOperand.databaseField) {
+          leftValue = await this.getLookUpValue(
+            leftOperand.placeholder,
+            leftOperand.databaseField,
+            leftOperand.tableName
+          );
+        } else {
+          leftValue = leftOperand.databaseField;
+        }
 
-      console.log("templatePlaceholder");
-      console.log(templatePlaceholder);
+        // if right value is not static, get it's value
+        let rightValue;
+        if (rightOperand.tableName !== rightOperand.databaseField) {
+          console.log("...getting right lookup value");
+          rightValue = await this.getLookUpValue(
+            rightOperand.placeholder,
+            rightOperand.databaseField,
+            rightOperand.tableName
+          );
+          rightValue = returnObject.value;
+        } else {
+          rightValue = rightOperand.databaseField;
+        }
 
-      // Static Date field
-      if (databaseField.includes("DATE")) {
-        console.log("+++++ in date field");
-        const currentDate = new Date();
-        const options = {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        };
-        const formattedDate = currentDate.toLocaleDateString("en-US", options);
+        let result = this.evaluateCondition(leftValue, operator, rightValue);
+
+        // evaluate
+        console.log(
+          `...got both values: ${leftValue}${operator}${rightValue} -> ${result}`
+        );
+        console.log(`...replacing: ${placeholder}`);
+
+        /*let templatePlaceholder = "";
+        if (placeholder !== tableName + "." + databaseField) {
+          templatePlaceholder =
+            placeholder + "+" + tableName + "." + databaseField;
+        } else {
+          templatePlaceholder = placeholder;
+        }*/
+
         results.push({
-          placeholder: "Date",
-          value: formattedDate,
+          placeholder: placeholder,
+          value: result,
           isDropdown: false,
-          //templatePlaceholder: templatePlaceholder,
-          templatePlaceholder: "DATE",
+          templatePlaceholder: placeholder,
         });
-      }
-      // It's a lookup field without relation
-      else if (databaseField.includes(".") && selectAtGenerate === false) {
-        console.log("found a lookup field: " + databaseField);
-        console.log("in table: " + tableName);
-        let relationshipReferenceField;
-        let relationshipField;
-        [relationshipReferenceField, relationshipField] =
-          databaseField.split(".");
+
+        // set condition to true or false
+      } else {
+        // Reconstruct the displayname + placeholder if necessary
+        let templatePlaceholder = "";
+        if (
+          placeholder !==
+          tableName + "." + databaseField /*&&
+        !placeholder.includes(".")*/
+        ) {
+          templatePlaceholder =
+            placeholder + "+" + tableName + "." + databaseField;
+        } else {
+          templatePlaceholder = placeholder;
+        }
 
         console.log(
-          "relationshipReferenceField:  " + relationshipReferenceField
+          `reconstructing placeholders, placeholder: ${placeholder}, rest: ${tableName}.${databaseField}, referenceField: ${referenceField}, templatePlaceholder: ${templatePlaceholder}`
         );
-        console.log("relationshipField:  " + relationshipField);
-        try {
-          const value = await getRelatedRecord({
-            recordId: this.recordId,
-            tableName,
-            relationshipReferenceField,
-            relationshipField,
-          });
 
+        // Static Date field
+        if (databaseField.includes("DATE")) {
+          console.log("+++++ in date field");
+          const currentDate = new Date();
+          const options = {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          };
+          const formattedDate = currentDate.toLocaleDateString(
+            "en-US",
+            options
+          );
           results.push({
-            placeholder,
-            value,
+            placeholder: "Date",
+            value: formattedDate,
             isDropdown: false,
-            templatePlaceholder: templatePlaceholder,
-          });
-        } catch (error) {
-          console.error(`Error fetching value for ${placeholder}:`, error);
-          results.push({
-            placeholder,
-            value: "No value found",
-            error: `Error fetching data: ${error.message}`,
-            isDropdown: false,
-            templatePlaceholder: templatePlaceholder,
+            //templatePlaceholder: templatePlaceholder,
+            templatePlaceholder: "DATE",
           });
         }
-      }
-      // It's a related object
-      else if (selectAtGenerate === true) {
-        // Fetch list of possible values for dropdown
-        console.log("----- in dropdown field");
-        console.log(tableName);
-        console.log(databaseField);
-        console.log(this.recordId);
-        console.log(placeholder);
-        let recordId = await this.recordId;
+        // It's a lookup field without relation
+        else if (databaseField.includes(".") && selectAtGenerate === false) {
+          console.log("found a lookup field: " + databaseField);
+          //console.log("in table: " + tableName);
+          let relationshipReferenceField;
+          let relationshipField;
+          [relationshipReferenceField, relationshipField] =
+            databaseField.split(".");
 
-        if (placeholder.includes(".")) {
-          console.log("child element found");
-
-          // It's a child record, extract the parent name
-          let parentName = placeholder.split(".")[0];
-          let parent = structuredData.find((p) => p.name === parentName);
-          if (!parent) {
-            // If parent does not exist, create it and add it to the array
-            parent = {
-              name: parentName,
-              children: [],
-              databaseField: null,
-              placeholder: null,
-              selectAtGenerate: null,
-              tableName: null,
+          //console.log(
+          //  "relationshipReferenceField:  " + relationshipReferenceField
+          //);
+          //console.log("relationshipField:  " + relationshipField);
+          try {
+            const value = await getRelatedRecord({
               recordId: this.recordId,
-              referenceField: referenceField,
-            };
-            structuredData.push(parent);
-          } else {
-          }
-          // Add the child field to the parent's children array
-          parent.children.push({
-            databaseField,
-            placeholder,
-            selectAtGenerate,
-            tableName,
-            templatePlaceholder,
-            referenceField,
-          });
+              tableName,
+              relationshipReferenceField,
+              relationshipField,
+            });
 
-          // Don't push it to the UI
-          /*results.push({
+            results.push({
+              placeholder,
+              value,
+              isDropdown: false,
+              templatePlaceholder: templatePlaceholder,
+            });
+          } catch (error) {
+            console.error(`Error fetching value for ${placeholder}:`, error);
+            results.push({
+              placeholder,
+              value: "No value found",
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: false,
+              templatePlaceholder: templatePlaceholder,
+            });
+          }
+        }
+        // It's a related object
+        else if (selectAtGenerate === true) {
+          // Fetch list of possible values for dropdown
+          console.log("----- in dropdown field");
+          console.log(tableName);
+          console.log(databaseField);
+          console.log(this.recordId);
+          console.log(placeholder);
+          let recordId = await this.recordId;
+
+          if (placeholder.includes(".")) {
+            console.log("child element found");
+
+            // It's a child record, extract the parent name
+            let parentName = placeholder.split(".")[0];
+            let parent = structuredData.find((p) => p.name === parentName);
+            if (!parent) {
+              // If parent does not exist, create it and add it to the array
+              parent = {
+                name: parentName,
+                children: [],
+                databaseField: null,
+                placeholder: null,
+                selectAtGenerate: null,
+                tableName: null,
+                recordId: this.recordId,
+                referenceField: referenceField,
+              };
+              structuredData.push(parent);
+            } else {
+            }
+            // Add the child field to the parent's children array
+            parent.children.push({
+              databaseField,
+              placeholder,
+              selectAtGenerate,
+              tableName,
+              templatePlaceholder,
+              referenceField,
+            });
+
+            // Don't push it to the UI
+            /*results.push({
             placeholder,
             //values: dropdownValues,
             isDropdown: false,
@@ -822,7 +931,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             recordId: this.recordId,
           });*/
 
-          /*
+            /*
         
           let relationshipReferenceField;
           let relationshipField;
@@ -863,150 +972,154 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             });
           }
         */
-        } else {
-          console.log("Parent value found, look for children values");
+          } else {
+            console.log("Parent value found, look for children values");
 
-          // Push parent to structured data
-          // so that children data can be
-          // fetched later.
-          let parent = structuredData.some((p) => p.name === databaseField);
-          if (!parent) {
-            structuredData.push({
-              name: placeholder,
-              children: [],
-              databaseField,
-              placeholder,
-              selectAtGenerate,
-              tableName,
-              recordId,
-              referenceField,
-            });
-          } else if (parent && parent.databaseField === null) {
-            parent.databaseField = databaseField;
-            parent.placeholder = placeholder;
-            parent.selectAtGenerate = selectAtGenerate;
-            parent.tableName = tableName;
-            parent.recordId = this.recordId;
-            parent.referenceField = referenceField;
-          }
-
-          // Related Record with Lookup
-          if (databaseField.includes(".")) {
-            console.log("--------------------Related Field with Lookup");
-            console.log(this.recordId);
-
-            let relationshipReferenceField;
-            let relationshipField;
-            [relationshipReferenceField, relationshipField] =
-              databaseField.split(".");
-
-            console.log(
-              "relationshipReferenceField:  " + relationshipReferenceField
-            );
-            console.log("relationshipField:  " + relationshipField);
-            console.log("sending referenceField: " + referenceField);
-
-            try {
-              const dropdownValues = await getRelatedLookupRecord({
-                parentId: this.recordId,
-                childId: "",
-                tableName,
-                relationshipReferenceField,
-                relationshipField,
-                referenceField: referenceField,
-              });
-
-              console.log("results from dropdown");
-              console.log(dropdownValues);
-              console.log(
-                "results from dropdown 2 " + JSON.stringify(dropdownValues)
-              );
-
-              results.push({
-                placeholder,
-                values: dropdownValues,
-                isDropdown: true,
-                templatePlaceholder: templatePlaceholder,
-                recordId: this.recordId,
-              });
-            } catch (error) {
-              console.error(`Error fetching value for ${placeholder}:`, error);
-              results.push({
-                placeholder,
-                value: "No value found",
-                error: `Error fetching data: ${error.message}`,
-                isDropdown: false,
-                templatePlaceholder: templatePlaceholder,
-              });
-            }
-          }
-          // Regular Field with Lookup
-          else {
-            console.log("Regular Field with Lookup");
-
-            try {
-              const dropdownValues = await getRecordList({
-                tableName,
+            // Push parent to structured data
+            // so that children data can be
+            // fetched later.
+            let parent = structuredData.some((p) => p.name === databaseField);
+            if (!parent) {
+              structuredData.push({
+                name: placeholder,
+                children: [],
                 databaseField,
+                placeholder,
+                selectAtGenerate,
+                tableName,
                 recordId,
                 referenceField,
               });
+            } else if (parent && parent.databaseField === null) {
+              parent.databaseField = databaseField;
+              parent.placeholder = placeholder;
+              parent.selectAtGenerate = selectAtGenerate;
+              parent.tableName = tableName;
+              parent.recordId = this.recordId;
+              parent.referenceField = referenceField;
+            }
 
-              console.log("result for dropdwown parent received");
-              console.log(dropdownValues);
+            // Related Record with Lookup
+            if (databaseField.includes(".")) {
+              console.log("--------------------Related Field with Lookup");
+              console.log(this.recordId);
 
-              const stringValues = dropdownValues.map((item) => item.value);
-              console.log("------ stringValues:");
-              console.log(stringValues);
+              let relationshipReferenceField;
+              let relationshipField;
+              [relationshipReferenceField, relationshipField] =
+                databaseField.split(".");
 
-              results.push({
-                placeholder,
-                values: stringValues,
-                isDropdown: true,
-                templatePlaceholder: templatePlaceholder,
-                recordId: this.recordId,
-              });
-            } catch (error) {
-              console.error(
-                `Error fetching dropdown values for placeholder:`,
-                error
+              /*console.log(
+                "relationshipReferenceField:  " + relationshipReferenceField
               );
-              results.push({
-                placeholder,
-                values: ["No values found"],
-                error: `Error fetching data: ${error.message}`,
-                isDropdown: false,
-                templatePlaceholder: templatePlaceholder,
-              });
+              console.log("relationshipField:  " + relationshipField);
+              console.log("sending referenceField: " + referenceField);*/
+
+              try {
+                const dropdownValues = await getRelatedLookupRecord({
+                  parentId: this.recordId,
+                  childId: "",
+                  tableName,
+                  relationshipReferenceField,
+                  relationshipField,
+                  referenceField: referenceField,
+                });
+
+                /*console.log("results from dropdown");
+                console.log(dropdownValues);
+                console.log(
+                  "results from dropdown 2 " + JSON.stringify(dropdownValues)
+                );*/
+
+                results.push({
+                  placeholder,
+                  values: dropdownValues,
+                  isDropdown: true,
+                  templatePlaceholder: templatePlaceholder,
+                  recordId: this.recordId,
+                });
+              } catch (error) {
+                console.error(
+                  `Error fetching value for ${placeholder}:`,
+                  error
+                );
+                results.push({
+                  placeholder,
+                  value: "No value found",
+                  error: `Error fetching data: ${error.message}`,
+                  isDropdown: false,
+                  templatePlaceholder: templatePlaceholder,
+                });
+              }
+            }
+            // Regular Field with Lookup
+            else {
+              console.log("Regular Field with Lookup");
+
+              try {
+                const dropdownValues = await getRecordList({
+                  tableName,
+                  databaseField,
+                  recordId,
+                  referenceField,
+                });
+
+                console.log("result for dropdwown parent received");
+                console.log(dropdownValues);
+
+                const stringValues = dropdownValues.map((item) => item.value);
+                console.log("------ stringValues:");
+                console.log(stringValues);
+
+                results.push({
+                  placeholder,
+                  values: stringValues,
+                  isDropdown: true,
+                  templatePlaceholder: templatePlaceholder,
+                  recordId: this.recordId,
+                });
+              } catch (error) {
+                console.error(
+                  `Error fetching dropdown values for placeholder:`,
+                  error
+                );
+                results.push({
+                  placeholder,
+                  values: ["No values found"],
+                  error: `Error fetching data: ${error.message}`,
+                  isDropdown: false,
+                  templatePlaceholder: templatePlaceholder,
+                });
+              }
             }
           }
         }
-      }
-      // It's regular field
-      else {
-        console.log("----- in regular field");
-        console.log(databaseField);
-        try {
-          const value = await getRecordValue({
-            tableName,
-            fieldName: databaseField,
-            recordId: this.recordId,
-          });
-          results.push({
-            placeholder,
-            value,
-            isDropdown: false,
-            templatePlaceholder: templatePlaceholder,
-          });
-        } catch (error) {
-          console.error(`Error fetching value for ${placeholder}:`, error);
-          results.push({
-            placeholder,
-            value: "No value found",
-            error: `Error fetching data: ${error.message}`,
-            isDropdown: false,
-            templatePlaceholder: templatePlaceholder,
-          });
+        // It's regular field
+        else {
+          console.log("----- in regular field");
+          console.log(databaseField);
+          try {
+            const value = await getRecordValue({
+              tableName,
+              fieldName: databaseField,
+              recordId: this.recordId,
+            });
+            results.push({
+              placeholder,
+              value,
+              isDropdown: false,
+              templatePlaceholder: templatePlaceholder,
+            });
+          } catch (error) {
+            console.error(`Error fetching value for ${placeholder}:`, error);
+            results.push({
+              placeholder,
+              value: "No value found",
+              error: `Error fetching data: ${error.message}`,
+              isDropdown: false,
+              templatePlaceholder: templatePlaceholder,
+            });
+          }
         }
       }
     }
@@ -1041,17 +1154,17 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         // Loop through each item in dropdownValues
         dropdownValues.forEach(async (dropdownItem) => {
           //for (let dropdownItem of dropdownValues) {
-          console.log("Processing dropdownItem");
-          console.log(dropdownItem);
+          //console.log("Processing dropdownItem");
+          //console.log(dropdownItem);
 
           // Loop through all children and process each
           for (let child of parent.children) {
-            console.log("  Child:", child);
+            //console.log("  Child:", child);
 
             let [relationshipReferenceField, relationshipField] =
               child.databaseField.split(".");
 
-            console.log(
+            /*console.log(
               "relationshipReferenceField: " +
                 relationshipReferenceField +
                 " relationshipField: " +
@@ -1062,7 +1175,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 dropdownItem.Id +
                 " referenceFieldFinal: " +
                 parent.referenceField
-            );
+            );*/
 
             // If child is regular object
             if (
@@ -1098,13 +1211,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               relationshipField !== undefined &&
               relationshipReferenceField !== undefined
             ) {
-              console.log("++++++++++++++++++++ child is lookup object");
+              //console.log("++++++++++++++++++++ child is lookup object");
 
               let childDropdownValues;
               try {
                 //if (referenceField !== ""){}
                 //let referenceField = "BD_Case__c";
-                console.log("sending in: " + parent.referenceField);
+                //console.log("sending in: " + parent.referenceField);
 
                 if (parent.referenceField) {
                   childDropdownValues = await getRelatedLookupRecord({
@@ -1128,17 +1241,17 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                   });
                 }
 
-                console.log(
+                /*console.log(
                   "results from children dropdown ",
                   childDropdownValues
-                );
+                );*/
                 //console.log(childDropdownValues);
 
                 // Find parent in results and add data to it
 
-                console.log(
+                /*console.log(
                   "templatePlaceholder: " + child.templatePlaceholder
-                );
+                );*/
 
                 // Push an input field to results
                 addressData.push({
@@ -1174,10 +1287,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               console.log("Error retrieving child data.");
             }
           }
-          console.log("final address data ");
-          console.log(addressData);
+          //console.log("final address data ");
+          //console.log(addressData);
 
-          console.log("results until now, fixing it");
+          //console.log("results until now, fixing it");
           this.placeholdersGenerated.forEach((item) => {
             if (item.isDropdown) {
               // Map over each object in the `values` array and join the characters into complete strings
@@ -1186,7 +1299,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               });
             }
           });
-          console.log(this.placeholdersGenerated);
+          //console.log(this.placeholdersGenerated);
 
           // Loop over `placeholdersGenerated` to find dropdown items
           //for (let dropdownItem of this.placeholdersGenerated) {

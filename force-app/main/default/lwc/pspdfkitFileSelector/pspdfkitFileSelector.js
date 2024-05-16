@@ -532,10 +532,13 @@ export default class PSPDFKitFileSelector extends LightningElement {
       if (keyValue.includes("Condition")) {
         console.log("...Condition found");
 
+        let originalPlaceholder = "";
         let conditionParsed;
         if (searchValue !== "") {
+          originalPlaceholder = keyValue + "+" + searchValue;
           conditionParsed = this.parseCondition(searchValue);
         } else {
+          originalPlaceholder = keyValue + "+" + placeholder;
           conditionParsed = this.parseCondition(placeholder);
         }
         console.log("conditionParsed");
@@ -552,12 +555,17 @@ export default class PSPDFKitFileSelector extends LightningElement {
           conditionParsed.rightSide
         );
 
-        console.log("here are both sides parse");
+        console.log("here are both sides parsed");
         console.log(leftSideObject);
         console.log(rightSideObject);
 
         let objectToPush = {
           isCondition: true,
+          databaseField: null,
+          placeholder: originalPlaceholder,
+          selectAtGenerate: false,
+          tableName: null,
+          referenceField: null,
           leftOperand: leftSideObject,
           rightOperand: rightSideObject,
           operator: conditionParsed.operator,
