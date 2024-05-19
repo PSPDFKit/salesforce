@@ -23,6 +23,7 @@ import getRelatedLookupRecord from "@salesforce/apex/PSPDFKitController.getRelat
 import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document_Selection__c";
 import Name from "@salesforce/schema/BD_Pending_Documents__c.Name";
 import Id from "@salesforce/schema/BD_Pending_Documents__c.Id";
+import DocumentId from "@salesforce/schema/BD_Pending_Documents__c.DocumentId__c";
 
 export default class PSPDFKitSignDocument extends LightningElement {
   @api documentId;
@@ -32,7 +33,7 @@ export default class PSPDFKitSignDocument extends LightningElement {
   // changes and reload PSPDFKit
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [Name, Id],
+    fields: [Name, Id, DocumentId],
   })
   wiredRecord({ error, data }) {
     console.log("in wiredRecord for Name"); //(aADOu0000008fPNOAY) -> 069Ou0000017ICXIA2
@@ -44,6 +45,11 @@ export default class PSPDFKitSignDocument extends LightningElement {
     console.log("got pendingDocumentId");
     console.log(pendingDocumentId);
     this.pendingDocumentId = pendingDocumentId;
+
+    const documentIdGenerated = getFieldValue(data, DocumentId);
+    console.log("got DocumentId");
+    console.log(documentIdGenerated);
+    this.documentIdGenerated = documentIdGenerated;
 
     if (this.documentId) {
       window.setTimeout(() => {
@@ -409,17 +415,17 @@ export default class PSPDFKitSignDocument extends LightningElement {
     //console.log(event);
     console.log("opening visual force page now");
     console.log("document id");
-    console.log(this.documentId);
+    console.log(this.documentIdGenerated);
     let visualForce = this.template.querySelector("iframe");
     console.log(visualForce);
-    if (visualForce && this.documentId) {
+    if (visualForce && this.documentIdGenerated) {
       /*getbase64DataForTemplate({ documentTemplateId: this.documentId })
         .then((result) => {
           console.log("got result from getbase64DataForTemplate");
           console.log(result);*/
 
       console.log("calling getbase64DataForSigning...");
-      getbase64DataForSigning({ strId: this.documentId })
+      getbase64DataForSigning({ strId: this.documentIdGenerated })
         .then((result) => {
           console.log("got result");
           var base64str = result.VersionData;
@@ -442,6 +448,7 @@ export default class PSPDFKitSignDocument extends LightningElement {
               recordId: this.recordId,
               documentId: this.documentId,
               pendingDocumentId: this.pendingDocumentId,
+              documentIdGenerated: this.documentIdGenerated,
             },
             "*"
           );

@@ -162,6 +162,11 @@
                 console.log("VF Case Id received");
                 console.log(event.data.caseId);
                 caseId = event.data.caseId;
+                
+
+                console.log("VF Template name received");
+                console.log(event.data.templateName);
+                templateName = event.data.templateName;
 
                 // Template should not be shown when 
                 // generating the document
@@ -338,6 +343,7 @@
         }
 
         let caseId;
+        let templateName;
         function saveFileToPendingDocuments() {
             tempInstance.exportPDF().then((buffer) => {
                 const blob = new Blob([buffer], { type: "application/pdf" });
@@ -380,15 +386,20 @@
                             pendingDocumentObject.BD_Case__c = caseId; // This is how you link it to CMS_Case__c
                             // Set other necessary fields of BD_Pending_Documents__c
                             pendingDocumentObject.Id = this.documentId;
-                            pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
+                            //pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
+                            pendingDocumentObject.Name = templateName;
 
                             // Assuming there's a lookup or master-detail field on BD_Pending_Documents__c that relates to the ContentVersion or ContentDocument
-                            pendingDocumentObject.Name = cvResult[0].id;
+                            
+                            //pendingDocumentObject.Name = cvResult[0].id;
+                            pendingDocumentObject.DocumentId__c = cvResult[0].id;
                             pendingDocumentObject.BD_Status__c = "Pending Approval";
 
                             var pdResult = sforce.connection.create([pendingDocumentObject]);
+                           
                             console.log(pdResult);
                             if (pdResult[0].success === 'true') {
+                                console.log(pdResult);
                                 alert('Pending document record created and linked successfully.');
                             } else {
                                 alert('Error creating pending document record: ' + pdResult[0].errors.message);

@@ -414,21 +414,18 @@ global with sharing class PSPDFKitController {
   }
 
   @AuraEnabled(cacheable=true)
-  public static String getDocumentTemplateJsonByDocumentId(Id documentId) {
+  public static BD_Document_Templates__c getDocumentTemplateJsonByDocumentId(
+    Id documentId
+  ) {
     BD_Document_Templates__c template = [
-      SELECT PSPDFKit_TemplateJson__c
+      SELECT PSPDFKit_TemplateJson__c, Name
       FROM BD_Document_Templates__c
       WHERE Id = :documentId
       LIMIT 1
     ];
 
-    if (template != null) {
-      // Return the PSPDFKit_TemplateJson__c field's value
-      return template.PSPDFKit_TemplateJson__c;
-    }
-
-    // Return null or an appropriate error message if not found
-    return null;
+    // Return the template SObject if found
+    return template;
   }
 
   @AuraEnabled(cacheable=true)

@@ -172,6 +172,10 @@
                 console.log("VF pendingDocumentId received");
                 this.pendingDocumentId = event.data.pendingDocumentId
 
+                this.documentIdGenerated = event.data.documentIdGenerated;
+                console.log("VF documentIdGenerated received");
+                
+
                 // Template should not be shown when 
                 // generating the document
                 if (pdf != '') {
@@ -348,7 +352,7 @@
 
         function saveUpdatedFile() {
             // Ensure that this.ContentDocumentId, this.recordId, and this.pendingDocumentId are available
-            if (!this.ContentDocumentId || !this.caseId || !this.pendingDocumentId) {
+            if (!this.ContentDocumentId || !this.recordId || !this.pendingDocumentId) {
                 alert('ContentDocumentId, recordId, or pendingDocumentId is missing.');
                 console.log('ContentDocumentId:', this.ContentDocumentId);
                 console.log('recordId:', this.recordId);
@@ -375,8 +379,9 @@
                         // Update BD_Pending_Documents__c with the new ContentVersion ID
                         var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
                         pendingDocumentObject.Id = this.recordId; // Use the retrieved pendingDocumentId
-                        pendingDocumentObject.Name = newContentVersionId; // Update the Name field with the new ContentVersion ID
-        
+                        pendingDocumentObject.Name = this.documentId; // Update the Name field with the new ContentVersion ID
+                        pendingDocumentObject.DocumentId__c = newContentVersionId;
+
                         var pdResult = sforce.connection.update([pendingDocumentObject]);
                         console.log(pdResult);
                         if (pdResult[0].success === 'true') {
@@ -434,10 +439,11 @@
                             var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
                             pendingDocumentObject.BD_Case__c = caseId; // This is how you link it to CMS_Case__c
                             // Set other necessary fields of BD_Pending_Documents__c
-                            pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
+                            //pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
 
                             // Assuming there's a lookup or master-detail field on BD_Pending_Documents__c that relates to the ContentVersion or ContentDocument
                             pendingDocumentObject.Name = cvResult[0].id;
+                            pendingDocumentObject.DocumentId = cvResult[0].id;
                             pendingDocumentObject.BD_Status__c = "Pending Approval";
 
                             var pdResult = sforce.connection.create([pendingDocumentObject]);

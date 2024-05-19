@@ -38,21 +38,27 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   }
 
   // Use wire service to automatically call the Apex method when documentId is set
+  placeholders;
+  templateName;
+
   @wire(getDocumentTemplateJsonByDocumentId, { documentId: "$documentId" })
   wiredDocumentTemplateJson({ error, data }) {
-    console.log(data);
     if (data) {
-      console.log("data before");
-      console.log(data);
-      this.placeholders = JSON.parse(data);
+      console.log("Data received from Apex:", data);
+      try {
+        // Directly access the fields from the SObject
+        this.placeholders = JSON.parse(data.PSPDFKit_TemplateJson__c);
+        this.templateName = data.Name;
+        console.log("Placeholders:", this.placeholders);
+        console.log("Template Name:", this.templateName);
 
-      console.log("Template JSON:", this.placeholders);
-
-      // Function to get the value for all placeholders
-      // in the JSON
-      this.getAllRecordsNew();
+        // Function to get the value for all placeholders in the JSON
+        this.getAllRecordsNew();
+      } catch (e) {
+        console.error("Error processing data:", e);
+      }
     } else if (error) {
-      console.error("Error retrieving document template JSON:", error);
+      console.error("Error retrieving document template:", error);
     }
   }
 
@@ -511,6 +517,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 placeholders: filledPlaceholdersData,
                 template: false,
                 caseId: this.recordId,
+                templateName: this.templateName,
               },
               "*"
             );
@@ -741,6 +748,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     const results = [];
     let structuredData = [];
 
+    console.log("getAllRecordsNew");
+    console.log(this.placeholders);
+
     for (const {
       databaseField,
       placeholder,
@@ -752,6 +762,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       rightOperand,
       operator,
     } of this.placeholders) {
+      console.log("in the loop");
+      console.log(databaseField + " " + placeholder);
+
       if (isCondition) {
         // if left value is not static, get it's value
         let leftValue;
