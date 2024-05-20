@@ -298,8 +298,11 @@
 
                     console.log("in the pspdfkit instance, do we have the placeholders?");
                     console.log(placeholders);
+
+                    // Dynamically add Header and Footer
                     if(placeholders["HEADER"] && placeholders["HEADER"] === "Yes"){
                         async function addHeaderAndFooter(instance) {
+
                             const headerUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/Florin/Header.png";
                             const footerUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/Florin/Footer.png";
                             const pageIndex = 0;
@@ -379,6 +382,61 @@
                           addHeaderAndFooter(instance);
                           
                     }
+
+                    // Dynamically create signature widgets based on <SigX> placeholders.
+                    async function addSignatureWidgets(instance) {
+                        const searchTerm = "<Sig";
+                        const searchResults = await instance.search(searchTerm);
+                        
+                        // Convert the search results to a standard JavaScript array
+                        const results = searchResults.toArray();
+                        
+                        // Flatten the results and convert rectsOnPage to a standard array
+                        const flattenedResults = results.flatMap(result => {
+                            const rectsArray = result.rectsOnPage.toArray();
+                            return rectsArray.map(rect => ({
+                            pageIndex: result.pageIndex,
+                            rect: new PSPDFKit.Geometry.Rect({
+                                left: rect.left,
+                                top: rect.top,
+                                width: rect.width,
+                                height: rect.height
+                            })
+                            }));
+                        });
+                        
+                        const annotations = [];
+                        const formFields = [];
+                        
+                        flattenedResults.forEach((result, index) => {
+                            const fieldName = `signature-field-${index}`;
+                            const widgetId = PSPDFKit.generateInstantId();
+                        
+                            const widget = new PSPDFKit.Annotations.WidgetAnnotation({
+                            pageIndex: result.pageIndex,
+                            boundingBox: result.rect,
+                            formFieldName: fieldName,
+                            id: widgetId,
+                            backgroundColor: PSPDFKit.Color.WHITE
+                            });
+                        
+                            const formField = new PSPDFKit.FormFields.SignatureFormField({
+                            name: fieldName,
+                            annotationIds: PSPDFKit.Immutable.List([widget.id])
+                            });
+                        
+                            console.log("here is the widget");
+                            console.log(widget);
+                            annotations.push(widget);
+                            formFields.push(formField);
+                        });
+                        
+                        console.log(annotations);
+                        // Create all annotations and form fields
+                        await instance.create([...annotations, ...formFields]);
+                        }
+                        
+                        addSignatureWidgets(instance);
 
                     })
                     .catch(error => { console.log(error); });
