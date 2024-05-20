@@ -126,6 +126,7 @@
 
         window.addEventListener('message', handleOpenAndSaveFiles);
 
+        let placeholders; 
         function handleOpenAndSaveFiles(event) {
 
             console.log("in handleOpenAndSaveFiles");
@@ -150,7 +151,7 @@
 
                 console.log("VF page: message received");
                 console.log("VF page: placeholders received:");
-                let placeholders = event.data.placeholders;
+                placeholders = event.data.placeholders;
                 console.log(placeholders);
                 state = event.data.state;
                 contVersion = event.data;
@@ -291,7 +292,95 @@
                     //disableWebAssemblyStreaming: true,
                     //productId: PSPDFKit.ProductId.Salesforce,
                 })
-                    .then(instance => { tempInstance = instance; })
+                    .then(async instance => { tempInstance = instance; 
+                    
+                    // Perform PSPDFKit specific operations here
+
+                    console.log("in the pspdfkit instance, do we have the placeholders?");
+                    console.log(placeholders);
+                    if(placeholders["HEADER"] && placeholders["HEADER"] === "Yes"){
+                        async function addHeaderAndFooter(instance) {
+                            const headerUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/Florin/Header.png";
+                            const footerUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/Florin/Footer.png";
+                            const pageIndex = 0;
+                          
+                            // Fetch the header image
+                            const headerRequest = await fetch(headerUrl);
+                            const headerBlob = await headerRequest.blob();
+                            const headerAttachmentId = await instance.createAttachment(headerBlob);
+                          
+                            // Fetch the footer image
+                            const footerRequest = await fetch(footerUrl);
+                            const footerBlob = await footerRequest.blob();
+                            const footerAttachmentId = await instance.createAttachment(footerBlob);
+                          
+                            // Get the page info for the specified page
+                            const pageInfo = instance.pageInfoForIndex(pageIndex);
+                            const pageWidth = pageInfo.width;
+                            const pageHeight = pageInfo.height;
+                          
+                            // Helper function to calculate scaled dimensions
+                            function getScaledDimensions(imgWidth, imgHeight, maxWidth) {
+                              const scale = maxWidth / imgWidth;
+                              const width = imgWidth * scale;
+                              const height = imgHeight * scale;
+                              return { width, height };
+                            }
+                          
+                            // Create a new Image object to determine the size of the header
+                            const headerImage = new Image();
+                            headerImage.src = URL.createObjectURL(headerBlob);
+                            await headerImage.decode();
+                          
+                            const headerScaledDimensions = getScaledDimensions(headerImage.width, headerImage.height, pageWidth);
+                            const headerLeft = (headerScaledDimensions.width < pageWidth) ? (pageWidth - headerScaledDimensions.width) / 2 : 0;
+                          
+                            // Create a new Image object to determine the size of the footer
+                            const footerImage = new Image();
+                            footerImage.src = URL.createObjectURL(footerBlob);
+                            await footerImage.decode();
+                          
+                            const footerScaledDimensions = getScaledDimensions(footerImage.width, footerImage.height, pageWidth);
+                            const footerLeft = (footerScaledDimensions.width < pageWidth) ? (pageWidth - footerScaledDimensions.width) / 2 : 0;
+                          
+                            // Create header annotation
+                            const headerAnnotation = new PSPDFKit.Annotations.ImageAnnotation({
+                              pageIndex: pageIndex,
+                              contentType: headerBlob.type,
+                              imageAttachmentId: headerAttachmentId,
+                              description: "Header Image Annotation",
+                              boundingBox: new PSPDFKit.Geometry.Rect({
+                                left: headerLeft,
+                                top: 0,
+                                width: headerScaledDimensions.width,
+                                height: headerScaledDimensions.height
+                              })
+                            });
+                            await instance.create(headerAnnotation);
+                          
+                            // Create footer annotation
+                            const footerAnnotation = new PSPDFKit.Annotations.ImageAnnotation({
+                              pageIndex: pageIndex,
+                              contentType: footerBlob.type,
+                              imageAttachmentId: footerAttachmentId,
+                              description: "Footer Image Annotation",
+                              boundingBox: new PSPDFKit.Geometry.Rect({
+                                left: footerLeft,
+                                top: pageHeight - footerScaledDimensions.height,
+                                width: footerScaledDimensions.width,
+                                height: footerScaledDimensions.height
+                              })
+                            });
+                            await instance.create(footerAnnotation);
+                          }
+                          
+                          // Usage example:
+                          // Assuming you have a PSPDFKit instance named `instance`
+                          addHeaderAndFooter(instance);
+                          
+                    }
+
+                    })
                     .catch(error => { console.log(error); });
             })
         }

@@ -1424,8 +1424,18 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     // Once parent value is fetched, fetch all of their children values
 
-    console.log("Fetched data:", results);
+    // Assign the results to placeholdersGenerated
     this.placeholdersGenerated = results;
+
+    // Add an extra option for the Headers before all results
+    this.placeholdersGenerated.unshift({
+      placeholder: "Header",
+      values: ["Yes", "No"],
+      templatePlaceholder: "HEADER",
+    });
+
+    console.log("placeholdersGenerated", this.placeholdersGenerated);
+
     window.setTimeout(() => {
       this.loadPSPDFKit();
     }, 2000);
