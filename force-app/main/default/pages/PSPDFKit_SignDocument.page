@@ -263,6 +263,40 @@
 
                 let licenseKey = 'vCR5dwIXsXHZsHQoufWEefkm8URHmt9zBymfQ5rWYpggjx_xYADpAXOHYxcdt_PbwurRb_c52uN5BrbRl0ta5wnVrcTnfSM4jASkm6QuPPiuhEI0xdglf_s-V-4aFMCK9u9XT0vJ3XPU4zyiMdem6Wd5sNvUEfP_fWPsbm1DnRMAJJl3vmXshBTlGtjlJYXwNn69OkOq6K9q7qGFHIx95iCXSQLSjRfpyEtWr0wjwLlUykC7tIt9qX8oGO-STn6hplnJzRWRFs_EdP4-YqzcLMaaY-GMKnOUSU5wrThJ7Bb6LJEWBTRX2XraeB6UFqM0rwMqcso8CnoDq1l3Qn_aNZS_6wmcj3K1azVL8NuMyBmu87nwzwlegvXjSqWIXHptd_FUqXX3Npze4CymDYNoRJuJy8s3bv1ikBvXkMKwQR8d1ayy8fs9tzcRyWamyzfzsCNjv1duLSGIkluTxIZMeYU2hd3nsFsFY7Bnot2MLGZI2udJ7iIFTx3QBS_zRFdQjJ_FLl9viOFVtjG_Rklfzqvn2675leoU7de7DBUOnUWQk8oZRUAvMmber1GzORnKeE1M37Wd5YxS20tQYrjRNr0BdaTOMEUshCyCI1EEjWrCy_zdlng2l2jZtrlYZkNsEwiGz8Cvn9UtmgVHg0UQPfzDYB8tk7Hv51rh5RR9xEllaFZMc82py7G_GjSHIRLyKJWiD_eaHbWxPEnzZszNhmqpA6Jx4Y-jVAPE-bub3LG6dd5nfzCHlbMOJTiNPHrSayPmX3QRTV14MpDcyRu8uZGhalXvx3IYcMPx_SLEXattbzdcT6OWH6nFmmrztq63pJ2IgnfDbeZ0XlarWKu0SYEMAq8fBl41tFFVYdztD6PU2qULlY3SyTQyL_FnQxw4oSgFTBXeyr80Mlj03FZf710WxYF1-JuWUQq4GlOlknuXqmVdjgCF4R__lKm0IPr0xCvTq4r5f9t7zXP3LT12QcQ5QtRXPi6By11pZMkTlKGbfzRbDuf2ksVAMhOSuPmYf3C-xZBdPGvm6r95ltSFxIdYNILrwJ2IjYs2RW3JxDWFpwK4MYpEiADzQP3SiKBgqKncfTcInoFmd5kM8mFddavDbw4uoaNLIUaSXphq_qgucHk5LQP7sHFjzfqVVWxYR_U6_NUZyvpUn-1Wv6YO9K5JzeR-lnCTxOxPIE-iA01qDhj2lZ-sJYy_zK0D19uPk9b8agtDudqWlQPebCtc6cHpfe3Wq16rlwiFheL4pVI=';
 
+                const itemsToRemove = [
+                    "sidebar-document-outline",
+                    "sidebar-bookmarks",
+                    "sidebar-layers",
+                    "multi-annotations-selection",
+                    "pan",
+                    "ink",
+                    "zoom-mode",
+                    "annotate",
+                    "highlighter",
+                    "text-highlighter",
+                    "ink-eraser",
+                    "signature",
+                    "image",
+                    "stamp",
+                    "note",
+                    "text",
+                    "callout",
+                    "line",
+                    "link",
+                    "arrow",
+                    "rectangle",
+                    "ellipse",
+                    "polygon",
+                    "cloudy-polygon",
+                    "polyline"
+                ];
+
+                // Filter out the items to remove
+                const filteredToolbarItems = PSPDFKit.defaultToolbarItems.filter(item => !itemsToRemove.includes(item.type));
+
+                let finalToolbarItems = filteredToolbarItems;
+                finalToolbarItems = finalToolbarItems.concat([saveButton]);
+
                 PSPDFKit.load({
                     licenseKey,
                     //inlineWorkers: true,
@@ -270,7 +304,12 @@
                     //baseCoreUrl,
                     container: "#pspdfkit",
                     document: document,
-                    toolbarItems: PSPDFKit.defaultToolbarItems
+                    isEditableAnnotation: function(annotation) {
+                        // Return false for all annotations except for signature widgets
+                        return annotation instanceof PSPDFKit.Annotations.WidgetAnnotation && annotation.formFieldName.startsWith('signature');
+                      },
+                    toolbarItems: finalToolbarItems,
+                    /*toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
                         .reduce((acc = [], item) => {
                             if (item.type === "ink") {
@@ -286,16 +325,12 @@
                                         type: "redact-text-highlighter",
                                         dropdownGroup: "additional-tools",
                                     },
-                                    {
-                                        type: "redact-rectangle",
-                                        dropdownGroup: "additional-tools",
-                                    },
                                 ]);
                             }
 
                             return acc.concat([item]);
                         }, [])
-                        .concat([saveButton]),
+                        .concat([saveButton]),*/
                     //disableWebAssemblyStreaming: true,
                     //productId: PSPDFKit.ProductId.Salesforce,
                 })
