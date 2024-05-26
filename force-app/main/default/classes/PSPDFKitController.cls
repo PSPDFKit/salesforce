@@ -654,4 +654,19 @@ global with sharing class PSPDFKitController {
 
     return allRelatedValues; // Returns a list of values from all the related records */
   }
+
+  @AuraEnabled
+  public static void resetDocumentSelection(Id recordId, String objectName) {
+    String query =
+      'SELECT BD_Document_Selection__c FROM ' +
+      objectName +
+      ' WHERE Id = :recordId LIMIT 1';
+    SObject obj = Database.query(query);
+
+    // Check if the returned SObject is not null
+    if (obj != null) {
+      obj.put('BD_Document_Selection__c', null);
+      update obj;
+    }
+  }
 }

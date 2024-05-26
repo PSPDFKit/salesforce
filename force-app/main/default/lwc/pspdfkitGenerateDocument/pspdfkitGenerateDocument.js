@@ -19,8 +19,12 @@ import getRecordValue from "@salesforce/apex/PSPDFKitController.getRecordValue";
 import getRecordList from "@salesforce/apex/PSPDFKitController.getRecordList";
 import getRelatedRecord from "@salesforce/apex/PSPDFKitController.getRelatedRecord";
 import getRelatedLookupRecord from "@salesforce/apex/PSPDFKitController.getRelatedLookupRecord";
+import resetDocumentSelection from "@salesforce/apex/PSPDFKitController.resetDocumentSelection";
 
 import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document_Selection__c";
+
+// Fetch the field holding the selected template
+//const fields = [BD_Document_Selection__c];
 export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
 
@@ -29,12 +33,46 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [BD_Document_Selection__c],
+    //layoutTypes: ["Full"],
+    //modes: ["View"],
   })
   wiredRecord({ error, data }) {
-    console.log("in wiredRecord for BD_Document_Selection__c");
-    const currentValue = getFieldValue(data, BD_Document_Selection__c);
-    console.log(currentValue);
-    this.documentId = currentValue;
+    if (data) {
+      this.record = data;
+      console.log("logging data");
+      console.log(data);
+      const currentValue = getFieldValue(data, BD_Document_Selection__c); //aADOu0000008fPNOAY
+      console.log(currentValue);
+      this.documentId = currentValue;
+
+      console.log(
+        "reseting BD_Document_Selection__c for object " + this.objectApiName
+      );
+
+      // Call Apex method to reset the field
+      resetDocumentSelection({
+        recordId: this.recordId,
+        objectName: this.objectApiName,
+      })
+        .then(() => {
+          console.log("BD_Document_Selection__c field reset to null");
+        })
+        .catch((error) => {
+          console.error(
+            "Error resetting BD_Document_Selection__c field: ",
+            error
+          );
+        });
+
+      console.log("Record Data: ", data); // Log the record data to inspect
+      console.log("Object API Name: ", this.objectApiName); // Log the object API name
+    } else if (error) {
+      console.error("Error in wiredRecord: ", error);
+    }
+  }
+
+  get objectApiName() {
+    return this.record && this.record.apiName ? this.record.apiName : "";
   }
 
   // Use wire service to automatically call the Apex method when documentId is set
@@ -66,6 +104,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @track fileName;
   @track openModalGenerate = false;
   @api recordId;
+  @track record;
   /*@track dropdownOptions = [
     { label: "Role 1", value: "option1" },
     { label: "Role 2", value: "option2" },
@@ -94,17 +133,23 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     }
   }*/
 
-  @wire(getRecord, {
+  /*@wire(getRecord, {
     recordId: "$recordId",
     layoutTypes: ["Full"],
     modes: ["View"],
   })
-  record;
-
-  get objectApiName() {
-    return this.record.data ? this.record.data.apiName : "";
-    //return this.record.data.apiName;
+  wiredRecord({ error, data }) {
+    if (data) {
+      this.record = data;
+      console.log("Record Data: ", data); // Log the record data to inspect
+      console.log("Object API Name: ", this.objectApiName); // Log the object API name
+    } else if (error) {
+      console.error("Error in wiredRecord: ", error);
+    }
   }
+  get objectApiName() {
+    return this.record && this.record.apiName ? this.record.apiName : "";
+  }*/
 
   @track placeholdersGenerated = [];
 
@@ -407,9 +452,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   async loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
-    console.log(this.record);
-    let name = this.record.data.apiName;
-    console.log(name);
+    //console.log(this.record);
+    //let name = this.record.data.apiName;
+    //console.log(name);
 
     console.log("manually fetching all input fields");
 
