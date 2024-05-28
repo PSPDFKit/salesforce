@@ -83,6 +83,9 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   wiredDocumentTemplateJson({ error, data }) {
     if (data) {
       console.log("Data received from Apex:", data);
+
+      this.loadingData = true;
+
       try {
         // Directly access the fields from the SObject
         this.placeholders = JSON.parse(data.PSPDFKit_TemplateJson__c);
@@ -450,8 +453,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     return placeholderObj ? placeholderObj.templatePlaceholder : null;
   }
 
+  @track loadingData = false;
+  @track readyToRender = false;
   async loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
+    this.readyToRender = true;
+    this.loadingData = false;
     //console.log(this.record);
     //let name = this.record.data.apiName;
     //console.log(name);

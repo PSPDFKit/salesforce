@@ -8,51 +8,56 @@
       </div>
 
       <div class="container">
-
-        <!--<lightning-button
-        class="button"
-        label="Select Template"
-        title="Primary action"
-        variant="brand"
-        stretch
-        onclick={handleOpenModalGenerate}
-      ></lightning-button>-->
-
-        <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
-          <div key={placeholderGenerated.placeholder} class="slds-p-horizontal_medium slds-p-vertical_small">
-              <p>{placeholderGenerated.placeholder}</p>
-              <c-custom-look-up-generate
-              object-api-name={objectApiName}
-              label="Test"
-              onselection={handleSelection}
-              onchange={handleSearchChangeGenerated}
-              placeholder-name={placeholderGenerated.placeholder}
-              data-key={placeholderGenerated.placeholder} 
-              search-key={placeholderGenerated.value}
-              drop-down-options-api={placeholderGenerated.values}
-              template-placeholder={placeholderGenerated.templatePlaceholder}
-              children={placeholderGenerated.Children}
-              >
-            </c-custom-look-up-generate>
+        <template if:true={loadingData}>
+          <div class="slds-spinner_container">
+            <div role="status" class="slds-spinner slds-spinner_medium">
+              <span class="slds-assistive-text">Loading template...</span>
+              <div class="slds-spinner__dot-a"></div>
+              <div class="slds-spinner__dot-b"></div>
+            </div>
           </div>
         </template>
 
+        <template if:false={loadingData}>
+          <template if:true={readyToRender}>
+            <template for:each={placeholdersGenerated} for:item="placeholderGenerated">
+              <div key={placeholderGenerated.placeholder} class="slds-p-horizontal_medium slds-p-vertical_small">
+                  <p>{placeholderGenerated.placeholder}</p>
+                  <c-custom-look-up-generate
+                  object-api-name={objectApiName}
+                  label="Test"
+                  onselection={handleSelection}
+                  onchange={handleSearchChangeGenerated}
+                  placeholder-name={placeholderGenerated.placeholder}
+                  data-key={placeholderGenerated.placeholder} 
+                  search-key={placeholderGenerated.value}
+                  drop-down-options-api={placeholderGenerated.values}
+                  template-placeholder={placeholderGenerated.templatePlaceholder}
+                  children={placeholderGenerated.Children}
+                  >
+                </c-custom-look-up-generate>
+              </div>
+            </template>
 
-        <lightning-button
-        class="button"
-        label="Generate"
-        title="Primary action"
-        variant="brand"
-        stretch
-        onclick={loadPSPDFKit}
-      ></lightning-button>
+            <lightning-button
+              class="button"
+              label="Generate"
+              title="Primary action"
+              variant="brand"
+              stretch
+              onclick={loadPSPDFKit}
+            ></lightning-button>
+          </template>
+
+          <template if:false={readyToRender}>
+            <p>Select Template to continue</p>
+          </template>
+        </template>
       </div>
     </div>
 
     <div class="viewer">
-      <iframe
-        src="/apex/PSPDFKit_InitPSPDFKit"
-      ></iframe>
+      <iframe src="/apex/PSPDFKit_InitPSPDFKit"></iframe>
     </div>
   </div>
 
@@ -67,8 +72,7 @@
             variant="bare-inverse"
             onclick={closeModal}
             class="slds-modal__close"
-          >
-          </lightning-button-icon>
+          ></lightning-button-icon>
           <h1 style="font-size: 22px; font-weight: bold">Salesforce Files</h1>
         </div>
         <c-pspdfkit-open-salesforce-files
@@ -77,6 +81,4 @@
       </div>
     </div>
   </template>
-
-
 </template>

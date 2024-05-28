@@ -22,11 +22,12 @@
     <template if:true={showDropdown}>
         <div class="slds-m-top_small">
             <lightning-combobox name="options"
-                                
                                 value={selectedOption}
                                 placeholder="Select an Option"
                                 options={dropdownOptions}
-                                onchange={handleOptionChange}></lightning-combobox>
+                                onchange={handleOptionChange}
+                                variant = "label-hidden" >
+                            </lightning-combobox>
         </div>
     </template>
 
@@ -43,5 +44,6 @@
             </template>
         </div>
     </template>
-
 </template>
+
+
