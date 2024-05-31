@@ -546,8 +546,10 @@
                     var contentVersionObject = new sforce.SObject('ContentVersion');
                     // Set other necessary attributes for contentVersionObject...
                     contentVersionObject.VersionData = updatedFile;
-                    contentVersionObject.Title = contVersion.fName || 'Default Title'; // Set a default title if fName is not availa
-                    contentVersionObject.PathOnClient = contVersion.PathOnClient || 'file.pdf';
+                    //contentVersionObject.Title = contVersion.fName || 'Document'; // Set a default title if fName is not availa
+                    //contentVersionObject.PathOnClient = contVersion.PathOnClient || 'file.pdf';
+                    contentVersionObject.Title = templateName + ".pdf";
+                    contentVersionObject.PathOnClient = templateName + ".pdf";
 
                     // ...other settings for contentVersionObject
 
@@ -594,6 +596,23 @@
                             console.log(pdResult);
                             if (pdResult[0].success === 'true') {
                                 console.log(pdResult);
+
+                                const pendingDocumentId = pdResult[0].id;
+                                console.log("first link created successfully");
+
+                                // Create ContentDocumentLink to link the document to the pending document record
+                                const pendingDocumentLinkObject = new sforce.SObject('ContentDocumentLink');
+                                pendingDocumentLinkObject.ContentDocumentId = contentDocumentId;
+                                pendingDocumentLinkObject.LinkedEntityId = pendingDocumentId;
+                                pendingDocumentLinkObject.ShareType = 'V';
+
+                                const pdlResult = sforce.connection.create([pendingDocumentLinkObject]);
+                                if (pdlResult[0].success === 'true') {
+                                    console.log('Pending document record created and linked successfully.');
+                                } else {
+                                    console.log('Error linking content document to pending document: ' + pdlResult[0].errors.message);
+                                }
+
                                 alert('Pending document record created and linked successfully.');
                             } else {
                                 alert('Error creating pending document record: ' + pdResult[0].errors.message);

@@ -425,6 +425,7 @@ export default class PSPDFKitSignDocument extends LightningElement {
           console.log(result);*/
 
       console.log("calling getbase64DataForSigning...");
+      console.log(this.documentIdGenerated);
       getbase64DataForSigning({ strId: this.documentIdGenerated })
         .then((result) => {
           console.log("got result");

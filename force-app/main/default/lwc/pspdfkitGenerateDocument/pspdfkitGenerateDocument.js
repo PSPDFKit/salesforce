@@ -49,20 +49,24 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         "reseting BD_Document_Selection__c for object " + this.objectApiName
       );
 
-      // Call Apex method to reset the field
-      resetDocumentSelection({
-        recordId: this.recordId,
-        objectName: this.objectApiName,
-      })
-        .then(() => {
-          console.log("BD_Document_Selection__c field reset to null");
+      // Reset BD_Document_Selection__c with a delay
+      // otherwise PSPDFKit won't load
+      window.setTimeout(() => {
+        resetDocumentSelection({
+          recordId: this.recordId,
+          objectName: this.objectApiName,
         })
-        .catch((error) => {
-          console.error(
-            "Error resetting BD_Document_Selection__c field: ",
-            error
-          );
-        });
+          .then(() => {
+            console.log("BD_Document_Selection__c field reset to null");
+          })
+          .catch((error) => {
+            console.error(
+              "Error resetting BD_Document_Selection__c field: ",
+              error
+            );
+          });
+      }, 5000);
+      // Call Apex method to reset the field
 
       console.log("Record Data: ", data); // Log the record data to inspect
       console.log("Object API Name: ", this.objectApiName); // Log the object API name
@@ -543,43 +547,49 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // let event = this.event;
     //console.log(event);
     console.log("opening visual force page now");
-    let visualForce = this.template.querySelector("iframe");
-    if (visualForce && this.documentId) {
-      getbase64DataForTemplate({ documentTemplateId: this.documentId })
-        .then((result) => {
-          console.log("got result from getbase64DataForTemplate");
-          console.log(result);
+    window.setTimeout(async () => {
+      console.log("in timeout now");
+      let visualForce = await this.template.querySelector("iframe");
+      console.log(this.documentId);
+      console.log(visualForce);
+      console.log(visualForce && this.documentId);
+      if (visualForce && this.documentId) {
+        getbase64DataForTemplate({ documentTemplateId: this.documentId })
+          .then((result) => {
+            console.log("got result from getbase64DataForTemplate");
+            console.log(result);
 
-          getbase64Data({ strId: result }).then((result) => {
-            var base64str = result.VersionData;
-            var binary = atob(base64str.replace(/\s/g, ""));
-            var len = binary.length;
-            var buffer = new ArrayBuffer(len);
-            var view = new Uint8Array(buffer);
-            for (var i = 0; i < len; i++) {
-              view[i] = binary.charCodeAt(i);
-            }
-            var blob = new Blob([view]);
-            visualForce.contentWindow.postMessage(
-              {
-                versionData: blob,
-                ContentDocumentId: result.ContentDocumentId,
-                PathOnClient: result.PathOnClient,
-                state: "salesforce",
-                placeholders: filledPlaceholdersData,
-                template: false,
-                caseId: this.recordId,
-                templateName: this.templateName,
-              },
-              "*"
-            );
+            getbase64Data({ strId: result }).then((result) => {
+              var base64str = result.VersionData;
+              var binary = atob(base64str.replace(/\s/g, ""));
+              var len = binary.length;
+              var buffer = new ArrayBuffer(len);
+              var view = new Uint8Array(buffer);
+              for (var i = 0; i < len; i++) {
+                view[i] = binary.charCodeAt(i);
+              }
+              var blob = new Blob([view]);
+              visualForce.contentWindow.postMessage(
+                {
+                  versionData: blob,
+                  ContentDocumentId: result.ContentDocumentId,
+                  PathOnClient: result.PathOnClient,
+                  state: "salesforce",
+                  placeholders: filledPlaceholdersData,
+                  template: false,
+                  caseId: this.recordId,
+                  templateName: this.templateName,
+                },
+                "*"
+              );
+            });
+          })
+          .catch((error) => {
+            console.log(error);
           });
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      this.openModalGenerate = false;
-    }
+        this.openModalGenerate = false;
+      }
+    }, 2000);
   }
 
   async getAllRecords() {
