@@ -60,12 +60,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             console.log("BD_Document_Selection__c field reset to null");
           })
           .catch((error) => {
+            x;
             console.error(
               "Error resetting BD_Document_Selection__c field: ",
               error
             );
           });
-      }, 5000);
+      }, 7000);
       // Call Apex method to reset the field
 
       console.log("Record Data: ", data); // Log the record data to inspect
@@ -461,23 +462,29 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @track readyToRender = false;
   async loadPSPDFKit() {
     console.log("in loadPSPDFKit Generate button");
-    this.readyToRender = true;
-    this.loadingData = false;
+
+    //window.setTimeout(async () => {
+    console.log(
+      "this.placeholdersGenerated ",
+      JSON.stringify(this.placeholdersGenerated)
+    );
     //console.log(this.record);
     //let name = this.record.data.apiName;
     //console.log(name);
 
     console.log("manually fetching all input fields");
 
-    const lookupElements = this.template.querySelectorAll(
+    const lookupElements = await this.template.querySelectorAll(
       "c-custom-look-up-generate"
     );
 
     let filledPlaceholdersData = {};
 
+    console.log("do lookup elements exist? ", lookupElements);
+
     //console.log(JSON.stringify(lookupElements));
 
-    lookupElements.forEach((element) => {
+    await lookupElements.forEach((element) => {
       // Access the @api getter from the child component
       //console.log(element);
       //const searchValue = element.currentSearchTerm;
@@ -539,7 +546,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         }
       }
     });
-    console.log("final placeholder data");
+    console.log(
+      "final placeholder data, ",
+      JSON.stringify(filledPlaceholdersData)
+    );
     console.log(JSON.parse(JSON.stringify(filledPlaceholdersData)));
 
     // Fetch all placeholders AND their data
@@ -547,49 +557,49 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // let event = this.event;
     //console.log(event);
     console.log("opening visual force page now");
-    window.setTimeout(async () => {
-      console.log("in timeout now");
-      let visualForce = await this.template.querySelector("iframe");
-      console.log(this.documentId);
-      console.log(visualForce);
-      console.log(visualForce && this.documentId);
-      if (visualForce && this.documentId) {
-        getbase64DataForTemplate({ documentTemplateId: this.documentId })
-          .then((result) => {
-            console.log("got result from getbase64DataForTemplate");
-            console.log(result);
 
-            getbase64Data({ strId: result }).then((result) => {
-              var base64str = result.VersionData;
-              var binary = atob(base64str.replace(/\s/g, ""));
-              var len = binary.length;
-              var buffer = new ArrayBuffer(len);
-              var view = new Uint8Array(buffer);
-              for (var i = 0; i < len; i++) {
-                view[i] = binary.charCodeAt(i);
-              }
-              var blob = new Blob([view]);
-              visualForce.contentWindow.postMessage(
-                {
-                  versionData: blob,
-                  ContentDocumentId: result.ContentDocumentId,
-                  PathOnClient: result.PathOnClient,
-                  state: "salesforce",
-                  placeholders: filledPlaceholdersData,
-                  template: false,
-                  caseId: this.recordId,
-                  templateName: this.templateName,
-                },
-                "*"
-              );
-            });
-          })
-          .catch((error) => {
-            console.log(error);
+    console.log("in timeout now");
+    let visualForce = await this.template.querySelector("iframe");
+    console.log(this.documentId);
+    console.log(visualForce);
+    console.log(visualForce && this.documentId);
+    if (visualForce && this.documentId) {
+      getbase64DataForTemplate({ documentTemplateId: this.documentId })
+        .then((result) => {
+          console.log("got result from getbase64DataForTemplate");
+          console.log(result);
+
+          getbase64Data({ strId: result }).then((result) => {
+            var base64str = result.VersionData;
+            var binary = atob(base64str.replace(/\s/g, ""));
+            var len = binary.length;
+            var buffer = new ArrayBuffer(len);
+            var view = new Uint8Array(buffer);
+            for (var i = 0; i < len; i++) {
+              view[i] = binary.charCodeAt(i);
+            }
+            var blob = new Blob([view]);
+            visualForce.contentWindow.postMessage(
+              {
+                versionData: blob,
+                ContentDocumentId: result.ContentDocumentId,
+                PathOnClient: result.PathOnClient,
+                state: "salesforce",
+                placeholders: filledPlaceholdersData,
+                template: false,
+                caseId: this.recordId,
+                templateName: this.templateName,
+              },
+              "*"
+            );
           });
-        this.openModalGenerate = false;
-      }
-    }, 2000);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      this.openModalGenerate = false;
+    }
+    //}, 5000);
   }
 
   async getAllRecords() {
@@ -824,8 +834,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       rightOperand,
       operator,
     } of this.placeholders) {
-      console.log("in the loop");
-      console.log(databaseField + " " + placeholder);
+      //console.log("in the loop");
+      //console.log(databaseField + " " + placeholder);
 
       if (isCondition) {
         // if left value is not static, get it's value
@@ -843,7 +853,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         // if right value is not static, get it's value
         let rightValue;
         if (rightOperand.tableName !== rightOperand.databaseField) {
-          console.log("...getting right lookup value");
+          //console.log("...getting right lookup value");
           rightValue = await this.getLookUpValue(
             rightOperand.placeholder,
             rightOperand.databaseField,
@@ -898,7 +908,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
         // Static Date field
         if (databaseField.includes("DATE")) {
-          console.log("+++++ in date field");
+          //console.log("+++++ in date field");
           const currentDate = new Date();
           const options = {
             weekday: "long",
@@ -920,7 +930,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         }
         // It's a lookup field without relation
         else if (databaseField.includes(".") && selectAtGenerate === false) {
-          console.log("found a lookup field: " + databaseField);
+          //console.log("found a lookup field: " + databaseField);
           //console.log("in table: " + tableName);
           let relationshipReferenceField;
           let relationshipField;
@@ -959,15 +969,15 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         // It's a related object
         else if (selectAtGenerate === true) {
           // Fetch list of possible values for dropdown
-          console.log("----- in dropdown field");
+          /*console.log("----- in dropdown field");
           console.log(tableName);
           console.log(databaseField);
           console.log(this.recordId);
-          console.log(placeholder);
+          console.log(placeholder);*/
           let recordId = await this.recordId;
 
           if (placeholder.includes(".")) {
-            console.log("child element found");
+            //console.log("child element found");
 
             // It's a child record, extract the parent name
             let parentName = placeholder.split(".")[0];
@@ -1048,7 +1058,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           }
         */
           } else {
-            console.log("Parent value found, look for children values");
+            //console.log("Parent value found, look for children values");
 
             // Push parent to structured data
             // so that children data can be
@@ -1076,8 +1086,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
             // Related Record with Lookup
             if (databaseField.includes(".")) {
-              console.log("--------------------Related Field with Lookup");
-              console.log(this.recordId);
+              //console.log("--------------------Related Field with Lookup");
+              //console.log(this.recordId);
 
               let relationshipReferenceField;
               let relationshipField;
@@ -1129,7 +1139,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             }
             // Regular Field with Lookup
             else {
-              console.log("Regular Field with Lookup");
+              //console.log("Regular Field with Lookup");
 
               try {
                 const dropdownValues = await getRecordList({
@@ -1139,12 +1149,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                   referenceField,
                 });
 
-                console.log("result for dropdwown parent received");
-                console.log(dropdownValues);
+                //console.log("result for dropdwown parent received");
+                //console.log(dropdownValues);
 
                 const stringValues = dropdownValues.map((item) => item.value);
-                console.log("------ stringValues:");
-                console.log(stringValues);
+                //console.log("------ stringValues:");
+                //console.log(stringValues);
 
                 results.push({
                   placeholder,
@@ -1171,8 +1181,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         }
         // It's regular field
         else {
-          console.log("----- in regular field");
-          console.log(databaseField);
+          //console.log("----- in regular field");
+          //console.log(databaseField);
           try {
             const value = await getRecordValue({
               tableName,
@@ -1224,7 +1234,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         console.log(dropdownValues);
 
         // Ensure results array is accessible and modifiable across multiple async calls
-        let results = [];
+        //let results = [];
 
         // Loop through each item in dropdownValues
         dropdownValues.forEach(async (dropdownItem) => {
@@ -1257,7 +1267,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               relationshipField === undefined &&
               relationshipReferenceField !== undefined
             ) {
-              console.log("child is regular object");
+              //console.log("child is regular object");
               let fieldName = relationshipReferenceField;
 
               const value = await getRecordValue({
@@ -1487,10 +1497,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // Once parent value is fetched, fetch all of their children values
 
     // Assign the results to placeholdersGenerated
+    console.log("got results", results);
+    console.log(results);
     this.placeholdersGenerated = results;
 
     // Add an extra option for the Headers before all results
-    this.placeholdersGenerated.unshift({
+    await this.placeholdersGenerated.unshift({
       placeholder: "Header",
       values: ["Yes", "No"],
       templatePlaceholder: "HEADER",
@@ -1498,9 +1510,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     console.log("placeholdersGenerated", this.placeholdersGenerated);
 
+    this.readyToRender = true;
+    this.loadingData = false;
+
     window.setTimeout(() => {
       this.loadPSPDFKit();
-    }, 2000);
+    }, 1000);
 
     // Once the values have been fetched
     // load PSPDFKit
