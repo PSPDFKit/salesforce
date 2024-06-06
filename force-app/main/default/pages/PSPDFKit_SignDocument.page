@@ -412,8 +412,11 @@
                     var contentVersionObject = new sforce.SObject('ContentVersion');
                     contentVersionObject.ContentDocumentId = this.ContentDocumentId; // Link to existing ContentDocumentId
                     contentVersionObject.VersionData = updatedFile;
-                    contentVersionObject.Title = this.documentId || 'Default Title'; // Set a default title if documentId is not available
-                    contentVersionObject.PathOnClient = this.documentId || 'file.pdf';
+                    //contentVersionObject.Title = this.documentId || 'Default Title'; // Set a default title if documentId is not available
+                    //contentVersionObject.PathOnClient = this.documentId || 'file.pdf';
+
+                    contentVersionObject.Title = templateName + ".pdf";
+                    contentVersionObject.PathOnClient = templateName + ".pdf";
         
                     // Save the new ContentVersion
                     var cvResult = sforce.connection.create([contentVersionObject]);
