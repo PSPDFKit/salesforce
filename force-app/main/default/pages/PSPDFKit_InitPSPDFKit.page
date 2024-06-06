@@ -66,17 +66,56 @@
         }
 
         async function getPlacholderTags(blob) {
-            const iModule = window.iModule;
-            let arrayBufferTemplate = await blob.arrayBuffer();
-            const zip = new PizZip(arrayBufferTemplate);
-            console.log("zip");
-            const doc = new docxtemplater(zip, {
-                delimiters: { start: "{{", end: "}}" },
-                modules: [iModule]
-            });
-            console.log("doc");
-            const tags = iModule.getAllTags();
-            return tags;
+            try{
+                const iModule = window.iModule;
+                let arrayBufferTemplate = await blob.arrayBuffer();
+                const zip = new PizZip(arrayBufferTemplate);
+                console.log("zip");
+                const doc = new docxtemplater(zip, {
+                    delimiters: { start: "{{", end: "}}" },
+                    modules: [iModule]
+                });
+                console.log("doc");
+                const tags = iModule.getAllTags();
+                return tags;
+            }catch(e){
+                console.log("Error in finding placeholders.");
+                console.log(e);
+                const allErrorMessages = getErrorExplanations(e.properties);
+
+                alert("The template seems to be invalid: " + JSON.stringify(allErrorMessages));
+                console.log(JSON.stringify(allErrorMessages));
+                return {"Template invalid.": "Error, no placeholders found."};
+            }
+
+            function getErrorExplanations(errorObj) {
+                let explanations = "";
+            
+                function traverseErrors(errors) {
+                    if (errors && Array.isArray(errors)) {
+                        errors.forEach((error) => {
+                            if (error.properties && error.properties.explanation) {
+                                explanations += error.properties.explanation + " ";
+                            }
+                            // Recursively traverse errors if there are nested errors
+                            if (error.errors && Array.isArray(error.errors)) {
+                                traverseErrors(error.errors);
+                            }
+                        });
+                    }
+                }
+            
+                if (errorObj.errors && Array.isArray(errorObj.errors)) {
+                    traverseErrors(errorObj.errors);
+                } else {
+                    explanations = "No errors found in the array.";
+                }
+            
+                return explanations.trim();
+            }
+            
+            
+           
         }
         /*********************************/
 
@@ -144,7 +183,8 @@
                 loadPlaceholdersFromTemplate(pdf);
 
                 // Show viewer with template document
-                loadPSPDFKit(null);
+                //loadPSPDFKit(null);
+                loadPSPDFKitTemplateView(null);
             } else if (event.data.template === false) {
 
                 // 2. Placholders filled, loadPSPDFKit
@@ -192,8 +232,6 @@
                 nullGetter() { return ''; }
             });
 
-            console.log("...json data");
-            console.log(jsonData);
             doc.setData(jsonData);
             doc.render();
 
@@ -203,6 +241,121 @@
 
         function isEmptyObject(obj) {
             return Object.keys(obj).length === 0 && obj.constructor === Object;
+        }
+
+        function loadPSPDFKitTemplateView(placeholderData){
+            pdf.arrayBuffer().then(async val => {
+
+                console.log("is PSPDFKit defined?");
+                console.log(PSPDFKit);
+                console.log(placeholderData);
+
+
+                let document = val;
+                if (placeholderData != null && typeof placeholderData === 'object' && !isEmptyObject(placeholderData)) {
+                    document = fillTemplate(val, placeholderData);
+                } else {
+                    document = val;
+                }
+
+                console.log("document to be loaded");
+                console.log(document);
+
+                let licenseKey = 'L0PuOKZnq2Icm9VlXkkdJ9aQoIdsaz-wrcQnv84fp44qRpxUsHN20R0-05sRPUwHlHIKgr87Cv2-AOGEfgwloYiqXmkGY2lcn_hxBzXotJpGRhbxKv-m6SiEH2jthmfLi3IudKHyOs8V2SP_MlOHrwhBtB22IDU542dTdKFvRU1aM17GAvHAmojtP64SQZktfR7rV3L_OpR2HKLGna53XtO-yF0Lgz9DfEFfOnHLqAKV1JGx52YtqxBfXaVPn6dl6OaPpoNSvCJY3WXjFIJcGaGl5iSU6oPxJNk3eZKP6G5I96P_lWtukBS0h0Z3_KTUIAo4syA07wQ9188qNpTbVoElv8215bqZadjAQzTNkGk2u5vuWdT8ncdHO27rvsyN4yp7OO83IVI3D8TyNSSOVW2KTYov3ruTfegfDFnt5SksHP5SDVk1ohGVOR05h22aeHk0B5XL_0OWW_B3w_BunQ62-AZicDgUZRWaiX_g-nJJTQhm8ctw1-OQ3L_1DPbycZuQBzCyrASzktoKmFZIwk1vrewa4wQ-WWKBiaUGULe1qka7B83u7cAswn8MjV-O02dTH8C5BVsZSVax8V6Z1NH7DXRnalFkIXpya3ZsTxhkqUHqBtTRCmk-Z8xRD-wT0ArU8DrkeKaXOTFhG2PejyixFKQCgJZF7eittG430yOxJ3WEP7WRnQSZwKBxlusDo3Zp6ZG9DikkT1fXgLqbdF96CRbPhEUAzQlQZVGhjTJsH6IgWQNGoHjfLokzpQfLwpxLagxith7Nfpc1Cn952-8jnLkANKG0PXM-suVLI715wq-Yk-7SoITdj6EZ6iSKaCtYcp9muH6x1zUWeaW-upahP2d-3DwLiiVNGG_0tOOvtB6468NhbF3bExDnH5-LwPp_OuNuXAgzWU7UIkRrqTIf2O2jNBiU71Pdx9BYL1-R7u7ZgWGd7hJvQ5pd8O-8AqAkc33RikZHJtanWvKtBSe5flQy8QksWHLgQflc16UoiGdhsJo9r89SDRI-paPue-iXdM6d5htdrw7rgk19MD9XIl2WToy9OurowMgUtYDXx1OkOoTPAL4aNG3sGuhugpg_pDQ5wOkQrt3-r9851nd1ieq6i8kEbbzKJnB7PvemumldQn1ZH0_0ZbA8E7hGBI6q2G2ypBkdcbbaJ0cj_bTllf2rzqpT_-h46ZRv_hp3MUEWbcZX_511aTZoV7GGDlFL9kDQFekAiCDJfoW8Sw==';
+
+                // Customize the toolbar
+                console.log("default toolbar items");
+                console.log(PSPDFKit.defaultToolbarItems);
+                console.log(JSON.stringify(PSPDFKit.defaultToolbarItems));
+
+                const itemsToRemove = [
+                    "sidebar-document-outline",
+                    "sidebar-bookmarks",
+                    "sidebar-layers",
+                    "multi-annotations-selection",
+                    "pan",
+                    "ink",
+                    "zoom-mode",
+                    "annotate",
+                    "highlighter",
+                    "text-highlighter",
+                    "ink-eraser",
+                    "signature",
+                    "image",
+                    "stamp",
+                    "note",
+                    "text",
+                    "callout",
+                    "line",
+                    "link",
+                    "arrow",
+                    "rectangle",
+                    "ellipse",
+                    "polygon",
+                    "cloudy-polygon",
+                    "polyline"
+                ];
+
+                // Filter out the items to remove
+                const filteredToolbarItems = PSPDFKit.defaultToolbarItems.filter(item => !itemsToRemove.includes(item.type));
+
+                /*let finalToolbarItems = filteredToolbarItems.reduce((acc, item) => {
+                acc.push(item);
+                if (item.type === "spacer") {
+                    acc.push({ type: "content-editor" });
+                    acc.push({ type: "form-creator" });
+                }
+                return acc;
+                }, []);
+                finalToolbarItems = finalToolbarItems.concat([saveButton]);*/
+
+
+                PSPDFKit.load({
+                    dynamicFonts: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/PSPDFKit20243/dynamicFonts/fonts.json",
+                    licenseKey,
+                    //inlineWorkers: true,
+                    baseUrl,
+                    //baseCoreUrl,
+                    container: "#pspdfkit",
+                    document: document,
+                    toolbarItems: filteredToolbarItems,
+                    /*toolbarItems: PSPDFKit.defaultToolbarItems
+                        .filter((item) => item.type !== "signature")
+                        .reduce((acc = [], item) => {
+                            if (item.type === "ink") {
+                                return acc.concat([
+                                    item,
+                                    { type: "signature", dropdownGroup: "additional-tools" },
+                                    { type: "form-creator", dropdownGroup: "additional-tools" },
+                                    {
+                                        type: "content-editor",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-text-highlighter",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                    {
+                                        type: "redact-rectangle",
+                                        dropdownGroup: "additional-tools",
+                                    },
+                                ]);
+                            }
+
+                            return acc.concat([item]);
+                        }, [])
+                        .concat([saveButton]),*/
+                    //disableWebAssemblyStreaming: true,
+                    //productId: PSPDFKit.ProductId.Salesforce,
+                })
+                    .then(async instance => { tempInstance = instance; 
+                    
+                    })
+                    .catch(error => { 
+                        alert("Loading of PSPDFKit failed, please check error message in the console.");
+                        console.log(error);
+                    });
+            })
         }
 
         function loadPSPDFKit(placeholderData) {
@@ -219,41 +372,6 @@
                 } else {
                     document = val;
                 }
-
-
-
-                // Fill template with placeholder data - needs to be re-used later
-                /*let filledDocumentDocx = await PSPDFKit.populateDocumentTemplate(
-                    {
-                        document: val,
-                        baseUrl,
-                        //licenseKey: "YOUR_LICENSE_KEY"
-                    },
-                    {
-                        config: {
-                            delimiter: {
-                                start: "{{",
-                                end: "}}"
-                            }
-                        },
-                        model: {
-                            "Placeholder1": "Pavitter",
-                        }
-                    }
-                );
-
-                console.log("template filled");
-
-                // Convert filled document to PDF
-                let filledDocumentPDF = await PSPDFKit.convertToPDF(
-                    {
-                        document: filledDocumentDocx,
-                        baseUrl,
-                        //licenseKey: "YOUR_LICENSE_KEY"
-                    },
-                    //PSPDFKit.Conformance.PDFA_4F
-                );*/
-
 
                 console.log("document to be loaded");
                 console.log(document);
@@ -306,8 +424,8 @@
                 }, []);
                 finalToolbarItems = finalToolbarItems.concat([saveButton]);
 
-
                 PSPDFKit.load({
+                    dynamicFonts: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/PSPDFKit20243/dynamicFonts/fonts.json",
                     licenseKey,
                     //inlineWorkers: true,
                     baseUrl,
@@ -489,7 +607,10 @@
                         addSignatureWidgets(instance);
 
                     })
-                    .catch(error => { console.log(error); });
+                    .catch(error => { 
+                        alert("Loading of PSPDFKit failed, please check error message in the console.");
+                        console.log(error);
+                    });
             })
         }
 

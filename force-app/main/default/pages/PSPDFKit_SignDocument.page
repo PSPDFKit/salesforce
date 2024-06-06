@@ -5,7 +5,7 @@
     <script type="text/javascript"> __sfdcSessionId = '{!$Api.Session_Id}';</script>
     <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
     <!--<script src="{!$Resource.PSPDFKit20241}" type="text/javascript"></script>-->
-    <script src="{!$Resource.PSPDFKit20241}" type="text/javascript"></script>
+    <script src="{!$Resource.PSPDFKit20243}" type="text/javascript"></script>
     <script src="{!$Resource.docxtemplater}" type="text/javascript"></script>
     <script src="{!$Resource.inspectModule}" type="text/javascript"></script>
     <script src="{!$Resource.pizzip}" type="text/javascript"></script>
@@ -92,7 +92,8 @@
 
         //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-2/pspdfkit-lib/";
         // Cloudfare
-        var baseUrl = "https://pspdfkit-static.org/";
+        //var baseUrl = "https://pspdfkit-static.org/";
+        var baseUrl = "https://pspdfkit-static.org/PSPDFKit20243/";
 
         const saveButton = {
             type: "custom",
@@ -305,16 +306,17 @@
                     finalToolbarItems = finalToolbarItems.concat([saveButton]);
 
                 PSPDFKit.load({
+                    dynamicFonts: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/PSPDFKit20243/dynamicFonts/fonts.json",
                     licenseKey,
                     //inlineWorkers: true,
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
                     document: document,
-                    isEditableAnnotation: function(annotation) {
+                    /*isEditableAnnotation: function(annotation) {
                         // Return false for all annotations except for signature widgets
                         return annotation instanceof PSPDFKit.FormFields.SignatureFormField;
-                      },
+                      },*/
                     toolbarItems: finalToolbarItems,
                     /*toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")

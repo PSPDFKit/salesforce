@@ -93,6 +93,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
       try {
         // Directly access the fields from the SObject
+        console.log("data");
+        console.log(data);
         this.placeholders = JSON.parse(data.PSPDFKit_TemplateJson__c);
         this.templateName = data.Name;
         console.log("Placeholders:", this.placeholders);
@@ -101,9 +103,33 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         // Function to get the value for all placeholders in the JSON
         this.getAllRecordsNew();
       } catch (e) {
-        console.error("Error processing data:", e);
+        this.readyToRender = true;
+        this.loadingData = false;
+        console.error(
+          "Error processing template json, was the template properly imported?",
+          e
+        );
+        alert("Error processing template json:", error);
+
+        resetDocumentSelection({
+          recordId: this.recordId,
+          objectName: this.objectApiName,
+        })
+          .then(() => {
+            console.log("BD_Document_Selection__c field reset to null");
+          })
+          .catch((error) => {
+            x;
+            console.error(
+              "Error resetting BD_Document_Selection__c field: ",
+              error
+            );
+          });
       }
     } else if (error) {
+      this.readyToRender = true;
+      this.loadingData = false;
+      //alert("Error retrieving document template:", error);
       console.error("Error retrieving document template:", error);
     }
   }

@@ -317,6 +317,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
       .then(() => {
         // Handle success, such as showing a success message
         console.log("Record updated with JSON string");
+        alert("Template Saved");
       })
       .catch((error) => {
         // Handle error, such as showing an error message

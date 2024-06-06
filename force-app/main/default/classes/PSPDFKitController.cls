@@ -614,7 +614,8 @@ global with sharing class PSPDFKitController {
     } catch (QueryException e) {
       // Handle the exception here, e.g., log the error or notify someone
 
-      return new List<String>{ baseQuery };
+      //return new List<String>{ baseQuery };
+      return new List<String>{ 'No values found.' };
     }
 
     List<String> allRelatedValues = new List<String>();
