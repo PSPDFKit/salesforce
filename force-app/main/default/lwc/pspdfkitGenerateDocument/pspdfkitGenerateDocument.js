@@ -1217,7 +1217,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             });
             results.push({
               placeholder,
-              value,
+              value: value.toString(),
               isDropdown: false,
               templatePlaceholder: templatePlaceholder,
             });
@@ -1304,7 +1304,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
               addressData.push({
                 placeholder: child.placeholder,
-                value: value,
+                value: value.toString(),
                 isDropdown: false,
                 parentId: dropdownItem.Id,
                 parentValue: dropdownItem.value,
@@ -1367,7 +1367,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 // Push an input field to results
                 addressData.push({
                   placeholder: child.placeholder,
-                  value: childDropdownValues[0],
+                  value: childDropdownValues[0].toString(),
                   isDropdown: false,
                   parentId: dropdownItem.Id,
                   parentValue: dropdownItem.value,

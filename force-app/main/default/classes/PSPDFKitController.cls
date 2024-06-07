@@ -438,7 +438,7 @@ global with sharing class PSPDFKitController {
     SObject record = Database.query(
       'SELECT ' + fieldName + ' FROM ' + tableName + ' WHERE Id = :recordId'
     );
-    return record.get(fieldName);
+    return record.get(String.valueOf(fieldName));
   }
 
   @AuraEnabled(cacheable=true)
@@ -476,8 +476,19 @@ global with sharing class PSPDFKitController {
     List<Map<String, String>> values = new List<Map<String, String>>();
     for (SObject record : records) {
       Map<String, String> recordMap = new Map<String, String>();
-      recordMap.put('value', (String) record.get(databaseField));
-      recordMap.put('Id', (String) record.get('Id'));
+
+      Object fieldValue = record.get(databaseField);
+      if (fieldValue != null) {
+        if (fieldValue instanceof Decimal) {
+          recordMap.put('value', ((Decimal) fieldValue).format());
+        } else {
+          recordMap.put('value', String.valueOf(fieldValue));
+        }
+      } else {
+        recordMap.put('value', null);
+      }
+
+      recordMap.put('Id', String.valueOf(record.get('Id')));
       values.add(recordMap);
     }
     return values;
@@ -526,7 +537,7 @@ global with sharing class PSPDFKitController {
         relatedObjectName +
         ' WHERE Id = :relatedRecordId'
     );
-    return (String) relatedRecord.get(relationshipField);
+    return (String) relatedRecord.get(String.valueOf(relationshipField));
   }
 
   @AuraEnabled(cacheable=true)
@@ -648,7 +659,7 @@ global with sharing class PSPDFKitController {
       for (SObject relatedRecord : relatedRecords) {
         String fieldValue = (String) relatedRecord.get(relationshipField);
         if (fieldValue != null) {
-          allRelatedValues.add(fieldValue);
+          allRelatedValues.add(String.valueOf(fieldValue));
         }
       }
     }
