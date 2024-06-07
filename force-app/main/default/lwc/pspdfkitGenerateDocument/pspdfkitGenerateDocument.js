@@ -727,66 +727,6 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         // Handle the error appropriately
       }
     }
-
-    /*const searchTerms = [];
-    lookupElements.forEach((element) => {
-      const searchValue = element.currentSearchTerm;
-      const keyValue = element.getAttribute("data-key");
-      console.log("getting role keys");
-      console.log(keyValue);
-      if (keyValue) {
-        searchTerms.push({
-          placeholder: keyValue,
-          databaseField: searchValue,
-          value: "",
-        });
-      }
-    });*/
-
-    /*console.log("lookupElements before filling elements");
-    console.log(lookupElements);
-    console.log("searchTerms");
-    console.log(searchTerms);
-    console.log(searchTerms.length);
-
-    let databaseFieldsRecords = searchTerms
-      .map((item) => item.databaseField)
-      .filter((field) => field !== "");
-
-    // Query roles seperately
-    let databaseFieldsRoles = databaseFieldsRecords
-      .filter((value) => value.includes("Role: "))
-      .map((value) => value.replace("Role: ", "")); // Remove "Role: " from the value
-
-    databaseFieldsRecords = databaseFieldsRecords.filter(
-      (value) => !value.includes("Role: ")
-    );
-
-    console.log("query fields:");
-    console.log(databaseFieldsRecords);
-    console.log(databaseFieldsRoles);
-
-    if (databaseFieldsRecords.length > 0) {
-      try {
-        console.log("looking up records now");
-        // Step 2: Fetch field values for the collected searchTerms
-        const result = await getRecordFields({
-          objectApiName: this.objectApiName,
-          recordId: this.recordId,
-          fieldNames: databaseFieldsRecords,
-        });
-
-        console.log("record id");
-        console.log(this.recordId);
-        console.log("result of getRecordFields:", result);
-
-        // Seperate this out into a seperate process later
-        const resultRoles = await getRoleFields({
-          objectApiName: "CMS_Role__c",
-          recordId: this.recordId,
-          fieldNames: databaseFieldsRoles,
-        });
-        console.log("result of getRoleFields:", resultRoles);*/
   }
 
   async getLookUpValue(placeholder, databaseField, tableName) {
@@ -897,14 +837,6 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           `...got both values: ${leftValue}${operator}${rightValue} -> ${result}`
         );
         console.log(`...replacing: ${placeholder}`);
-
-        /*let templatePlaceholder = "";
-        if (placeholder !== tableName + "." + databaseField) {
-          templatePlaceholder =
-            placeholder + "+" + tableName + "." + databaseField;
-        } else {
-          templatePlaceholder = placeholder;
-        }*/
 
         results.push({
           placeholder: placeholder,
@@ -1032,64 +964,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               templatePlaceholder,
               referenceField,
             });
-
-            // Don't push it to the UI
-            /*results.push({
-            placeholder,
-            //values: dropdownValues,
-            isDropdown: false,
-            templatePlaceholder: templatePlaceholder,
-            recordId: this.recordId,
-          });*/
-
-            /*
-        
-          let relationshipReferenceField;
-          let relationshipField;
-          [relationshipReferenceField, relationshipField] =
-            databaseField.split(".");
-
-          console.log(
-            "relationshipReferenceField:  " + relationshipReferenceField
-          );
-          console.log("relationshipField:  " + relationshipField);
-
-          try {
-            const dropdownValues = await getRelatedLookupRecord({
-              recordId: this.recordId,
-              tableName,
-              relationshipReferenceField,
-              relationshipField,
-            });
-
-            console.log("results from dropdown");
-            console.log(dropdownValues);
-
-            results.push({
-              placeholder,
-              values: dropdownValues,
-              isDropdown: true,
-              templatePlaceholder: templatePlaceholder,
-              recordId: this.recordId,
-            });
-          } catch (error) {
-            console.error(`Error fetching value for ${placeholder}:`, error);
-            results.push({
-              placeholder,
-              value: "No value found",
-              error: `Error fetching data: ${error.message}`,
-              isDropdown: false,
-              templatePlaceholder: templatePlaceholder,
-            });
-          }
-        */
           } else {
             //console.log("Parent value found, look for children values");
 
             // Push parent to structured data
             // so that children data can be
             // fetched later.
-            let parent = structuredData.some((p) => p.name === databaseField);
+            let parent = structuredData.find((p) => p.name === databaseField);
             if (!parent) {
               structuredData.push({
                 name: placeholder,
