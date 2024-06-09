@@ -946,8 +946,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 name: parentName,
                 children: [],
                 databaseField: null,
-                placeholder: null,
-                selectAtGenerate: null,
+                placeholder: parentName,
+                selectAtGenerate: true,
                 tableName: null,
                 recordId: this.recordId,
                 referenceField: referenceField,
@@ -955,6 +955,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               structuredData.push(parent);
             } else {
             }
+            if (!parent.children) {
+              parent.children = [];
+            }
+
             // Add the child field to the parent's children array
             parent.children.push({
               databaseField,
@@ -970,7 +974,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             // Push parent to structured data
             // so that children data can be
             // fetched later.
-            let parent = structuredData.find((p) => p.name === databaseField);
+            let parent = structuredData.find((p) => p.name === placeholder);
             if (!parent) {
               structuredData.push({
                 name: placeholder,
