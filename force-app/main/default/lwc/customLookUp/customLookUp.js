@@ -14,6 +14,16 @@ export default class CustomLookUp extends LightningElement {
   @api searchKey;
   @api placeholderName;
   @api dropdownValues;
+  @api fieldLabel;
+  @api parentLoop;
+
+  @api children = []; // Array to hold child elements
+  @track hasChildren = false;
+
+  connectedCallback() {
+    // Check if there are children
+    this.hasChildren = this.children && this.children.length > 0;
+  }
 
   _searchKey = "";
 

@@ -102,48 +102,91 @@ export default class PSPDFKitFileSelector extends LightningElement {
   }
 
   handleMessageFromVf(event) {
-    // Check the message origin and type for security
     console.log("message received");
 
-    // Assuming the message contains a JSON object under event.data
     const messageData = event.data;
     const data = JSON.parse(JSON.stringify(messageData));
-
-    // Pre-fill searchKey, if they already exist
-    //getTemplateJson
 
     console.log(data);
 
     if (data && data.value) {
-      this.placeholders = Object.keys(data.value).map((fullKey) => {
-        const parts = fullKey.split("+"); // Splitting the string by "+"
-        if (parts.length === 2) {
-          console.log("after splitting");
-          console.log(parts[1]); // This should now be the searchKey
-          return {
-            key: parts[0].trim(), // Remove any potential whitespace around the key
-            value: "Test", // The value you want to set
-            searchKey: parts[1].trim(), // Remove any potential whitespace around the searchKey
-          };
-        } else {
-          // Handle the error or provide default values
-          //console.error("Invalid format for key: " + fullKey);
-          return {
-            key: fullKey, // Fallback to the fullKey if the format is not as expected
-            value: "Test",
-            searchKey: fullKey, // No searchKey available
-          };
-        }
-      });
+      function extractKeys(obj, parentKey = "") {
+        const placeholders = [];
 
+        console.log("Processing object:", obj);
+
+        Object.keys(obj).forEach((key) => {
+          const fullKey = parentKey ? `${parentKey}+${key}` : key;
+          const parts = fullKey.split("+");
+
+          console.log("Processing key:", key);
+          console.log("Full key:", fullKey);
+          console.log("Parts:", parts);
+
+          if (
+            typeof obj[key] === "object" &&
+            !Array.isArray(obj[key]) &&
+            obj[key] !== null
+          ) {
+            // This is the parent loop element
+            if (Object.keys(obj[key]).length > 0) {
+              // Recursively handle non-empty child objects
+              console.log("Found non-empty nested object:", obj[key]);
+              const children = extractKeys(obj[key], fullKey);
+              const placeholder = {
+                key: parts[0].trim(),
+                value: "Enter filter criteria",
+                //searchKey: parts.length > 1 ? parts[1].trim() : fullKey.trim(),
+                searchKey: key.includes("Loop") ? "" : fullKey.trim(),
+                children: children,
+              };
+              placeholders.push(placeholder);
+            }
+            // This is a regular placeholder or the child of a loop
+            else {
+              // Handle empty nested objects
+              console.log("Found empty nested object:", fullKey);
+              const placeholder = {
+                //key: parts[0].trim(), key
+                key: fullKey.includes("Loop") ? key : parts[0].trim(),
+                //key: key,
+                value: "Enter field name",
+                searchKey: parts.length > 1 ? parts[1].trim() : fullKey.trim(),
+                children: [],
+                parentLoop: fullKey.includes("Loop") ? key : "",
+              };
+
+              placeholders.push(placeholder);
+            }
+          } else {
+            const placeholder = {
+              key: parts[0].trim(),
+              value: "Filter",
+              //searchKey: parts.length > 1 ? parts[1].trim() : fullKey.trim(),
+              //searchKey: key.includes("Loop")
+              //  ? "Enter filter criteria"
+              //  : fullKey.trim(),
+              searchKey: "Test",
+              field: key.includes("Loop") ? "field" : undefined,
+              filter: key.includes("Loop") ? "filter" : undefined,
+              children: [],
+            };
+            placeholders.push(placeholder);
+          }
+        });
+
+        return placeholders;
+      }
+
+      this.placeholders = extractKeys(data.value);
       console.log("placeholders set");
       console.log(this.placeholders);
 
       // Don't fetch JSON from Salesforce anymore, but
       // always load it from the document.
-      //this.fetchAndProcessTemplateJson();
+      // this.fetchAndProcessTemplateJson();
     } else {
-      console.log("placeholder not set");
+      console.log("placeholders not set");
       console.log(data.value);
     }
   }
@@ -523,6 +566,7 @@ export default class PSPDFKitFileSelector extends LightningElement {
       // Get the key (placeholder name) associated with this lookup
       const keyValue = element.getAttribute("data-key");
       const placeholder = element.currentSearchKey;
+      const parentLoop = element.parentLoop;
 
       console.log(
         `Key Value: ${keyValue}, Search Value: ${searchValue}, Placeholder: ${placeholder}`
@@ -570,6 +614,24 @@ export default class PSPDFKitFileSelector extends LightningElement {
           leftOperand: leftSideObject,
           rightOperand: rightSideObject,
           operator: conditionParsed.operator,
+        };
+
+        searchTerms.push(objectToPush);
+      } else if (parentLoop) {
+        alert("child found");
+      } else if (keyValue.includes("Loop")) {
+        console.log("Loop found");
+        console.log("has parent?");
+        console.log(parentLoop);
+
+        let objectToPush = {
+          isLoop: true,
+          databaseField: null,
+          placeholder: keyValue,
+          selectAtGenerate: false,
+          tableName: null,
+          referenceField: null,
+          loopElements: {},
         };
 
         searchTerms.push(objectToPush);

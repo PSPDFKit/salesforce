@@ -28,8 +28,11 @@
               onchange={handleSearchChange}
               data-key={placeholder.key} 
               search-key={placeholder.searchKey}
-              placeholder-name={placeholder.key}
+              placeholder-name={placeholder.value}
               dropdown-values={relatedObjects}
+              children={placeholder.children}
+              field-label={placeholder.key}
+              parent-loop={placeholder.parentLoop}
               >
             </c-custom-look-up>
               
