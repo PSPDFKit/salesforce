@@ -110,6 +110,7 @@ export default class CustomLookUp extends LightningElement {
             this.childrenInputs.push({
               label: key,
               value: value,
+              templatePlaceholder: childObject.templatePlaceholder,
             });
 
             // If the key ends with a recognized property name, add a more detailed object
@@ -130,10 +131,27 @@ export default class CustomLookUp extends LightningElement {
     let label = event.target.label;
     let newValue = event.target.value;
 
+    console.log("new value: ", newValue);
+    //this.searchKey = newValue;
+
     let childIndex = this.childrenInputs.findIndex((c) => c.label === label);
     if (childIndex !== -1) {
       this.childrenInputs[childIndex].value = newValue;
     }
+
+    this.updateChildrenInputApi();
+
+    console.log("label:", label);
+    console.log("childIndex:", childIndex);
+    console.log(this.childrenInputs[childIndex].value);
+  }
+
+  updateChildrenInputApi() {
+    this.childrenInputApi = this.childrenInputs.map((childInput) => ({
+      label: childInput.label,
+      value: childInput.value,
+      templatePlaceholder: childInput.templatePlaceholder,
+    }));
   }
 
   handleSearchChange(event) {

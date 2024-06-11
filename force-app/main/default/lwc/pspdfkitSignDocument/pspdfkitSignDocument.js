@@ -497,7 +497,7 @@ export default class PSPDFKitSignDocument extends LightningElement {
       console.log(templatePlaceholder);
 
       // Static Date field
-      if (databaseField.includes("DATE")) {
+      if (databaseField.includes("$DATE")) {
         console.log("+++++ in date field");
         const currentDate = new Date();
         const options = {
@@ -508,11 +508,11 @@ export default class PSPDFKitSignDocument extends LightningElement {
         };
         const formattedDate = currentDate.toLocaleDateString("en-US", options);
         results.push({
-          placeholder: "Date",
+          placeholder: "$DATE",
           value: formattedDate,
           isDropdown: false,
           //templatePlaceholder: templatePlaceholder,
-          templatePlaceholder: "DATE",
+          templatePlaceholder: "$DATE",
         });
       }
       // It's a lookup field without relation

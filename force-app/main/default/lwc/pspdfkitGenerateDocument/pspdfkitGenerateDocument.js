@@ -865,7 +865,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
         );
 
         // Static Date field
-        if (databaseField.includes("DATE")) {
+        if (databaseField.includes("$DATE")) {
           //console.log("+++++ in date field");
           const currentDate = new Date();
           const options = {
@@ -883,7 +883,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
             value: formattedDate,
             isDropdown: false,
             //templatePlaceholder: templatePlaceholder,
-            templatePlaceholder: "DATE",
+            templatePlaceholder: "$DATE",
           });
         }
         // It's a lookup field without relation
