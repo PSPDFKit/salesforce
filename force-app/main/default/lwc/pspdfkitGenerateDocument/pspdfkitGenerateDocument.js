@@ -1100,9 +1100,12 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
               fieldName: databaseField,
               recordId: this.recordId,
             });
+
+            let valueString = value ? value.toString() : "";
+
             results.push({
               placeholder,
-              value: value.toString(),
+              value: valueString,
               isDropdown: false,
               templatePlaceholder: templatePlaceholder,
             });
@@ -1187,9 +1190,11 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 recordId: dropdownItem.Id, // parentId
               });
 
+              let valueString = value ? value.toString() : "";
+
               addressData.push({
                 placeholder: child.placeholder,
-                value: value.toString(),
+                value: valueString,
                 isDropdown: false,
                 parentId: dropdownItem.Id,
                 parentValue: dropdownItem.value,
@@ -1250,9 +1255,13 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                 );*/
 
                 // Push an input field to results
+                let valueString = childDropdownValues[0]
+                  ? childDropdownValues[0].toString()
+                  : "";
+
                 addressData.push({
                   placeholder: child.placeholder,
-                  value: childDropdownValues[0].toString(),
+                  value: valueString,
                   isDropdown: false,
                   parentId: dropdownItem.Id,
                   parentValue: dropdownItem.value,
@@ -1326,8 +1335,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
                     addressEntry.placeholder.includes(
                       dropdownItem.placeholder
                     ) &&
-                    addressEntry.placeholder != null &&
-                    addressEntry.value !== null
+                    addressEntry.placeholder != null
+                    //&& addressEntry.value !== null
                     //addressEntry.placeholder != null
                   ) {
                     // Ensure 'Children' array exists
@@ -1350,7 +1359,8 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
                     // Prepare new entry object
                     const newEntry = {
-                      [addressEntry.placeholder]: addressEntry.value,
+                      [addressEntry.placeholder]:
+                        addressEntry.value !== null ? addressEntry.value : "", // Assign an empty string if value is null
                       templatePlaceholder: addressEntry.templatePlaceholder,
                     };
                     // Check if the entry already exists to prevent duplicates
