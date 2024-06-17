@@ -176,6 +176,9 @@
                 this.documentIdGenerated = event.data.documentIdGenerated;
                 console.log("VF documentIdGenerated received");
                 
+                console.log("VF Template name received");
+                console.log(event.data.templateName);
+                templateName = event.data.templateName;
 
                 // Template should not be shown when 
                 // generating the document
@@ -209,6 +212,7 @@
             return Object.keys(obj).length === 0 && obj.constructor === Object;
         }
 
+        let templateName;
         function loadPSPDFKit(placeholderData) {
             pdf.arrayBuffer().then(async val => {
 

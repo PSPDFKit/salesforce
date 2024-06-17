@@ -450,6 +450,7 @@ export default class PSPDFKitSignDocument extends LightningElement {
               documentId: this.documentId,
               pendingDocumentId: this.pendingDocumentId,
               documentIdGenerated: this.documentIdGenerated,
+              templateName: this.templateName,
             },
             "*"
           );

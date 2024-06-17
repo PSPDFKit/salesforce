@@ -345,13 +345,13 @@ global with sharing class PSPDFKitController {
   ) {
     // Fetch the record with the Related_Objects__c field
     BD_Document_Templates__c templateRecord = [
-      SELECT Related_Objects__c
+      SELECT Related_Objects_long__c
       FROM BD_Document_Templates__c
       WHERE Id = :recordId
       LIMIT 1
     ];
 
-    return templateRecord.Related_Objects__c;
+    return templateRecord.Related_Objects_long__c;
   }
 
   //@AuraEnabled(cacheable=true)
