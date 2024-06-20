@@ -864,8 +864,16 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
           `reconstructing placeholders, placeholder: ${placeholder}, rest: ${tableName}.${databaseField}, referenceField: ${referenceField}, templatePlaceholder: ${templatePlaceholder}`
         );
 
-        // Static Date field
-        if (databaseField.includes("$DATE")) {
+        if (!databaseField) {
+          results.push({
+            placeholder,
+            value: "No value found",
+            error: `Invalid field.`,
+            isDropdown: false,
+            templatePlaceholder: "No placeholder found.",
+          });
+        } else if (databaseField.includes("$DATE")) {
+          // Static Date field
           //console.log("+++++ in date field");
           const currentDate = new Date();
           const options = {
