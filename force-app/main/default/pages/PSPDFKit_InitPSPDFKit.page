@@ -229,7 +229,7 @@
             const doc = new docxtemplater(zip, {
                 delimiters: { start: "{{", end: "}}" },
                 modules: [iModule],
-                nullGetter() { return ''; }
+                nullGetter() { return 'MISSING-DATA'; }
             });
 
             doc.setData(jsonData);
@@ -462,8 +462,24 @@
                     //disableWebAssemblyStreaming: true,
                     //productId: PSPDFKit.ProductId.Salesforce,
                 })
-                    .then(async instance => { tempInstance = instance; 
+                    .then(async instance => { 
+                        
+                    tempInstance = instance; 
                     
+                    // Search and highlight the word "MISSING-DATA""
+                    const results = await instance.search("MISSING-DATA");
+
+                    const annotations = results.map((result) => {
+                        return new PSPDFKit.Annotations.HighlightAnnotation({
+                            pageIndex: result.pageIndex,
+                            rects: result.rectsOnPage,
+                            boundingBox: PSPDFKit.Geometry.Rect.union(result.rectsOnPage),
+                            color: PSPDFKit.Color.RED,
+
+                        });
+                    });
+                    instance.create(annotations);
+
                     // Perform PSPDFKit specific operations here
 
                     console.log("in the pspdfkit instance, do we have the placeholders?");

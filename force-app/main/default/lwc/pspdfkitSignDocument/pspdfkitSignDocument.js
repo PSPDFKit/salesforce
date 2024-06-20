@@ -54,7 +54,7 @@ export default class PSPDFKitSignDocument extends LightningElement {
     if (this.documentId) {
       window.setTimeout(() => {
         this.loadPSPDFKit();
-      }, 2000);
+      }, 2500);
     }
   }
 

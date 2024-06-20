@@ -322,32 +322,32 @@
                         return annotation instanceof PSPDFKit.FormFields.SignatureFormField;
                       },*/
                     toolbarItems: finalToolbarItems,
-                    /*toolbarItems: PSPDFKit.defaultToolbarItems
-                        .filter((item) => item.type !== "signature")
-                        .reduce((acc = [], item) => {
-                            if (item.type === "ink") {
-                                return acc.concat([
-                                    item,
-                                    { type: "signature", dropdownGroup: "additional-tools" },
-                                    { type: "form-creator", dropdownGroup: "additional-tools" },
-                                    {
-                                        type: "content-editor",
-                                        dropdownGroup: "additional-tools",
-                                    },
-                                    {
-                                        type: "redact-text-highlighter",
-                                        dropdownGroup: "additional-tools",
-                                    },
-                                ]);
-                            }
-
-                            return acc.concat([item]);
-                        }, [])
-                        .concat([saveButton]),*/
                     //disableWebAssemblyStreaming: true,
                     //productId: PSPDFKit.ProductId.Salesforce,
                 })
-                    .then(instance => { tempInstance = instance; })
+                    .then(instance => { 
+                        
+                        tempInstance = instance;
+                    
+                        instance.addEventListener("viewState.change", (viewState) => {
+                            console.log(viewState.toJS());
+                            if(viewState.interactionMode === "CONTENT_EDITOR"){
+                                // Remove the saveButton from the finalToolbarItems array
+                                // as long as document is being edited
+                                finalToolbarItems = finalToolbarItems.filter(item => item !== saveButton);
+                                instance.setToolbarItems(finalToolbarItems);
+                            }else{
+                                // Add it back
+                                if (!finalToolbarItems.includes(saveButton)) {
+                                    // Add saveButton to the finalToolbarItems array
+                                    finalToolbarItems = finalToolbarItems.concat([saveButton]);
+                                    instance.setToolbarItems(finalToolbarItems);
+                                  }
+                            }
+ 
+                          });
+                    
+                    })
                     .catch(error => { console.log(error); });
             })
         }
