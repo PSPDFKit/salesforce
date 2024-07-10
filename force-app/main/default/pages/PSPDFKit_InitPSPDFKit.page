@@ -1,6 +1,7 @@
 <apex:page controller="PSPDFKitController">
     <!-- PSPDF Init div -->
     <div id="pspdfkit" style="width: 100%; height: 100vh;"></div>
+    <div id="editor" style="width: 100%; height: 100vh; display: none;"></div>
 
     <script type="text/javascript"> __sfdcSessionId = '{!$Api.Session_Id}';</script>
     <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
@@ -9,8 +10,8 @@
     <script src="{!$Resource.docxtemplater}" type="text/javascript"></script>
     <script src="{!$Resource.inspectModule}" type="text/javascript"></script>
     <script src="{!$Resource.pizzip}" type="text/javascript"></script>
+    <script src="{!$Resource.PSPDFKitDocumentAuthoring}" type="text/javascript"></script>
     <script type="text/javascript">
-
 
         // Load Template
         /*********************************/
@@ -19,35 +20,6 @@
 
             console.log("loadPlaceholdersFromTemplate: ", templateArrayBuffer);
 
-            // Get the template from Salesforce
-            /*sforce.connection.query(
-                "SELECT VersionData FROM ContentVersion WHERE Title = 'TestTemplate'",
-                {
-                    onSuccess: function (result) {
-                        var records = result.getArray("records");
-                        // File loaded as Base64
-                        var versionData = records[0].VersionData;
-
-                        let binaryString = atob(versionData);
-
-                        let len = binaryString.length;
-                        let bytes = new Uint8Array(len);
-                        for (let i = 0; i < len; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-
-                        // File converted into ArrayBuffer
-                        let arrayBuffer = bytes.buffer;
-                        console.log("File as Array Buffer");
-                        console.log(arrayBuffer);
-                        loadPSPDFKitCustom(arrayBuffer);
-
-                    },
-                    onFailure: function (error) {
-                        console.log("An error has occurred: " + error);
-                    }
-                }
-            );*/
             loadPSPDFKitCustom(templateArrayBuffer);
 
         }
@@ -366,15 +338,15 @@
                 console.log(placeholderData);
 
 
-                let document = val;
+                let document1 = val;
                 if (placeholderData != null && typeof placeholderData === 'object' && !isEmptyObject(placeholderData)) {
-                    document = fillTemplate(val, placeholderData);
+                    document1 = fillTemplate(val, placeholderData);
                 } else {
-                    document = val;
+                    document1 = val;
                 }
 
                 console.log("document to be loaded");
-                console.log(document);
+                console.log(document1);
 
                 let licenseKey = 'L0PuOKZnq2Icm9VlXkkdJ9aQoIdsaz-wrcQnv84fp44qRpxUsHN20R0-05sRPUwHlHIKgr87Cv2-AOGEfgwloYiqXmkGY2lcn_hxBzXotJpGRhbxKv-m6SiEH2jthmfLi3IudKHyOs8V2SP_MlOHrwhBtB22IDU542dTdKFvRU1aM17GAvHAmojtP64SQZktfR7rV3L_OpR2HKLGna53XtO-yF0Lgz9DfEFfOnHLqAKV1JGx52YtqxBfXaVPn6dl6OaPpoNSvCJY3WXjFIJcGaGl5iSU6oPxJNk3eZKP6G5I96P_lWtukBS0h0Z3_KTUIAo4syA07wQ9188qNpTbVoElv8215bqZadjAQzTNkGk2u5vuWdT8ncdHO27rvsyN4yp7OO83IVI3D8TyNSSOVW2KTYov3ruTfegfDFnt5SksHP5SDVk1ohGVOR05h22aeHk0B5XL_0OWW_B3w_BunQ62-AZicDgUZRWaiX_g-nJJTQhm8ctw1-OQ3L_1DPbycZuQBzCyrASzktoKmFZIwk1vrewa4wQ-WWKBiaUGULe1qka7B83u7cAswn8MjV-O02dTH8C5BVsZSVax8V6Z1NH7DXRnalFkIXpya3ZsTxhkqUHqBtTRCmk-Z8xRD-wT0ArU8DrkeKaXOTFhG2PejyixFKQCgJZF7eittG430yOxJ3WEP7WRnQSZwKBxlusDo3Zp6ZG9DikkT1fXgLqbdF96CRbPhEUAzQlQZVGhjTJsH6IgWQNGoHjfLokzpQfLwpxLagxith7Nfpc1Cn952-8jnLkANKG0PXM-suVLI715wq-Yk-7SoITdj6EZ6iSKaCtYcp9muH6x1zUWeaW-upahP2d-3DwLiiVNGG_0tOOvtB6468NhbF3bExDnH5-LwPp_OuNuXAgzWU7UIkRrqTIf2O2jNBiU71Pdx9BYL1-R7u7ZgWGd7hJvQ5pd8O-8AqAkc33RikZHJtanWvKtBSe5flQy8QksWHLgQflc16UoiGdhsJo9r89SDRI-paPue-iXdM6d5htdrw7rgk19MD9XIl2WToy9OurowMgUtYDXx1OkOoTPAL4aNG3sGuhugpg_pDQ5wOkQrt3-r9851nd1ieq6i8kEbbzKJnB7PvemumldQn1ZH0_0ZbA8E7hGBI6q2G2ypBkdcbbaJ0cj_bTllf2rzqpT_-h46ZRv_hp3MUEWbcZX_511aTZoV7GGDlFL9kDQFekAiCDJfoW8Sw==';
 
@@ -382,6 +354,32 @@
                 console.log("default toolbar items");
                 console.log(PSPDFKit.defaultToolbarItems);
                 console.log(JSON.stringify(PSPDFKit.defaultToolbarItems));
+
+                // Function to show the editor and hide PSPDFKit viewer
+                function showEditor() {
+                    document.getElementById('pspdfkit').style.display = 'none';
+                    document.getElementById('editor').style.display = 'block';
+                }
+
+                const documentAuthoringButton = {
+                    type: "custom",
+                    id: "documentAuthoring",
+                    title: "Edit Content",
+                    onPress: (event) => {
+                        showEditor();
+                        // Initialize the editor in the 'editor' div
+                        const editor = DocAuth.createEditorInstance(
+                            {
+                                target: document.getElementById("editor"),
+                                document: DocAuth.Utils.documentFromPlaintext("Hi, this is running natively in Salesforce!"),
+                            },
+                            {
+                                // assets: { base: '<CUSTOM_DOCUMENT_AUTHORING_ASSETS_LOCATION>' }
+                                // licenseKey: '<YOUR_LICENSE_KEY>',
+                            }
+                        );
+                    }
+                };
 
                 const itemsToRemove = [
                     "sidebar-document-outline",
@@ -422,7 +420,10 @@
                 }
                 return acc;
                 }, []);
+                finalToolbarItems = finalToolbarItems.concat([documentAuthoringButton]);
                 finalToolbarItems = finalToolbarItems.concat([saveButton]);
+
+                
 
                 PSPDFKit.load({
                     dynamicFonts: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/PSPDFKit20243/dynamicFonts/fonts.json",
@@ -431,7 +432,7 @@
                     baseUrl,
                     //baseCoreUrl,
                     container: "#pspdfkit",
-                    document: document,
+                    document: document1,
                     toolbarItems: finalToolbarItems,
                     /*toolbarItems: PSPDFKit.defaultToolbarItems
                         .filter((item) => item.type !== "signature")
