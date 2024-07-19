@@ -17,10 +17,17 @@
 
         window.addEventListener('message', handleDocumentAuthoringMessages);
 
-        function arrayBufferFromUint8Array(uint8Array) {
-            return uint8Array.buffer.slice(uint8Array.byteOffset, uint8Array.byteOffset + uint8Array.byteLength);
-        }
 
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+    
         async function handleDocumentAuthoringMessages(event) {
 
             console.log("in handleOpenAndSaveFiles");
@@ -35,9 +42,8 @@
             //let fileArrayBuffer = base64ToArrayBuffer(event.data.fileBase64);
             let fileArrayBuffer;
             if(event.data.fileArrayBuffer){
-                const uint8Array = new Uint8Array(event.data.fileArrayBuffer);
-                const arrayBuffer = arrayBufferFromUint8Array(uint8Array);
-                console.log('ArrayBuffer received:', arrayBuffer);
+                const arrayBuffer = base64ToArrayBuffer(event.data.fileArrayBuffer);
+                
 
                 const docAuth = await DocAuth.createDocAuthInstance();
                 const editor = DocAuth.createEditorInstance({

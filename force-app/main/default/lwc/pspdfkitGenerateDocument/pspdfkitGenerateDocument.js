@@ -49,9 +49,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log(visualForce.contentWindow);
       const data = {
         message: "Message from LWC",
-        fileArrayBuffer: this.arrayBufferDocx
-          ? Array.from(new Uint8Array(this.arrayBufferDocx))
-          : null,
+        fileArrayBuffer: this.arrayBufferDocx,
       };
 
       visualForce.contentWindow.postMessage(data, "*");
@@ -239,6 +237,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     // Check the message origin and type for security
     console.log("message received in Generate", event);
     console.log(event);
+
     const data = JSON.parse(JSON.stringify(event.data));
     console.log("data: ", data);
     console.log(data);

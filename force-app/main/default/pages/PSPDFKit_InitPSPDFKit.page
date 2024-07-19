@@ -195,6 +195,16 @@
             }
         }
 
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
         function fillTemplate(templateArrayBuffer, jsonData) {
             const iModule = window.iModule;
             const zip = new PizZip(templateArrayBuffer);
@@ -211,11 +221,24 @@
             // Send the arrayBuffer back to the LWC to be used for 
             // the Document Authoring page as well
             // Send the arrayBuffer back to the LWC component
-            console.log("arrayBufferEvent data sent, ", arrayBuffer);
+            //console.log("arrayBufferEvent data sent, ", arrayBuffer);
+
+            // Convert ArrayBuffer to Uint8Array for serialization
+            /*const uint8Array = new Uint8Array(arrayBuffer);
             window.parent.postMessage({
                 type: 'arrayBufferEvent',
                 arrayBuffer: arrayBuffer
-            }, '*');
+            }, '*');*/
+
+        // Convert ArrayBuffer to base64 string
+        const base64String = arrayBufferToBase64(arrayBuffer);
+
+        // Send the base64 string back to the LWC component
+        console.log("arrayBufferEvent data sent, ", base64String);
+        window.parent.postMessage({
+            type: 'arrayBufferEvent',
+            arrayBuffer: base64String
+        }, '*');
 
             return arrayBuffer;
         }
