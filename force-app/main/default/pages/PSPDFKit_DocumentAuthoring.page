@@ -1,4 +1,4 @@
-<apex:page controller="PSPDFKitController">
+<apex:page >
     <!-- PSPDF Init div -->
     <!--<div id="pspdfkit" style="width: 100%; height: 100vh;"></div>-->
     <div id="editor" style="border: 1px solid black; width: 1024px; height: 600px; position: relative"></div>
@@ -6,45 +6,44 @@
 
     <script type="text/javascript"> __sfdcSessionId = '{!$Api.Session_Id}';</script>
     <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
-    <!--<script src="{!$Resource.PSPDFKit20241}" type="text/javascript"></script>-->
-    <!--<script src="{!$Resource.PSPDFKit20243}" type="text/javascript"></script>
-    <script src="{!$Resource.docxtemplater}" type="text/javascript"></script>
-    <script src="{!$Resource.inspectModule}" type="text/javascript"></script>
-    <script src="{!$Resource.pizzip}" type="text/javascript"></script>-->
+
     <script src="{!$Resource.PSPDFKitDocumentAuthoring}" type="text/javascript"></script>
     <script type="text/javascript">
 
 
-        window.addEventListener('message', handleMessageDocumentAuthoring);
 
-        let documentId;
-        let recordId;
-        let pendingDocumentId;
-        async function handleMessageDocumentAuthoring(event) {
+        console.log("in Document Authoring");
+        //console.log(recId);
+
+        window.addEventListener('message', handleDocumentAuthoringMessages);
+
+        function arrayBufferFromUint8Array(uint8Array) {
+            return uint8Array.buffer.slice(uint8Array.byteOffset, uint8Array.byteOffset + uint8Array.byteLength);
+        }
+
+        async function handleDocumentAuthoringMessages(event) {
 
             console.log("in handleOpenAndSaveFiles");
             console.log(event);
 
-            if(event.data.fileArrayBuffer){
-                const docAuth = await DocAuth.createDocAuthInstance({
-                    // assets: { base: '<CUSTOM_DOCUMENT_AUTHORING_ASSETS_LOCATION>' }
-                    // licenseKey: '<YOUR_LICENSE_KEY>',
-                });
+            const docAuth = await DocAuth.createDocAuthInstance({
+                // assets: { base: '<CUSTOM_DOCUMENT_AUTHORING_ASSETS_LOCATION>' }
+                // licenseKey: '<YOUR_LICENSE_KEY>',
+            });
 
-               
-                console.log(event);
-                //let fileArrayBuffer = base64ToArrayBuffer(event.data.fileBase64);
-                let fileArrayBuffer;
             
-                    //fileArrayBuffer = base64ToArrayBuffer(event.data.fileBase64);
-                    const editor = DocAuth.createEditorInstance(
-                    {
-                        target: document.getElementById("editor"),
-                        //document: DocAuth.Utils.documentFromPlaintext("Hi, this is running natively in Salesforce!"),
-                        document:  await docAuth.importDocx(Promise.resolve(event.data.fileArrayBuffer)),
-                        
-                    }
-                    );
+            //let fileArrayBuffer = base64ToArrayBuffer(event.data.fileBase64);
+            let fileArrayBuffer;
+            if(event.data.fileArrayBuffer){
+                const uint8Array = new Uint8Array(event.data.fileArrayBuffer);
+                const arrayBuffer = arrayBufferFromUint8Array(uint8Array);
+                console.log('ArrayBuffer received:', arrayBuffer);
+
+                const docAuth = await DocAuth.createDocAuthInstance();
+                const editor = DocAuth.createEditorInstance({
+                    target: document.getElementById("editor"),
+                    document: await docAuth.importDocx(Promise.resolve(arrayBuffer)),
+                });
             }else{
                 const editor = DocAuth.createEditorInstance(
                     {
@@ -55,211 +54,9 @@
                     }
                     );
             }
-            console.log(event.data.fileArrayBuffer);
-        }
 
 
-      
+        }            
 
-        var updatedFile;
-        var tempInstance = null;
-        var contVersion;
-        var state;
-        var pdf;
-        //var baseUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_lib}/`;
-        //var baseCoreUrl = `${window.location.protocol}//${window.location.host}{!$Resource.PSPDFKit_core}/`;
-        //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-1/";
-
-        //var baseUrl = "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/pspdfkit-lib-2024-2/pspdfkit-lib/";
-        // Cloudfare
-        //var baseUrl = "https://pspdfkit-static.org/";
-        var baseUrl = "https://pspdfkit-static.org/PSPDFKit20243/";
-
-        const saveButton = {
-            type: "custom",
-            id: "download-pdf",
-            title: "Save",
-            onPress: () => {
-                //saveFileToSalesforce();
-                //saveFileToPendingDocuments();
-                saveUpdatedFile();
-            }
-        };
-
-
-        console.log("checking recId");
-        console.log(recId);
-        /*if (recId != null) {
-
-            pdf = '{!conbase}';
-            if (pdf != '') {
-                var base64str = pdf;
-                var binary = atob(base64str.replace(/\s/g, ''));
-                var len = binary.length;
-                var buffer = new ArrayBuffer(len);
-                var view = new Uint8Array(buffer);
-                for (var i = 0; i < len; i++) {
-                    view[i] = binary.charCodeAt(i);
-                }
-                pdf = new Blob([view]);
-                loadPSPDFKit(null);
-            }
-        }*/
-
-        function base64ToArrayBuffer(base64) {
-            // Decode the base64 string to binary data
-            const binaryString = atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-        
-            // Create a Uint8Array from the binary data
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-        
-            // Return the ArrayBuffer from the Uint8Array
-            return bytes.buffer;
-        }
-
-       
-        let templateName = "Document.pdf";
-        function saveUpdatedFile() {
-            // Ensure that this.ContentDocumentId, this.recordId, and this.pendingDocumentId are available
-            if (!this.ContentDocumentId || !this.recordId || !this.generatedDocumentId) {
-                alert('ContentDocumentId, recordId, or generatedDocumentId is missing.');
-                console.log('ContentDocumentId:', this.ContentDocumentId);
-                console.log('recordId:', this.recordId);
-                console.log('generatedDocumentId:', this.generatedDocumentId);
-                return;
-            }
-        
-            tempInstance.exportPDF().then((buffer) => {
-                const blob = new Blob([buffer], { type: "application/pdf" });
-                getBase64(blob).then((result) => {
-                    const updatedFile = result;
-        
-                    var contentVersionObject = new sforce.SObject('ContentVersion');
-                    contentVersionObject.ContentDocumentId = this.ContentDocumentId; // Link to existing ContentDocumentId
-                    contentVersionObject.VersionData = updatedFile;
-                    //contentVersionObject.Title = this.documentId || 'Default Title'; // Set a default title if documentId is not available
-                    //contentVersionObject.PathOnClient = this.documentId || 'file.pdf';
-
-                    //contentVersionObject.Title = templateName + ".pdf";
-                    //contentVersionObject.PathOnClient = templateName + ".pdf";
-
-                    //contentVersionObject.Title = "Document" + ".pdf";
-                    //contentVersionObject.PathOnClient = "Document" + ".pdf";
-
-                    // Name taken from path on client
-                    contentVersionObject.Title = templateName;
-                    contentVersionObject.PathOnClient = templateName;
-
-        
-                    // Save the new ContentVersion
-                    var cvResult = sforce.connection.create([contentVersionObject]);
-                    if (cvResult[0].success === 'true') {
-                        var newContentVersionId = cvResult[0].id;
-        
-                        // Update BD_Pending_Documents__c with the new ContentVersion ID
-                        var generatedDocumentObject = new sforce.SObject('Generated_Document__c');
-                        generatedDocumentObject.Id = this.recordId; // Use the retrieved pendingDocumentId
-                        //pendingDocumentObject.Name = this.documentId; // Update the Name field with the new ContentVersion ID
-                        // Keep the same old name
-                        // Check if templateName ends with ".pdf" and remove it
-                        // as we don't want that in the Pending Documents list
-                        if (templateName.endsWith(".pdf")) {
-                            templateName = templateName.replace(/\.pdf$/, "");
-                        }
-                        generatedDocumentObject.Name = templateName;
-                        generatedDocumentObject.DocumentId__c = newContentVersionId;
-
-                        var pdResult = sforce.connection.update([generatedDocumentObject]);
-                        console.log(pdResult);
-                        if (pdResult[0].success === 'true') {
-                            alert('Document updated and linked successfully.');
-                        } else {
-                            alert('Error updating pending document record: ' + pdResult[0].errors.message);
-                        }
-                    } else {
-                        alert('Error saving content version: ' + cvResult[0].errors.message);
-                        console.log(cvResult);
-                    }
-                });
-            });
-        }
-        
-
-        function saveFileToPendingDocuments() {
-            tempInstance.exportPDF().then((buffer) => {
-                const blob = new Blob([buffer], { type: "application/pdf" });
-                getBase64(blob).then((result) => {
-                    updatedFile = result;
-                    var contentVersionObject = new sforce.SObject('ContentVersion');
-                    // Set other necessary attributes for contentVersionObject...
-                    contentVersionObject.VersionData = updatedFile;
-                    contentVersionObject.Title = contVersion.fName || 'Default Title'; // Set a default title if fName is not availa
-                    contentVersionObject.PathOnClient = contVersion.PathOnClient || 'file.pdf';
-
-                    // ...other settings for contentVersionObject
-
-                    // Save the ContentVersion
-                    var cvResult = sforce.connection.create([contentVersionObject]);
-                    if (cvResult[0].success === 'true') {
-                        // Now create the ContentDocumentLink
-                        var contentDocumentLinkObject = new sforce.SObject('ContentDocumentLink');
-
-                        var cvId = cvResult[0].id;
-                        // Query to get ContentDocumentId
-                        var query = "SELECT ContentDocumentId FROM ContentVersion WHERE Id = '" + cvId + "'";
-                        var queryResult = sforce.connection.query(query);
-                        var records = queryResult.getArray("records");
-                        console.log("Content Document Id");
-                        console.log(records);
-                        console.log("case id");
-                        console.log(caseId);
-                        var contentDocumentId = records[0].ContentDocumentId;
-                        contentDocumentLinkObject.ContentDocumentId = contentDocumentId;
-                        contentDocumentLinkObject.LinkedEntityId = caseId;
-                        contentDocumentLinkObject.ShareType = 'V';
-                        // ... other settings for contentDocumentLinkObject
-
-                        var cdlResult = sforce.connection.create([contentDocumentLinkObject]);
-                        console.log(cdlResult);
-                        if (cdlResult[0].success === 'true') {
-                            // Here you create the BD_Pending_Documents__c record and link it to the CMS_Case__c
-                            var pendingDocumentObject = new sforce.SObject('BD_Pending_Documents__c');
-                            pendingDocumentObject.BD_Case__c = caseId; // This is how you link it to CMS_Case__c
-                            // Set other necessary fields of BD_Pending_Documents__c
-                            //pendingDocumentObject.Name = contVersion.fName; // For example, use the filename as the document name
-
-                            // Assuming there's a lookup or master-detail field on BD_Pending_Documents__c that relates to the ContentVersion or ContentDocument
-                            pendingDocumentObject.Name = cvResult[0].id;
-                            pendingDocumentObject.DocumentId = cvResult[0].id;
-                            pendingDocumentObject.BD_Status__c = "Pending Approval";
-
-                            var pdResult = sforce.connection.create([pendingDocumentObject]);
-                            console.log(pdResult);
-                            if (pdResult[0].success === 'true') {
-                                alert('Pending document record created and linked successfully.');
-                            } else {
-                                alert('Error creating pending document record: ' + pdResult[0].errors.message);
-                            }
-                        } else {
-                            alert('Error linking content document to case: ' + cdlResult[0].errors.message);
-                        }
-                    } else {
-                        alert('Error saving content version: ' + cvResult[0].errors.message);
-                        console.log(cvResult);
-                    }
-                });
-            });
-        }
-
-
-        function openSalesforceFile(recordId) {
-            if (window.location.href != window.location.origin + "/apex/PSPDFKit_InitPSPDFKit?id=" + recordId) {
-                window.open('/apex/PSPDFKit_InitPSPDFKit?id=' + recordId, '_self');
-            }
-        }
     </script>
 </apex:page>

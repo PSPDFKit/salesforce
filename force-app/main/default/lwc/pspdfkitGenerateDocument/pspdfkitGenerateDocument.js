@@ -42,34 +42,20 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   }
 
   loadDocumentAuthoring() {
-    console.log("starting timeout soon");
-    //console.log(visualForce);
-    //if (visualForce) {
     window.setTimeout(() => {
+      let visualForce = this.template.querySelector("iframe");
+      //const visualForce = this.template.querySelector("");
+      console.log("content window");
+      console.log(visualForce.contentWindow);
       const data = {
         message: "Message from LWC",
-        fileArrayBuffer: this.arrayBufferDocx,
+        fileArrayBuffer: this.arrayBufferDocx
+          ? Array.from(new Uint8Array(this.arrayBufferDocx))
+          : null,
       };
 
-      let visualForce = this.template.querySelector("iframe");
-      console.log("visual force page");
-
-      console.log(visualForce.contentWindow);
-      console.log("this.documentId");
-      console.log(this.documentId);
-
-      console.log("sending data to visualforce page");
       visualForce.contentWindow.postMessage(data, "*");
     }, 3000);
-    //} else {
-    //console.log("iFrame for Document Authoring could not be fetched");
-    //}
-
-    //})
-    // .catch((error) => {
-    //    console.log(error);
-    //  });
-    //}
   }
 
   // Listen for when BD_Document_Selection__c
