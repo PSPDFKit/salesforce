@@ -27,6 +27,50 @@ import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document
 //const fields = [BD_Document_Selection__c];
 export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
+  @track isModalOpenEditor = false;
+  @track arrayBufferDocx;
+
+  openModalEditor() {
+    this.isModalOpenEditor = true;
+
+    // Load the correct file when opening the editor modal
+    this.loadDocumentAuthoring();
+  }
+
+  closeModalEditor() {
+    this.isModalOpenEditor = false;
+  }
+
+  loadDocumentAuthoring() {
+    console.log("starting timeout soon");
+    //console.log(visualForce);
+    //if (visualForce) {
+    window.setTimeout(() => {
+      const data = {
+        message: "Message from LWC",
+        fileArrayBuffer: this.arrayBufferDocx,
+      };
+
+      let visualForce = this.template.querySelector("iframe");
+      console.log("visual force page");
+
+      console.log(visualForce.contentWindow);
+      console.log("this.documentId");
+      console.log(this.documentId);
+
+      console.log("sending data to visualforce page");
+      visualForce.contentWindow.postMessage(data, "*");
+    }, 3000);
+    //} else {
+    //console.log("iFrame for Document Authoring could not be fetched");
+    //}
+
+    //})
+    // .catch((error) => {
+    //    console.log(error);
+    //  });
+    //}
+  }
 
   // Listen for when BD_Document_Selection__c
   // changes and reload PSPDFKit
@@ -197,7 +241,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   connectedCallback() {
     // Add event listener for the message event
-    //window.addEventListener("message", this.handleMessageFromVf.bind(this));
+    window.addEventListener("message", this.handleMessageFromVf.bind(this));
   }
 
   disconnectedCallback() {
@@ -207,10 +251,20 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   handleMessageFromVf(event) {
     // Check the message origin and type for security
-    console.log("message received in Generate");
+    console.log("message received in Generate", event);
+    console.log(event);
+    const data = JSON.parse(JSON.stringify(event.data));
+    console.log("data: ", data);
+    console.log(data);
+
+    // Generated .DOCX file received
+    if (data && data.type === "arrayBufferEvent") {
+      console.log("ArrayBuffer received from VF page:", data.arrayBuffer);
+      this.arrayBufferDocx = data.arrayBuffer;
+    }
 
     // Assuming the message contains a JSON object under event.data
-    const messageData = event.data;
+    /*const messageData = event.data;
     const data = JSON.parse(JSON.stringify(messageData));
 
     // searchKey should be the one saved in Salesforce
@@ -235,7 +289,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       });
     }
     console.log("new placeholder data");
-    console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));
+    console.log(JSON.parse(JSON.stringify(this.placeholdersGenerated)));*/
   }
 
   handleInputChange(event) {

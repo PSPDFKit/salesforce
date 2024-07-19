@@ -2,11 +2,86 @@
   <div class="page">
     <div class="wrapper">
       <div>
-        <div>
-          <h1>Document Generation</h1>
-          <p title={templateName} class="heading">{templateName}</p>
+        <div class="slds-grid slds-gutters">
+          <h1 class="slds-col slds-has-flexi-truncate">Document Generation</h1>
+          <p title={templateName} class="heading slds-col slds-truncate">{templateName}</p>
+          <!-- Button for opening the editor modal -->
+          <lightning-button-icon
+            icon-name="utility:edit"
+            onclick={openModalEditor}
+            variant="bare"
+            title="Edit Document"
+            class="slds-col slds-shrink-none slds-p-left_small"
+          ></lightning-button-icon>
         </div>
       </div>
+
+      <template if:true={isModalOpenEditor}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section
+          role="dialog"
+          tabindex="-1"
+          aria-labelledby="modal-heading-02"
+          aria-modal="true"
+          aria-describedby="modal-content-id-2"
+          class="slds-modal slds-fade-in-open"
+        >
+          <div class="slds-modal__container" style="width: 90%; height: 90%;">
+            <!-- Modal/Popup Box LWC header here -->
+            <header class="slds-modal__header">
+              <button
+                class="
+                  slds-button slds-button_icon
+                  slds-modal__close
+                  slds-button_icon-inverse
+                "
+                title="Close"
+                onclick={closeModalEditor}
+              >
+                <lightning-icon
+                  icon-name="utility:close"
+                  alternative-text="close"
+                  variant="inverse"
+                  size="small"
+                ></lightning-icon>
+                <span class="slds-assistive-text">Close</span>
+              </button>
+              <h2
+                id="modal-heading-02"
+                class="slds-text-heading_medium slds-hyphenate"
+              >
+                Edit Document
+              </h2>
+            </header>
+            <!-- Modal/Popup Box LWC body starts here -->
+            <div
+              class="slds-modal__content slds-p-around_medium"
+              id="modal-content-id-2"
+              style="height: 100%; width: 100%"
+            >
+              <iframe 
+                id="docAuthor"
+                src="/apex/PSPDFKit_DocumentAuthoring"
+                style="border: none; height: 100%; width: 100%;"
+              ></iframe>
+            </div>
+            <!-- Modal/Popup Box LWC footer starts here -->
+            <footer class="slds-modal__footer">
+              <div class="slds-align_absolute-center">
+                <button
+                  class="slds-button slds-button_neutral"
+                  onclick={closeModalEditor}
+                  title="Cancel"
+                >
+                  Close
+                </button>
+              </div>
+            </footer>
+          </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+      
 
       <div class="container">
         <template if:true={loadingData}>

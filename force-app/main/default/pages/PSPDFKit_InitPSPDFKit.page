@@ -208,6 +208,15 @@
             doc.render();
 
             const arrayBuffer = doc.getZip().generate({ type: "arraybuffer", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+            // Send the arrayBuffer back to the LWC to be used for 
+            // the Document Authoring page as well
+            // Send the arrayBuffer back to the LWC component
+            console.log("arrayBufferEvent data sent, ", arrayBuffer);
+            window.parent.postMessage({
+                type: 'arrayBufferEvent',
+                arrayBuffer: arrayBuffer
+            }, '*');
+
             return arrayBuffer;
         }
 
