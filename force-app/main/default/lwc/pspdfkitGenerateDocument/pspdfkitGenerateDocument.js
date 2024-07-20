@@ -28,7 +28,7 @@ import BD_Document_Selection__c from "@salesforce/schema/CMS_Case__c.BD_Document
 export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
   @track isModalOpenEditor = false;
-  @track arrayBufferDocx;
+  @track base64Docx;
 
   openModalEditor() {
     this.isModalOpenEditor = true;
@@ -39,6 +39,20 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   closeModalEditor() {
     this.isModalOpenEditor = false;
+
+    // Ask for Document Authoring page for latest docx file
+    window.setTimeout(() => {
+      let visualForce = this.template.querySelector("iframe");
+      //const visualForce = this.template.querySelector("");
+      console.log("content window");
+      console.log(visualForce.contentWindow);
+      const data = {
+        message: "Send updated DOCX",
+        //fileBase64: this.base64Docx,
+      };
+
+      visualForce.contentWindow.postMessage(data, "*");
+    }, 1000);
   }
 
   loadDocumentAuthoring() {
@@ -49,7 +63,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
       console.log(visualForce.contentWindow);
       const data = {
         message: "Message from LWC",
-        fileArrayBuffer: this.arrayBufferDocx,
+        fileBase64: this.base64Docx,
       };
 
       visualForce.contentWindow.postMessage(data, "*");
@@ -243,9 +257,17 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     console.log(data);
 
     // Generated .DOCX file received
-    if (data && data.type === "arrayBufferEvent") {
-      console.log("ArrayBuffer received from VF page:", data.arrayBuffer);
-      this.arrayBufferDocx = data.arrayBuffer;
+    if (data && data.type === "base64Docx") {
+      console.log("ArrayBuffer received from VF page:", data.base64Docx);
+      this.base64Docx = data.base64Docx;
+    } else if (data && data.type === "base64Docx updated") {
+      console.log(
+        "updated ArrayBuffer received from VF page:",
+        data.base64Docx
+      );
+      this.base64Docx = data.base64Docx;
+
+      // load PSPDFKit again
     }
 
     // Assuming the message contains a JSON object under event.data

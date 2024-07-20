@@ -234,10 +234,10 @@
         const base64String = arrayBufferToBase64(arrayBuffer);
 
         // Send the base64 string back to the LWC component
-        console.log("arrayBufferEvent data sent, ", base64String);
+        console.log("base64Docx data sent, ", base64String);
         window.parent.postMessage({
-            type: 'arrayBufferEvent',
-            arrayBuffer: base64String
+            type: 'base64Docx',
+            base64Docx: base64String
         }, '*');
 
             return arrayBuffer;

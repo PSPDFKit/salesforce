@@ -14,6 +14,7 @@
 
         console.log("in Document Authoring");
         //console.log(recId);
+        let editorGlobal;
 
         window.addEventListener('message', handleDocumentAuthoringMessages);
 
@@ -27,8 +28,31 @@
             }
             return bytes.buffer;
         }
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+        
     
         async function handleDocumentAuthoringMessages(event) {
+
+
+            if(event.data.message === "Send updated DOCX"){
+                // exportDOCX: (options?: DocumentToDOCXOptions) => Promise<ArrayBuffer>;
+                const docxArrayBuffer = await editorGlobal.exportDOCX();
+                let base64String = arrayBufferToBase64(docxArrayBuffer);
+                window.parent.postMessage({
+                    type: 'base64Docx updated',
+                    base64Docx: base64String
+                }, '*');
+                return;
+            }
 
             console.log("in handleOpenAndSaveFiles");
             console.log(event);
@@ -39,19 +63,17 @@
             });
 
             
-            //let fileArrayBuffer = base64ToArrayBuffer(event.data.fileBase64);
-            let fileArrayBuffer;
-            if(event.data.fileArrayBuffer){
-                const arrayBuffer = base64ToArrayBuffer(event.data.fileArrayBuffer);
+            if(event.data.fileBase64){
+                const arrayBuffer = base64ToArrayBuffer(event.data.fileBase64);
                 
 
                 const docAuth = await DocAuth.createDocAuthInstance();
-                const editor = DocAuth.createEditorInstance({
+                editorGlobal = DocAuth.createEditorInstance({
                     target: document.getElementById("editor"),
                     document: await docAuth.importDocx(Promise.resolve(arrayBuffer)),
                 });
             }else{
-                const editor = DocAuth.createEditorInstance(
+                editorGlobal = DocAuth.createEditorInstance(
                     {
                         target: document.getElementById("editor"),
                         document: DocAuth.Utils.documentFromPlaintext("Coming soon: Edit your .DOCX files directly in Salesforce!"),
