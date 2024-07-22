@@ -8,6 +8,9 @@
     <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
 
     <script src="{!$Resource.PSPDFKitDocumentAuthoring}" type="text/javascript"></script>
+    <script src="{!$Resource.pizzip}" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+
     <script type="text/javascript">
 
 
@@ -36,20 +39,65 @@
             for (let i = 0; i < len; i++) {
                 binary += String.fromCharCode(bytes[i]);
             }
-            return window.btoa(binary);
+
+            let base64String =  window.btoa(binary);
+
+            return base64String;
+        }
+
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        async function convertDocxToZipBase64(arrayBuffer) {
+
+
+            // Step 2: Load the ArrayBuffer with PizZip or JSZip
+            const zip = new JSZip(); // Or use new JSZip() for JSZip
+            await zip.loadAsync(arrayBuffer);
+            console.log("Loaded ZIP using PizZip", zip);
+
+            // Step 3: Generate a ZIP Base64 string
+            const zipArrayBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+            console.log("Generated ZIP ArrayBuffer", zipArrayBuffer);
+
+            // Step 4: Convert the ZIP ArrayBuffer to Base64
+            const zipBase64 = arrayBufferToBase64(zipArrayBuffer);
+
+            // Step 5: Return the Base64 string with the MIME type set to application/zip
+            //const zipBase64WithMime = `data:application/zip;base64,${zipBase64}`;
+            return zipBase64;
         }
         
     
         async function handleDocumentAuthoringMessages(event) {
 
+            console.log("in handleDocumentAuthoringMessages");
+            console.log(event);
 
             if(event.data.message === "Send updated DOCX"){
+
+                console.log("Sending updated docx back");
+                console.log(editorGlobal);
                 // exportDOCX: (options?: DocumentToDOCXOptions) => Promise<ArrayBuffer>;
-                const docxArrayBuffer = await editorGlobal.exportDOCX();
-                let base64String = arrayBufferToBase64(docxArrayBuffer);
+                const docxArrayBuffer = await editorGlobal.exportDocx();
+                const pdfArrayBuffer = await editorGlobal.exportPDF();
+                //let base64String = await convertDocxToZipBase64(docxArrayBuffer);
+                const docxBase64 = arrayBufferToBase64(docxArrayBuffer);
+                const pdfBase64 = arrayBufferToBase64(pdfArrayBuffer);
+
+
                 window.parent.postMessage({
                     type: 'base64Docx updated',
-                    base64Docx: base64String
+                    base64Docx: docxBase64,
+                    base64PDF: pdfBase64
                 }, '*');
                 return;
             }
@@ -68,12 +116,12 @@
                 
 
                 const docAuth = await DocAuth.createDocAuthInstance();
-                editorGlobal = DocAuth.createEditorInstance({
+                editorGlobal = await DocAuth.createEditorInstance({
                     target: document.getElementById("editor"),
                     document: await docAuth.importDocx(Promise.resolve(arrayBuffer)),
                 });
             }else{
-                editorGlobal = DocAuth.createEditorInstance(
+                editorGlobal = await DocAuth.createEditorInstance(
                     {
                         target: document.getElementById("editor"),
                         document: DocAuth.Utils.documentFromPlaintext("Coming soon: Edit your .DOCX files directly in Salesforce!"),

@@ -1,7 +1,6 @@
 <apex:page controller="PSPDFKitController">
     <!-- PSPDF Init div -->
     <div id="pspdfkit" style="width: 100%; height: 100vh;"></div>
-    <div id="editor" style="width: 100%; height: 100vh; display: none;"></div>
 
     <script type="text/javascript"> __sfdcSessionId = '{!$Api.Session_Id}';</script>
     <script src="../../soap/ajax/54.0/connection.js" type="text/javascript"></script>
@@ -11,6 +10,8 @@
     <script src="{!$Resource.inspectModule}" type="text/javascript"></script>
     <script src="{!$Resource.pizzip}" type="text/javascript"></script>
     <script src="{!$Resource.PSPDFKitDocumentAuthoring}" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.0.0/jszip.min.js"></script>
+
     <script type="text/javascript">
 
         // Load Template
@@ -138,8 +139,41 @@
 
         window.addEventListener('message', handleOpenAndSaveFiles);
 
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        async function convertDocxToZip(base64Docx) {
+            let arrayBuffeWord =  base64ToArrayBuffer(base64Docx);
+
+
+            const zip = new PizZip(arrayBuffeWord);
+            const doc = new docxtemplater(zip, {
+                delimiters: { start: "{{", end: "}}" },
+                modules: [iModule],
+                nullGetter() { return 'MISSING-DATA'; }
+            });
+
+            doc.setData({});
+            doc.render();
+
+            const arrayBuffer = doc.getZip().generate({ type: "arraybuffer", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+            
+
+            return arrayBuffer;
+        }
+        
+        
+
         let placeholders; 
-        function handleOpenAndSaveFiles(event) {
+        let isBase64 = false;
+        async function handleOpenAndSaveFiles(event) {
 
             console.log("in handleOpenAndSaveFiles");
             console.log(event);
@@ -162,13 +196,36 @@
                 // 2. Placholders filled, loadPSPDFKit
                 // and generate final document.
 
+                if(event.data.base64String === true){
+                    // the pdf is actually a docx file, but base64 encoded
+                
+                    try {
+                        //const zipArrayBuffer = await convertDocxToZip(event.data.versionData);
+                        const zipArrayBuffer  = await base64ToArrayBuffer(event.data.versionData);
+                        console.log("Final ZIP Array Buffer:", zipArrayBuffer);
+                        pdf = zipArrayBuffer;
+                        // Proceed with further processing or usage of zipArrayBuffer
+                    } catch (error) {
+                        console.error("Error processing document:", error);
+                    }        
+                    
+                    // Need to find a new to prevent template filling again
+                    // probably by renaming this variable to "fillTemplateNecessary = false"
+                    isBase64 = true;
+
+                }else{
+                    // the pdf is actually a docx file
+                    pdf = event.data.versionData;
+                }
+
                 console.log("VF page: message received");
                 console.log("VF page: placeholders received:");
                 placeholders = event.data.placeholders;
                 console.log(placeholders);
                 state = event.data.state;
                 contVersion = event.data;
-                pdf = event.data.versionData;
+               
+                
                 console.log("VF page: pdf data: ");
                 console.log(pdf);
                 console.log(tempInstance);
@@ -362,20 +419,33 @@
             })
         }
 
-        function loadPSPDFKit(placeholderData) {
-            pdf.arrayBuffer().then(async val => {
+        async function loadPSPDFKit(placeholderData) {
+
+            let val;
+            if(isBase64){
+                val = pdf;
+            }else{
+                val = await pdf.arrayBuffer();
+            }
 
                 console.log("is PSPDFKit defined?");
                 console.log(PSPDFKit);
                 console.log(placeholderData);
 
 
+                // If the file is a base64 it means it's an edited
+                // docx from Document Authoring, no need to fill
+                // the template in this case.
                 let document1 = val;
-                if (placeholderData != null && typeof placeholderData === 'object' && !isEmptyObject(placeholderData)) {
+                if (placeholderData != null 
+                && typeof placeholderData === 'object' 
+                && !isEmptyObject(placeholderData)
+                && !isBase64) {
                     document1 = fillTemplate(val, placeholderData);
                 } else {
                     document1 = val;
                 }
+            
 
                 console.log("document to be loaded");
                 console.log(document1);
@@ -500,7 +570,7 @@
                     tempInstance = instance; 
                     
                     // Search and highlight the word "MISSING-DATA""
-                    const results = await instance.search("MISSING-DATA");
+                    /*const results = await instance.search("MISSING-DATA");
 
                     const annotations = results.map((result) => {
                         return new PSPDFKit.Annotations.HighlightAnnotation({
@@ -511,7 +581,7 @@
 
                         });
                     });
-                    instance.create(annotations);
+                    instance.create(annotations);*/
 
                     // Perform PSPDFKit specific operations here
 
@@ -651,16 +721,16 @@
 
                         // Create all annotations and form fields
                         await instance.create([...annotations, ...formFields]);
-                        }
+                    }
                         
-                        addSignatureWidgets(instance);
+                    //addSignatureWidgets(instance);
 
                     })
                     .catch(error => { 
-                        alert("Loading of PSPDFKit failed, please check error message in the console.");
+                        alert("Loading PSPDFKit failed, please check error in the console.");
                         console.log(error);
                     });
-            })
+            
         }
 
         function getBase64(file) {

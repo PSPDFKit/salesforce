@@ -29,6 +29,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   @api documentId;
   @track isModalOpenEditor = false;
   @track base64Docx;
+  @track base64PDF;
 
   openModalEditor() {
     this.isModalOpenEditor = true;
@@ -38,8 +39,6 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
   }
 
   closeModalEditor() {
-    this.isModalOpenEditor = false;
-
     // Ask for Document Authoring page for latest docx file
     window.setTimeout(() => {
       let visualForce = this.template.querySelector("iframe");
@@ -53,6 +52,10 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
       visualForce.contentWindow.postMessage(data, "*");
     }, 1000);
+
+    window.setTimeout(() => {
+      this.isModalOpenEditor = false;
+    }, 5000);
   }
 
   loadDocumentAuthoring() {
@@ -247,6 +250,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     window.removeEventListener("message", this.handleMessageFromVf.bind(this));
   }
 
+  openingPSPDFKit = false;
   handleMessageFromVf(event) {
     // Check the message origin and type for security
     console.log("message received in Generate", event);
@@ -258,16 +262,19 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
     // Generated .DOCX file received
     if (data && data.type === "base64Docx") {
-      console.log("ArrayBuffer received from VF page:", data.base64Docx);
+      console.log("Base64 received from VF page:", data.base64Docx);
       this.base64Docx = data.base64Docx;
     } else if (data && data.type === "base64Docx updated") {
-      console.log(
-        "updated ArrayBuffer received from VF page:",
-        data.base64Docx
-      );
+      console.log("updated Base64 received from VF page:", data.base64Docx);
       this.base64Docx = data.base64Docx;
+      this.base64PDF = data.base64PDF;
 
-      // load PSPDFKit again
+      // load PSPDFKit with the PDF version again, store the DOCX for later
+      this.isModalOpenEditor = false;
+      if (this.openingPSPDFKit === false) {
+        this.openingPSPDFKit = true;
+        this.loadPSPDFKit(this.base64PDF);
+      }
     }
 
     // Assuming the message contains a JSON object under event.data
@@ -547,7 +554,7 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
 
   @track loadingData = false;
   @track readyToRender = false;
-  async loadPSPDFKit() {
+  async loadPSPDFKit(updatedDocx) {
     console.log("in loadPSPDFKit Generate button");
 
     //window.setTimeout(async () => {
@@ -648,15 +655,48 @@ export default class PSPDFKitGenerateDocument extends LightningElement {
     console.log("in timeout now");
     let visualForce = await this.template.querySelector("iframe");
     console.log(this.documentId);
-    console.log(visualForce);
+    console.log(JSON.parse(JSON.stringify(visualForce)));
     console.log(visualForce && this.documentId);
-    if (visualForce && this.documentId) {
+
+    // Open the updated docx from Document Authoring
+    if (updatedDocx) {
+      var base64str = updatedDocx;
+      var binary = atob(base64str.replace(/\s/g, ""));
+      var len = binary.length;
+      var buffer = new ArrayBuffer(len);
+      var view = new Uint8Array(buffer);
+      for (var i = 0; i < len; i++) {
+        view[i] = binary.charCodeAt(i);
+      }
+      var blob = new Blob([view]);
+      visualForce.contentWindow.postMessage(
+        {
+          versionData: base64str,
+          //ContentDocumentId: result.ContentDocumentId,
+          ContentDocumentId: "test",
+          //PathOnClient: result.PathOnClient,
+          PathOnClient: "test.docx",
+          state: "salesforce",
+          placeholders: filledPlaceholdersData,
+          template: false,
+          caseId: this.recordId,
+          templateName: this.templateName,
+          base64String: true,
+        },
+        "*"
+      );
+      this.openingPSPDFKit = false;
+    }
+    // Or load file stored in Salesforce
+    else if (visualForce && this.documentId) {
       getbase64DataForTemplate({ documentTemplateId: this.documentId })
         .then((result) => {
           console.log("got result from getbase64DataForTemplate");
           console.log(result);
 
           getbase64Data({ strId: result }).then((result) => {
+            console.log("base 64 string for original data");
+            console.log(result.VersionData);
             var base64str = result.VersionData;
             var binary = atob(base64str.replace(/\s/g, ""));
             var len = binary.length;
